@@ -1,0 +1,80 @@
+﻿@model FutPlay.Models.Palpite
+
+@{
+    ViewData["Title"] = "Editar Palpite";
+}
+
+<div class="container mt-4">
+    <h1>Editar Palpite</h1>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="DataPalpite" />
+                <input type="hidden" asp-for="PontosGanhos" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="LigaId" class="form-label"></label>
+                    <select asp-for="LigaId" class="form-select" asp-items="ViewBag.LigaId">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <span asp-validation-for="LigaId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="LigaParticipanteId" class="form-label"></label>
+                    <select asp-for="LigaParticipanteId" class="form-select" asp-items="ViewBag.LigaParticipanteId">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="JogoId" class="form-label"></label>
+                    <select asp-for="JogoId" class="form-select" asp-items="ViewBag.JogoId">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <span asp-validation-for="JogoId" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="GolsCasaPalpite" class="form-label"></label>
+                        <input asp-for="GolsCasaPalpite" class="form-control" />
+                        <span asp-validation-for="GolsCasaPalpite" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="GolsVisitantePalpite" class="form-label"></label>
+                        <input asp-for="GolsVisitantePalpite" class="form-control" />
+                        <span asp-validation-for="GolsVisitantePalpite" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="Ativo" class="form-check-input" />
+                    <label asp-for="Ativo" class="form-check-label"></label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        Salvar Alterações
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Voltar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

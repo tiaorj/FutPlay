@@ -15,6 +15,7 @@ namespace FutPlay.Data
         public DbSet<Jogo> Jogos { get; set; }
         public DbSet<Liga> Ligas { get; set; }
         public DbSet<LigaParticipante> LigaParticipantes { get; set; }
+        public DbSet<Palpite> Palpites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +26,25 @@ namespace FutPlay.Data
             modelBuilder.Entity<Jogo>().ToTable("FutPlay_Jogos");
             modelBuilder.Entity<Liga>().ToTable("FutPlay_Ligas");
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
+            modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.Liga)
+                .WithMany()
+                .HasForeignKey(p => p.LigaId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.LigaParticipante)
+                .WithMany()
+                .HasForeignKey(p => p.LigaParticipanteId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.Jogo)
+                .WithMany()
+                .HasForeignKey(p => p.JogoId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<LigaParticipante>()
                 .HasOne(lp => lp.Liga)

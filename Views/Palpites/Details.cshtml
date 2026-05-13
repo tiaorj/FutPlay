@@ -1,0 +1,51 @@
+﻿@model FutPlay.Models.Palpite
+
+@{
+    ViewData["Title"] = "Detalhes do Palpite";
+}
+
+<div class="container mt-4">
+    <h1>Detalhes do Palpite</h1>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Liga</dt>
+                <dd class="col-sm-9">@Model.Liga?.Nome</dd>
+
+                <dt class="col-sm-3">Participante</dt>
+                <dd class="col-sm-9">@Model.LigaParticipante?.Nome</dd>
+
+                <dt class="col-sm-3">Jogo</dt>
+                <dd class="col-sm-9">
+                    @Model.Jogo?.TimeCasa?.Nome x @Model.Jogo?.TimeVisitante?.Nome
+                </dd>
+
+                <dt class="col-sm-3">Palpite</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-primary">
+                        @Model.GolsCasaPalpite x @Model.GolsVisitantePalpite
+                    </span>
+                </dd>
+
+                <dt class="col-sm-3">Pontos</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-dark">@Model.PontosGanhos</span>
+                </dd>
+
+                <dt class="col-sm-3">Data do Palpite</dt>
+                <dd class="col-sm-9">@Model.DataPalpite.ToString("dd/MM/yyyy HH:mm")</dd>
+            </dl>
+
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                    Editar
+                </a>
+
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

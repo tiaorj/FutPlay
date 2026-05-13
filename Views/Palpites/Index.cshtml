@@ -1,0 +1,86 @@
+﻿@model List<FutPlay.Models.Palpite>
+
+@{
+    ViewData["Title"] = "Palpites";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">Palpites</h1>
+            <p class="text-muted mb-0">
+                Palpites cadastrados pelos participantes.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-success">
+            Novo Palpite
+        </a>
+    </div>
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-warning">
+            @TempData["Erro"]
+        </div>
+    }
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Liga</th>
+                        <th>Participante</th>
+                        <th>Jogo</th>
+                        <th>Palpite</th>
+                        <th>Pontos</th>
+                        <th>Data</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var palpite in Model)
+                    {
+                        <tr>
+                            <td>@palpite.Liga?.Nome</td>
+                            <td>@palpite.LigaParticipante?.Nome</td>
+                            <td>
+                                <strong>@palpite.Jogo?.TimeCasa?.Nome</strong>
+                                x
+                                <strong>@palpite.Jogo?.TimeVisitante?.Nome</strong>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">
+                                    @palpite.GolsCasaPalpite x @palpite.GolsVisitantePalpite
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark">
+                                    @palpite.PontosGanhos
+                                </span>
+                            </td>
+                            <td>@palpite.DataPalpite.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@palpite.Id" class="btn btn-outline-primary btn-sm">
+                                    Detalhes
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@palpite.Id" class="btn btn-outline-success btn-sm">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info mb-0">
+                    Nenhum palpite cadastrado ainda.
+                </div>
+            }
+        </div>
+    </div>
+</div>
