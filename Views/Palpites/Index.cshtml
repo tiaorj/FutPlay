@@ -13,15 +13,27 @@
             </p>
         </div>
 
-        <a asp-action="Create" class="btn btn-success">
-            Novo Palpite
-        </a>
+        <div class="d-flex gap-2">
+            <a asp-action="RecalcularPontuacao" class="btn btn-primary">
+                Recalcular Pontuação
+            </a>
+
+            <a asp-action="Create" class="btn btn-success">
+                Novo Palpite
+            </a>
+        </div>
     </div>
 
     @if (TempData["Erro"] != null)
     {
         <div class="alert alert-warning">
             @TempData["Erro"]
+        </div>
+    }
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Sucesso"]
         </div>
     }
 

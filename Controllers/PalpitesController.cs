@@ -182,5 +182,115 @@ namespace FutPlay.Controllers
                 "Descricao"
             );
         }
+
+        private int CalcularPontuacao(Palpite palpite, Jogo jogo)
+        {
+            if (!jogo.GolsCasa.HasValue || !jogo.GolsVisitante.HasValue)
+            {
+                return 0;
+            }
+
+            int golsCasaReal = jogo.GolsCasa.Value;
+            int golsVisitanteReal = jogo.GolsVisitante.Value;
+
+            int golsCasaPalpite = palpite.GolsCasaPalpite;
+            int golsVisitantePalpite = palpite.GolsVisitantePalpite;
+
+            // Placar exato
+            if (golsCasaReal == golsCasaPalpite &&
+                golsVisitanteReal == golsVisitantePalpite)
+            {
+                return 10;
+            }
+
+            int pontos = 0;
+
+            // Acertou vencedor ou empate
+            string resultadoReal = ObterResultado(golsCasaReal, golsVisitanteReal);
+            string resultadoPalpite = ObterResultado(golsCasaPalpite, golsVisitantePalpite);
+
+            if (resultadoReal == resultadoPalpite)
+            {
+                pontos += 5;
+            }
+
+            // Acertou gols do time da casa
+            if (golsCasaReal == golsCasaPalpite)
+            {
+                pontos += 2;
+            }
+
+            // Acertou gols do time visitante
+            if (golsVisitanteReal == golsVisitantePalpite)
+            {
+                pontos += 2;
+            }
+
+            return pontos;
+        }
+
+        private string ObterResultado(int golsCasa, int golsVisitante)
+        {
+            if (golsCasa > golsVisitante)
+            {
+                return "Casa";
+            }
+
+            if (golsVisitante > golsCasa)
+            {
+                return "Visitante";
+            }
+
+            return "Empate";
+        }
+
+        public async Task<IActionResult> RecalcularPontuacao()
+        {
+            var palpites = await _context.Palpites
+                .Include(p => p.Jogo)
+                .Where(p => p.Ativo)
+                .ToListAsync();
+
+            foreach (var palpite in palpites)
+            {
+                if (palpite.Jogo != null &&
+                    palpite.Jogo.Status == "Finalizado" &&
+                    palpite.Jogo.GolsCasa.HasValue &&
+                    palpite.Jogo.GolsVisitante.HasValue)
+                {
+                    palpite.PontosGanhos = CalcularPontuacao(palpite, palpite.Jogo);
+                }
+                else
+                {
+                    palpite.PontosGanhos = 0;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            await AtualizarPontuacaoParticipantes();
+
+            TempData["Sucesso"] = "Pontuação recalculada com sucesso.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task AtualizarPontuacaoParticipantes()
+        {
+            var participantes = await _context.LigaParticipantes.ToListAsync();
+
+            foreach (var participante in participantes)
+            {
+                participante.PontuacaoTotal = await _context.Palpites
+                    .Where(p =>
+                        p.LigaParticipanteId == participante.Id &&
+                        p.LigaId == participante.LigaId &&
+                        p.Ativo)
+                    .SumAsync(p => p.PontosGanhos);
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
