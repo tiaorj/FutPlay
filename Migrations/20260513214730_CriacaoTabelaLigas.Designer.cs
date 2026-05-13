@@ -4,6 +4,7 @@ using FutPlay.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FutPlay.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513214730_CriacaoTabelaLigas")]
+    partial class CriacaoTabelaLigas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,43 +153,6 @@ namespace FutPlay.Migrations
                     b.ToTable("FutPlay_Ligas", (string)null);
                 });
 
-            modelBuilder.Entity("FutPlay.Models.LigaParticipante", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("DataEntrada")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("LigaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Nome")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("PontuacaoTotal")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LigaId");
-
-                    b.ToTable("FutPlay_LigaParticipantes", (string)null);
-                });
-
             modelBuilder.Entity("FutPlay.Models.Time", b =>
                 {
                     b.Property<int>("Id")
@@ -261,17 +227,6 @@ namespace FutPlay.Migrations
                         .IsRequired();
 
                     b.Navigation("Campeonato");
-                });
-
-            modelBuilder.Entity("FutPlay.Models.LigaParticipante", b =>
-                {
-                    b.HasOne("FutPlay.Models.Liga", "Liga")
-                        .WithMany()
-                        .HasForeignKey("LigaId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Liga");
                 });
 #pragma warning restore 612, 618
         }

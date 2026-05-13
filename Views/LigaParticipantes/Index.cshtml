@@ -1,0 +1,78 @@
+﻿@model List<FutPlay.Models.LigaParticipante>
+
+@{
+    ViewData["Title"] = "Participantes das Ligas";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">Participantes</h1>
+            <p class="text-muted mb-0">
+                Participantes cadastrados nas ligas do FutPlay.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-success">
+            Novo Participante
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>E-mail</th>
+                        <th>Liga</th>
+                        <th>Pontos</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var participante in Model)
+                    {
+                        <tr>
+                            <td>@participante.Nome</td>
+                            <td>@participante.Email</td>
+                            <td>@participante.Liga?.Nome</td>
+                            <td>
+                                <span class="badge bg-dark">
+                                    @participante.PontuacaoTotal
+                                </span>
+                            </td>
+                            <td>
+                                @if (participante.Ativo)
+                                {
+                                    <span class="badge bg-success">Ativo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inativo</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@participante.Id" class="btn btn-outline-primary btn-sm">
+                                    Detalhes
+                                </a>
+
+                                <a asp-action="Edit" asp-route-id="@participante.Id" class="btn btn-outline-success btn-sm">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info mb-0">
+                    Nenhum participante cadastrado ainda.
+                </div>
+            }
+        </div>
+    </div>
+</div>

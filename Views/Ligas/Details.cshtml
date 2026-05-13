@@ -1,0 +1,54 @@
+﻿@model FutPlay.Models.Liga
+
+@{
+    ViewData["Title"] = "Detalhes da Liga";
+}
+
+<div class="container mt-4">
+    <h1>Detalhes da Liga</h1>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nome</dt>
+                <dd class="col-sm-9">@Model.Nome</dd>
+
+                <dt class="col-sm-3">Campeonato</dt>
+                <dd class="col-sm-9">@Model.Campeonato?.Nome</dd>
+
+                <dt class="col-sm-3">Código de Convite</dt>
+                <dd class="col-sm-9">
+                    <span class="badge bg-dark">@Model.CodigoConvite</span>
+                </dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@(Model.Publica ? "Pública" : "Privada")</dd>
+
+                <dt class="col-sm-3">Data de Criação</dt>
+                <dd class="col-sm-9">@Model.DataCriacao.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Ativo)
+                    {
+                        <span class="badge bg-success">Ativa</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inativa</span>
+                    }
+                </dd>
+            </dl>
+
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                    Editar
+                </a>
+
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
