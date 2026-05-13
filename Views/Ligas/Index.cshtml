@@ -51,7 +51,11 @@
                             }
                         </p>
 
-                        <div class="d-flex gap-2 mt-3">
+                        <div class="d-flex gap-2 mt-3 flex-wrap">
+                            <a asp-action="Ranking" asp-route-id="@liga.Id" class="btn btn-outline-dark btn-sm">
+                                Ranking
+                            </a>
+
                             <a asp-action="Details" asp-route-id="@liga.Id" class="btn btn-outline-primary btn-sm">
                                 Detalhes
                             </a>

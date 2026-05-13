@@ -1,0 +1,93 @@
+﻿@model FutPlay.ViewModels.RankingLigaViewModel
+
+@{
+    ViewData["Title"] = "Ranking da Liga";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">Ranking da Liga</h1>
+            <p class="text-muted mb-0">
+                @Model.Liga.Nome - @Model.Liga.Campeonato?.Nome
+            </p>
+        </div>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Voltar
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Posição</th>
+                        <th>Participante</th>
+                        <th>E-mail</th>
+                        <th>Palpites</th>
+                        <th>Placares Exatos</th>
+                        <th>Pontos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Participantes)
+                    {
+                        <tr>
+                            <td>
+                                @if (item.Posicao == 1)
+                                {
+                                    <span class="badge bg-warning text-dark">1º</span>
+                                }
+                                else if (item.Posicao == 2)
+                                {
+                                    <span class="badge bg-secondary">2º</span>
+                                }
+                                else if (item.Posicao == 3)
+                                {
+                                    <span class="badge bg-danger">3º</span>
+                                }
+                                else
+                                {
+                                    <span>(@item.Posicao)º</span>
+                                }
+                            </td>
+
+                            <td>
+                                <strong>@item.Nome</strong>
+                            </td>
+
+                            <td>@item.Email</td>
+
+                            <td>
+                                <span class="badge bg-primary">
+                                    @item.TotalPalpites
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-success">
+                                    @item.PlacaresExatos
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-dark fs-6">
+                                    @item.PontuacaoTotal
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Participantes.Any())
+            {
+                <div class="alert alert-info mb-0">
+                    Nenhum participante cadastrado nesta liga ainda.
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -1,5 +1,6 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -125,5 +126,75 @@ namespace FutPlay.Controllers
         {
             return Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
         }
+
+        public async Task<IActionResult> Ranking(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var liga = await _context.Ligas
+                .Include(l => l.Campeonato)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (liga == null)
+            {
+                return NotFound();
+            }
+
+            var participantes = await _context.LigaParticipantes
+                .Where(p => p.LigaId == id && p.Ativo)
+                .OrderByDescending(p => p.PontuacaoTotal)
+                .ThenBy(p => p.Nome)
+                .ToListAsync();
+
+            var ranking = new List<RankingParticipanteViewModel>();
+
+            int posicao = 1;
+
+            foreach (var participante in participantes)
+            {
+                var palpitesParticipante = await _context.Palpites
+                    .Include(p => p.Jogo)
+                    .Where(p =>
+                        p.LigaId == id &&
+                        p.LigaParticipanteId == participante.Id &&
+                        p.Ativo)
+                    .ToListAsync();
+
+                var totalPalpites = palpitesParticipante.Count;
+
+                var placaresExatos = palpitesParticipante.Count(p =>
+                    p.Jogo != null &&
+                    p.Jogo.Status == "Finalizado" &&
+                    p.Jogo.GolsCasa.HasValue &&
+                    p.Jogo.GolsVisitante.HasValue &&
+                    p.Jogo.GolsCasa.Value == p.GolsCasaPalpite &&
+                    p.Jogo.GolsVisitante.Value == p.GolsVisitantePalpite
+                );
+
+                ranking.Add(new RankingParticipanteViewModel
+                {
+                    Posicao = posicao,
+                    Nome = participante.Nome,
+                    Email = participante.Email,
+                    PontuacaoTotal = participante.PontuacaoTotal,
+                    TotalPalpites = totalPalpites,
+                    PlacaresExatos = placaresExatos
+                });
+
+                posicao++;
+            }
+
+            var viewModel = new RankingLigaViewModel
+            {
+                Liga = liga,
+                Participantes = ranking
+            };
+
+            return View(viewModel);
+        }
+
     }
 }
