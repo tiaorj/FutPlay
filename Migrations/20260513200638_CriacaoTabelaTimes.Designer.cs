@@ -4,6 +4,7 @@ using FutPlay.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FutPlay.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260513200638_CriacaoTabelaTimes")]
+    partial class CriacaoTabelaTimes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,62 +60,6 @@ namespace FutPlay.Migrations
                     b.ToTable("FutPlay_Campeonatos", (string)null);
                 });
 
-            modelBuilder.Entity("FutPlay.Models.Jogo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("CampeonatoId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DataJogo")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Fase")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("GolsCasa")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("GolsVisitante")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Grupo")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("Rodada")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("TimeCasaId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TimeVisitanteId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampeonatoId");
-
-                    b.HasIndex("TimeCasaId");
-
-                    b.HasIndex("TimeVisitanteId");
-
-                    b.ToTable("FutPlay_Jogos", (string)null);
-                });
-
             modelBuilder.Entity("FutPlay.Models.Time", b =>
                 {
                     b.Property<int>("Id")
@@ -149,33 +96,6 @@ namespace FutPlay.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("FutPlay_Times", (string)null);
-                });
-
-            modelBuilder.Entity("FutPlay.Models.Jogo", b =>
-                {
-                    b.HasOne("FutPlay.Models.Campeonato", "Campeonato")
-                        .WithMany()
-                        .HasForeignKey("CampeonatoId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("FutPlay.Models.Time", "TimeCasa")
-                        .WithMany()
-                        .HasForeignKey("TimeCasaId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("FutPlay.Models.Time", "TimeVisitante")
-                        .WithMany()
-                        .HasForeignKey("TimeVisitanteId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Campeonato");
-
-                    b.Navigation("TimeCasa");
-
-                    b.Navigation("TimeVisitante");
                 });
 #pragma warning restore 612, 618
         }

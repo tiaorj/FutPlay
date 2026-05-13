@@ -1,53 +1,50 @@
-@model List<FutPlay.Models.Campeonato>
+﻿@model List<FutPlay.Models.Time>
 
 @{
-    ViewData["Title"] = "Campeonatos";
+    ViewData["Title"] = "Times e Seleções";
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="mb-1">Campeonatos</h1>
+            <h1 class="mb-1">Times e Seleções</h1>
             <p class="text-muted mb-0">
-                Campeonatos disponíveis no FutPlay.
+                Cadastre clubes e seleções usados nos campeonatos.
             </p>
         </div>
 
         <a asp-action="Create" class="btn btn-success">
-            Novo Campeonato
+            Novo Time/Seleção
         </a>
     </div>
 
     <div class="row">
-        @foreach (var campeonato in Model)
+        @foreach (var time in Model)
         {
             <div class="col-md-4 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <h5 class="card-title">
-                            @campeonato.Nome @campeonato.Ano
+                            @time.Nome
+                            @if (!string.IsNullOrWhiteSpace(time.Sigla))
+                            {
+                                <small class="text-muted">(@time.Sigla)</small>
+                            }
                         </h5>
 
                         <p class="card-text mb-1">
-                            <strong>Tipo:</strong> @campeonato.Tipo
+                            <strong>Tipo:</strong> @time.Tipo
                         </p>
 
-                        @if (campeonato.DataInicio.HasValue)
+                        @if (!string.IsNullOrWhiteSpace(time.Pais))
                         {
                             <p class="card-text mb-1">
-                                <strong>Início:</strong> @campeonato.DataInicio.Value.ToString("dd/MM/yyyy")
-                            </p>
-                        }
-
-                        @if (campeonato.DataFim.HasValue)
-                        {
-                            <p class="card-text mb-1">
-                                <strong>Fim:</strong> @campeonato.DataFim.Value.ToString("dd/MM/yyyy")
+                                <strong>País:</strong> @time.Pais
                             </p>
                         }
 
                         <p class="card-text mt-2">
-                            @if (campeonato.Ativo)
+                            @if (time.Ativo)
                             {
                                 <span class="badge bg-success">Ativo</span>
                             }
@@ -58,20 +55,13 @@
                         </p>
 
                         <div class="d-flex gap-2 mt-3">
-                            <a asp-action="Details" asp-route-id="@campeonato.Id" class="btn btn-outline-primary btn-sm">
+                            <a asp-action="Details" asp-route-id="@time.Id" class="btn btn-outline-primary btn-sm">
                                 Detalhes
                             </a>
 
-                            <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">
+                            <a asp-action="Edit" asp-route-id="@time.Id" class="btn btn-outline-success btn-sm">
                                 Editar
                             </a>
-
-                            @if (campeonato.Ativo)
-                            {
-                                <a asp-action="Delete" asp-route-id="@campeonato.Id" class="btn btn-outline-warning btn-sm">
-                                    Inativar
-                                </a>
-                            }
                         </div>
                     </div>
                 </div>

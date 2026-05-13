@@ -1,0 +1,56 @@
+﻿@model FutPlay.Models.Campeonato
+
+@{
+    ViewData["Title"] = "Inativar Campeonato";
+}
+
+<div class="container mt-4">
+    <h1>Inativar Campeonato</h1>
+
+    <div class="alert alert-warning mt-3">
+        Tem certeza que deseja inativar este campeonato?
+        <br />
+        Ele não será apagado do banco, apenas ficará marcado como inativo.
+    </div>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nome</dt>
+                <dd class="col-sm-9">@Model.Nome</dd>
+
+                <dt class="col-sm-3">Ano</dt>
+                <dd class="col-sm-9">@Model.Ano</dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@Model.Tipo</dd>
+
+                <dt class="col-sm-3">Status Atual</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Ativo)
+                    {
+                        <span class="badge bg-success">Ativo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inativo</span>
+                    }
+                </dd>
+            </dl>
+
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning">
+                        Confirmar Inativação
+                    </button>
+
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,96 @@
+﻿@model FutPlay.Models.Jogo
+
+@{
+    ViewData["Title"] = "Novo Jogo";
+}
+
+<div class="container mt-4">
+    <h1>Novo Jogo</h1>
+
+    <p class="text-muted">
+        Cadastre um jogo vinculado a um campeonato.
+    </p>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="CampeonatoId" class="form-label"></label>
+                    <select asp-for="CampeonatoId" class="form-select" asp-items="ViewBag.CampeonatoId">
+                        <option value="">Selecione...</option>
+                    </select>
+                    <span asp-validation-for="CampeonatoId" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TimeCasaId" class="form-label"></label>
+                        <select asp-for="TimeCasaId" class="form-select" asp-items="ViewBag.TimeCasaId">
+                            <option value="">Selecione...</option>
+                        </select>
+                        <span asp-validation-for="TimeCasaId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="TimeVisitanteId" class="form-label"></label>
+                        <select asp-for="TimeVisitanteId" class="form-select" asp-items="ViewBag.TimeVisitanteId">
+                            <option value="">Selecione...</option>
+                        </select>
+                        <span asp-validation-for="TimeVisitanteId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DataJogo" class="form-label"></label>
+                    <input asp-for="DataJogo" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="DataJogo" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Fase" class="form-label"></label>
+                        <input asp-for="Fase" class="form-control" placeholder="Ex: Fase de Grupos" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Grupo" class="form-label"></label>
+                        <input asp-for="Grupo" class="form-control" placeholder="Ex: A" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Rodada" class="form-label"></label>
+                        <input asp-for="Rodada" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Status" class="form-label"></label>
+                    <select asp-for="Status" class="form-select">
+                        <option value="Agendado">Agendado</option>
+                        <option value="Em andamento">Em andamento</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="Ativo" class="form-check-input" />
+                    <label asp-for="Ativo" class="form-check-label"></label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">Salvar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,61 @@
+﻿@model FutPlay.Models.Time
+
+@{
+    ViewData["Title"] = "Detalhes do Time/Seleção";
+}
+
+<div class="container mt-4">
+    <h1>Detalhes do Time/Seleção</h1>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nome</dt>
+                <dd class="col-sm-9">@Model.Nome</dd>
+
+                <dt class="col-sm-3">Sigla</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Sigla) ? "-" : Model.Sigla)</dd>
+
+                <dt class="col-sm-3">País</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Pais) ? "-" : Model.Pais)</dd>
+
+                <dt class="col-sm-3">Tipo</dt>
+                <dd class="col-sm-9">@Model.Tipo</dd>
+
+                <dt class="col-sm-3">Escudo</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrWhiteSpace(Model.EscudoUrl))
+                    {
+                        <img src="@Model.EscudoUrl" alt="@Model.Nome" style="max-width: 80px;" />
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    @if (Model.Ativo)
+                    {
+                        <span class="badge bg-success">Ativo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Inativo</span>
+                    }
+                </dd>
+            </dl>
+
+            <div class="d-flex gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                    Editar
+                </a>
+
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

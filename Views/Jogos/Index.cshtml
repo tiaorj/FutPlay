@@ -1,0 +1,87 @@
+﻿@model List<FutPlay.Models.Jogo>
+
+@{
+    ViewData["Title"] = "Jogos";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="mb-1">Jogos</h1>
+            <p class="text-muted mb-0">
+                Cadastro e acompanhamento dos jogos.
+            </p>
+        </div>
+
+        <a asp-action="Create" class="btn btn-success">
+            Novo Jogo
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Campeonato</th>
+                        <th>Jogo</th>
+                        <th>Fase</th>
+                        <th>Status</th>
+                        <th>Placar</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var jogo in Model)
+                    {
+                        <tr>
+                            <td>@jogo.DataJogo.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@jogo.Campeonato?.Nome</td>
+                            <td>
+                                <strong>@jogo.TimeCasa?.Nome</strong>
+                                x
+                                <strong>@jogo.TimeVisitante?.Nome</strong>
+                            </td>
+                            <td>
+                                @(string.IsNullOrWhiteSpace(jogo.Fase) ? "-" : jogo.Fase)
+                                @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                                {
+                                    <span> / Grupo @jogo.Grupo</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">@jogo.Status</span>
+                            </td>
+                            <td>
+                                @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
+                                {
+                                    <strong>@jogo.GolsCasa x @jogo.GolsVisitante</strong>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@jogo.Id" class="btn btn-outline-primary btn-sm">
+                                    Detalhes
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@jogo.Id" class="btn btn-outline-success btn-sm">
+                                    Editar
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info mb-0">
+                    Nenhum jogo cadastrado ainda.
+                </div>
+            }
+        </div>
+    </div>
+</div>
