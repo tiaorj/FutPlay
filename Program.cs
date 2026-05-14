@@ -22,6 +22,11 @@ builder.Services.Configure<ApiFootballOptions>(
     builder.Configuration.GetSection("ApiFootball"));
 
 builder.Services.AddHttpClient<FootballApiService>();
+builder.Services.AddScoped<ImportacaoCampeonatoService>();
+builder.Services.AddScoped<ImportacaoJogosService>();
+builder.Services.AddScoped<CampeonatoSincronizacaoService>();
+builder.Services.AddScoped<ClassificacaoService>();
+builder.Services.AddScoped<PontuacaoService>();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {

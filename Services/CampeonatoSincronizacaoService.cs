@@ -1,0 +1,204 @@
+using FutPlay.Data;
+using FutPlay.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+
+namespace FutPlay.Services
+{
+    public class CampeonatoSincronizacaoService
+    {
+        private readonly FootballApiService _footballApiService;
+        private readonly AppDbContext _context;
+        private readonly ClassificacaoService _classificacaoService;
+        private readonly PontuacaoService _pontuacaoService;
+
+        public CampeonatoSincronizacaoService(
+            FootballApiService footballApiService,
+            AppDbContext context,
+            ClassificacaoService classificacaoService,
+            PontuacaoService pontuacaoService)
+        {
+            _footballApiService = footballApiService;
+            _context = context;
+            _classificacaoService = classificacaoService;
+            _pontuacaoService = pontuacaoService;
+        }
+
+        public async Task<CampeonatoSincronizacaoResultado> AtualizarResultadosAsync(int campeonatoId)
+        {
+            var campeonato = await _context.Campeonatos
+                .FirstOrDefaultAsync(c => c.Id == campeonatoId);
+
+            if (campeonato == null)
+            {
+                return CampeonatoSincronizacaoResultado.Falha("Campeonato não encontrado.");
+            }
+
+            if (!campeonato.ApiLeagueId.HasValue)
+            {
+                return CampeonatoSincronizacaoResultado.Falha("Este campeonato não possui ID da API.");
+            }
+
+            try
+            {
+                int jogosAtualizados = await AtualizarResultadosCampeonatoAsync(campeonato);
+
+                return CampeonatoSincronizacaoResultado.Ok(
+                    $"Resultados atualizados com sucesso. Jogos atualizados: {jogosAtualizados}.",
+                    campeonato.Id,
+                    jogosAtualizados
+                );
+            }
+            catch (Exception ex)
+            {
+                return CampeonatoSincronizacaoResultado.Falha($"Erro ao atualizar resultados: {ex.Message}");
+            }
+        }
+
+        public async Task<CampeonatoSincronizacaoResultado> SincronizarCampeonatoAsync(int campeonatoId)
+        {
+            var campeonato = await _context.Campeonatos
+                .FirstOrDefaultAsync(c => c.Id == campeonatoId);
+
+            if (campeonato == null)
+            {
+                return CampeonatoSincronizacaoResultado.Falha("Campeonato não encontrado.");
+            }
+
+            if (!campeonato.ApiLeagueId.HasValue)
+            {
+                return CampeonatoSincronizacaoResultado.Falha("Este campeonato não possui ID da API.");
+            }
+
+            try
+            {
+                int jogosAtualizados = await AtualizarResultadosCampeonatoAsync(campeonato);
+                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
+                await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+
+                return CampeonatoSincronizacaoResultado.Ok(
+                    $"Sincronização concluída. Jogos atualizados: {jogosAtualizados}. Classificação e palpites recalculados.",
+                    campeonato.Id,
+                    jogosAtualizados,
+                    redirecionarParaPortal: true
+                );
+            }
+            catch (Exception ex)
+            {
+                return CampeonatoSincronizacaoResultado.Falha(
+                    $"Erro ao sincronizar campeonato: {ex.Message}",
+                    campeonato.Id,
+                    redirecionarParaPortal: true
+                );
+            }
+        }
+
+        private async Task<int> AtualizarResultadosCampeonatoAsync(Campeonato campeonato)
+        {
+            using var resultado = await _footballApiService.BuscarJogosAsync(
+                campeonato.ApiLeagueId!.Value,
+                campeonato.Ano
+            );
+
+            int jogosAtualizados = 0;
+
+            if (resultado.RootElement.TryGetProperty("response", out var response))
+            {
+                foreach (var item in response.EnumerateArray())
+                {
+                    var fixture = item.GetProperty("fixture");
+                    var goals = item.GetProperty("goals");
+
+                    int apiFixtureId = fixture.GetProperty("id").GetInt32();
+
+                    var jogo = await _context.Jogos
+                        .FirstOrDefaultAsync(j => j.ApiFixtureId == apiFixtureId);
+
+                    if (jogo == null)
+                    {
+                        continue;
+                    }
+
+                    DateTime dataJogo = fixture.GetProperty("date").GetDateTime();
+
+                    string statusApi = fixture
+                        .GetProperty("status")
+                        .GetProperty("short")
+                        .GetString() ?? "";
+
+                    string status = FootballApiStatusMapper.ConverterStatusJogo(statusApi);
+
+                    int? golsCasa = null;
+                    int? golsVisitante = null;
+
+                    if (goals.TryGetProperty("home", out var golsCasaElement) &&
+                        golsCasaElement.ValueKind != JsonValueKind.Null)
+                    {
+                        golsCasa = golsCasaElement.GetInt32();
+                    }
+
+                    if (goals.TryGetProperty("away", out var golsVisitanteElement) &&
+                        golsVisitanteElement.ValueKind != JsonValueKind.Null)
+                    {
+                        golsVisitante = golsVisitanteElement.GetInt32();
+                    }
+
+                    jogo.DataJogo = dataJogo;
+                    jogo.Status = status;
+                    jogo.GolsCasa = golsCasa;
+                    jogo.GolsVisitante = golsVisitante;
+
+                    _context.Jogos.Update(jogo);
+                    jogosAtualizados++;
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return jogosAtualizados;
+        }
+    }
+
+    public class CampeonatoSincronizacaoResultado
+    {
+        public bool Sucesso { get; set; }
+
+        public string Mensagem { get; set; } = string.Empty;
+
+        public int? CampeonatoId { get; set; }
+
+        public int JogosAtualizados { get; set; }
+
+        public bool RedirecionarParaPortal { get; set; }
+
+        public static CampeonatoSincronizacaoResultado Ok(
+            string mensagem,
+            int campeonatoId,
+            int jogosAtualizados,
+            bool redirecionarParaPortal = false)
+        {
+            return new CampeonatoSincronizacaoResultado
+            {
+                Sucesso = true,
+                Mensagem = mensagem,
+                CampeonatoId = campeonatoId,
+                JogosAtualizados = jogosAtualizados,
+                RedirecionarParaPortal = redirecionarParaPortal
+            };
+        }
+
+        public static CampeonatoSincronizacaoResultado Falha(
+            string mensagem,
+            int? campeonatoId = null,
+            bool redirecionarParaPortal = false)
+        {
+            return new CampeonatoSincronizacaoResultado
+            {
+                Sucesso = false,
+                Mensagem = mensagem,
+                CampeonatoId = campeonatoId,
+                RedirecionarParaPortal = redirecionarParaPortal
+            };
+        }
+    }
+}
