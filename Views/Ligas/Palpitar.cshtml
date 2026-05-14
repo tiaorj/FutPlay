@@ -34,7 +34,10 @@
 
                 <div class="mb-3">
                     <label asp-for="LigaParticipanteId" class="form-label"></label>
-                    <select asp-for="LigaParticipanteId" class="form-select" asp-items="Model.Participantes">
+                    <select asp-for="LigaParticipanteId"
+                            class="form-select"
+                            asp-items="Model.Participantes"
+                            onchange="carregarParticipante(this.value)">
                         <option value="">Selecione o participante...</option>
                     </select>
                     <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
@@ -146,4 +149,12 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        function carregarParticipante(participanteId) {
+            if (participanteId) {
+                window.location.href = '@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })' + '?participanteId=' + participanteId;
+            }
+        }
+    </script>
 }

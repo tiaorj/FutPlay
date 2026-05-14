@@ -1,3 +1,5 @@
+using FutPlay.Models;
+
 namespace FutPlay.Models;
 
 public class ErrorViewModel

@@ -27,7 +27,7 @@ namespace FutPlay.Controllers
             return View(ligas);
         }
 
-        public async Task<IActionResult> Palpitar(int? id)
+        public async Task<IActionResult> Palpitar(int? id, int? participanteId)
         {
             if (id == null)
             {
@@ -43,7 +43,12 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
-            var viewModel = await MontarViewModelPalpitar(liga.Id);
+            var model = new PalpitarLigaViewModel
+            {
+                LigaParticipanteId = participanteId ?? 0
+            };
+
+            var viewModel = await MontarViewModelPalpitar(liga.Id, model);
 
             return View(viewModel);
         }
@@ -130,7 +135,11 @@ namespace FutPlay.Controllers
 
             TempData["Sucesso"] = "Palpites salvos com sucesso.";
 
-            return RedirectToAction(nameof(Palpitar), new { id = model.LigaId });
+            return RedirectToAction(nameof(Palpitar), new
+            {
+                id = model.LigaId,
+                participanteId = model.LigaParticipanteId
+            });
         }
 
         private async Task<PalpitarLigaViewModel> MontarViewModelPalpitar(

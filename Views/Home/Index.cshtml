@@ -1,15 +1,201 @@
-﻿@{
-    ViewData["Title"] = "FutPlay";
+﻿@model FutPlay.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center mt-5">
-    <h1 class="display-4 fw-bold">FutPlay</h1>
+<div class="container mt-4">
+    <div class="mb-4">
+        <h1 class="mb-1">FutPlay</h1>
+        <p class="text-muted mb-0">
+            Dashboard geral do sistema de campeonatos, ligas, palpites e rankings.
+        </p>
+    </div>
 
-    <p class="lead mt-3">
-        Acompanhe campeonatos, jogos, palpites e rankings de futebol.
-    </p>
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Campeonatos</h6>
+                    <h2 class="fw-bold">@Model.TotalCampeonatos</h2>
+                    <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        Ver Campeonatos
+                    </a>
+                </div>
+            </div>
+        </div>
 
-    <a class="btn btn-success btn-lg mt-3" href="/Campeonatos">
-        Ver Campeonatos
-    </a>
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Times/Seleções</h6>
+                    <h2 class="fw-bold">@Model.TotalTimes</h2>
+                    <a asp-controller="Times" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        Ver Times
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Jogos</h6>
+                    <h2 class="fw-bold">@Model.TotalJogos</h2>
+                    <small class="text-muted">
+                        @Model.TotalJogosAgendados agendados / @Model.TotalJogosFinalizados finalizados
+                    </small>
+                    <div class="mt-2">
+                        <a asp-controller="Jogos" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Ver Jogos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Ligas</h6>
+                    <h2 class="fw-bold">@Model.TotalLigas</h2>
+                    <a asp-controller="Ligas" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                        Ver Ligas
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Participantes</h6>
+                    <h2 class="fw-bold">@Model.TotalParticipantes</h2>
+                    <a asp-controller="LigaParticipantes" asp-action="Index" class="btn btn-sm btn-outline-success">
+                        Ver Participantes
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Palpites</h6>
+                    <h2 class="fw-bold">@Model.TotalPalpites</h2>
+                    <a asp-controller="Palpites" asp-action="Index" class="btn btn-sm btn-outline-success">
+                        Ver Palpites
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h6 class="text-muted">Status do MVP</h6>
+                    <h2 class="fw-bold">OK</h2>
+                    <small class="text-muted">
+                        Base inicial do FutPlay funcionando.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-lg-7 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <strong>Próximos Jogos</strong>
+                </div>
+
+                <div class="card-body table-responsive">
+                    @if (Model.ProximosJogos.Any())
+                    {
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Campeonato</th>
+                                    <th>Jogo</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var jogo in Model.ProximosJogos)
+                                {
+                                    <tr>
+                                        <td>@jogo.DataJogo.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@jogo.Campeonato?.Nome</td>
+                                        <td>
+                                            <strong>@jogo.TimeCasa?.Nome</strong>
+                                            x
+                                            <strong>@jogo.TimeVisitante?.Nome</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">@jogo.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            Nenhum jogo futuro cadastrado.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-3">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white">
+                    <strong>Top 5 Participantes</strong>
+                </div>
+
+                <div class="card-body table-responsive">
+                    @if (Model.TopParticipantes.Any())
+                    {
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Participante</th>
+                                    <th>Liga</th>
+                                    <th>Pontos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var participante in Model.TopParticipantes)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@participante.Nome</strong>
+                                        </td>
+                                        <td>@participante.Liga</td>
+                                        <td>
+                                            <span class="badge bg-dark">
+                                                @participante.Pontos
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            Nenhum participante cadastrado.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
