@@ -1,65 +1,99 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - FutPlay</title>
-    <script type="importmap"></script>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FutPlay.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FutPlay</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+        <nav class="navbar navbar-expand-lg navbar-dark futplay-navbar shadow-sm">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                    ⚽ FutPlay
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                        aria-controls="menuPrincipal" aria-expanded="false" aria-label="Alternar navegação">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+
+                <div class="collapse navbar-collapse" id="menuPrincipal">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Dashboard</a>
+                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                Dashboard
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Times" asp-action="Index">Times/Seleções</a>
+                            <a class="nav-link" asp-controller="Campeonatos" asp-action="Index">
+                                Campeonatos
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Campeonatos" asp-action="Index">Campeonatos</a>
+                            <a class="nav-link" asp-controller="Times" asp-action="Index">
+                                Times
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Jogos" asp-action="Index">Jogos</a>
+                            <a class="nav-link" asp-controller="Jogos" asp-action="Index">
+                                Jogos
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Ligas" asp-action="Index">Ligas</a>
+                            <a class="nav-link" asp-controller="Ligas" asp-action="Index">
+                                Ligas
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="LigaParticipantes" asp-action="Index">Participantes</a>
+                            <a class="nav-link" asp-controller="LigaParticipantes" asp-action="Index">
+                                Participantes
+                            </a>
                         </li>
+
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Palpites" asp-action="Index">Palpites</a>
+                            <a class="nav-link" asp-controller="Palpites" asp-action="Index">
+                                Palpites
+                            </a>
                         </li>
+
                     </ul>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FutPlay - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <main class="futplay-main">
+        @RenderBody()
+    </main>
+
+    <footer class="futplay-footer mt-5">
+        <div class="container py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <span>
+                &copy; @DateTime.Now.Year - FutPlay
+            </span>
+
+            <span class="text-muted small">
+                Sistema de campeonatos, ligas, palpites e rankings de futebol.
+            </span>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

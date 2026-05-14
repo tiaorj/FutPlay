@@ -6,62 +6,82 @@
 
 <div class="container mt-4">
     <div class="mb-4">
-        <h1 class="mb-1">FutPlay</h1>
-        <p class="text-muted mb-0">
-            Dashboard geral do sistema de campeonatos, ligas, palpites e rankings.
+        <h1 class="futplay-page-title mb-1">Dashboard FutPlay</h1>
+        <p class="futplay-subtitle mb-0">
+            Visão geral dos campeonatos, jogos, ligas, palpites e rankings.
         </p>
     </div>
 
     <div class="row">
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Campeonatos</h6>
-                    <h2 class="fw-bold">@Model.TotalCampeonatos</h2>
-                    <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                        Ver Campeonatos
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Times/Seleções</h6>
-                    <h2 class="fw-bold">@Model.TotalTimes</h2>
-                    <a asp-controller="Times" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                        Ver Times
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Jogos</h6>
-                    <h2 class="fw-bold">@Model.TotalJogos</h2>
-                    <small class="text-muted">
-                        @Model.TotalJogosAgendados agendados / @Model.TotalJogosFinalizados finalizados
-                    </small>
-                    <div class="mt-2">
-                        <a asp-controller="Jogos" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                            Ver Jogos
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Campeonatos</h6>
+                        <h2 class="fw-bold">@Model.TotalCampeonatos</h2>
+                        <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Ver Campeonatos
                         </a>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        🏆
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Ligas</h6>
-                    <h2 class="fw-bold">@Model.TotalLigas</h2>
-                    <a asp-controller="Ligas" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                        Ver Ligas
-                    </a>
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Times/Seleções</h6>
+                        <h2 class="fw-bold">@Model.TotalTimes</h2>
+                        <a asp-controller="Times" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Ver Times
+                        </a>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        🛡️
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Jogos</h6>
+                        <h2 class="fw-bold">@Model.TotalJogos</h2>
+                        <small class="text-muted">
+                            @Model.TotalJogosAgendados agendados / @Model.TotalJogosFinalizados finalizados
+                        </small>
+                        <div class="mt-2">
+                            <a asp-controller="Jogos" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                                Ver Jogos
+                            </a>
+                        </div>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        ⚽
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Ligas</h6>
+                        <h2 class="fw-bold">@Model.TotalLigas</h2>
+                        <a asp-controller="Ligas" asp-action="Index" class="btn btn-sm btn-outline-primary">
+                            Ver Ligas
+                        </a>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        👥
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,37 +89,52 @@
 
     <div class="row">
         <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Participantes</h6>
-                    <h2 class="fw-bold">@Model.TotalParticipantes</h2>
-                    <a asp-controller="LigaParticipantes" asp-action="Index" class="btn btn-sm btn-outline-success">
-                        Ver Participantes
-                    </a>
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Participantes</h6>
+                        <h2 class="fw-bold">@Model.TotalParticipantes</h2>
+                        <a asp-controller="LigaParticipantes" asp-action="Index" class="btn btn-sm btn-outline-success">
+                            Ver Participantes
+                        </a>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        🙋
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Palpites</h6>
-                    <h2 class="fw-bold">@Model.TotalPalpites</h2>
-                    <a asp-controller="Palpites" asp-action="Index" class="btn btn-sm btn-outline-success">
-                        Ver Palpites
-                    </a>
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Palpites</h6>
+                        <h2 class="fw-bold">@Model.TotalPalpites</h2>
+                        <a asp-controller="Palpites" asp-action="Index" class="btn btn-sm btn-outline-success">
+                            Ver Palpites
+                        </a>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        🎯
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Status do MVP</h6>
-                    <h2 class="fw-bold">OK</h2>
-                    <small class="text-muted">
-                        Base inicial do FutPlay funcionando.
-                    </small>
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-muted">Status do MVP</h6>
+                        <h2 class="fw-bold">OK</h2>
+                        <small class="text-muted">
+                            Base inicial funcionando.
+                        </small>
+                    </div>
+                    <div class="futplay-stat-icon">
+                        ✅
+                    </div>
                 </div>
             </div>
         </div>
@@ -107,7 +142,7 @@
 
     <div class="row mt-2">
         <div class="col-lg-7 mb-3">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm futplay-section-card h-100">
                 <div class="card-header bg-white">
                     <strong>Próximos Jogos</strong>
                 </div>
@@ -145,7 +180,7 @@
                     }
                     else
                     {
-                        <div class="alert alert-info mb-0">
+                        <div class="futplay-empty">
                             Nenhum jogo futuro cadastrado.
                         </div>
                     }
@@ -154,7 +189,7 @@
         </div>
 
         <div class="col-lg-5 mb-3">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm futplay-section-card h-100">
                 <div class="card-header bg-white">
                     <strong>Top 5 Participantes</strong>
                 </div>
@@ -190,7 +225,7 @@
                     }
                     else
                     {
-                        <div class="alert alert-info mb-0">
+                        <div class="futplay-empty">
                             Nenhum participante cadastrado.
                         </div>
                     }
