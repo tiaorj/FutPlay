@@ -13,7 +13,13 @@ namespace FutPlay.ViewModels
         public int TotalParticipantes { get; set; }
         public int TotalPalpites { get; set; }
 
+        public List<Campeonato> CampeonatosAtivos { get; set; } = new();
+
         public List<Jogo> ProximosJogos { get; set; } = new();
+
+        public List<Jogo> UltimosResultados { get; set; } = new();
+
+        public List<Liga> LigasPublicas { get; set; } = new();
 
         public List<DashboardRankingViewModel> TopParticipantes { get; set; } = new();
     }

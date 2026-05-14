@@ -26,5 +26,7 @@ namespace FutPlay.Models
         public DateTime? DataFim { get; set; }
 
         public bool Ativo { get; set; } = true;
+
+        public int? ApiLeagueId { get; set; }
     }
 }

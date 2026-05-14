@@ -13,12 +13,27 @@
             </p>
         </div>
 
-        <div class="mt-3 mt-md-0">
+        <div class="mt-3 mt-md-0 futplay-actions">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                <a asp-action="RecalcularClassificacao"
+                   asp-route-id="@Model.Campeonato.Id"
+                   class="btn btn-success">
+                    Recalcular Classificação
+                </a>
+            }
+
             <a asp-action="Index" class="btn btn-outline-secondary">
                 Voltar
             </a>
         </div>
     </div>
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Sucesso"]
+        </div>
+    }
 
     @if (!Model.Classificacoes.Any())
     {

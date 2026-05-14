@@ -31,13 +31,41 @@ namespace FutPlay.Controllers
                 TotalParticipantes = await _context.LigaParticipantes.CountAsync(),
                 TotalPalpites = await _context.Palpites.CountAsync(),
 
+                CampeonatosAtivos = await _context.Campeonatos
+                    .Where(c => c.Ativo)
+                    .OrderByDescending(c => c.Ano)
+                    .ThenBy(c => c.Nome)
+                    .Take(6)
+                    .ToListAsync(),
+
                 ProximosJogos = await _context.Jogos
                     .Include(j => j.Campeonato)
                     .Include(j => j.TimeCasa)
                     .Include(j => j.TimeVisitante)
-                    .Where(j => j.Ativo && j.DataJogo >= DateTime.Now)
+                    .Where(j =>
+                        j.Ativo &&
+                        j.DataJogo >= DateTime.Now &&
+                        j.Status != "Finalizado")
                     .OrderBy(j => j.DataJogo)
-                    .Take(5)
+                    .Take(6)
+                    .ToListAsync(),
+
+                UltimosResultados = await _context.Jogos
+                    .Include(j => j.Campeonato)
+                    .Include(j => j.TimeCasa)
+                    .Include(j => j.TimeVisitante)
+                    .Where(j =>
+                        j.Ativo &&
+                        j.Status == "Finalizado")
+                    .OrderByDescending(j => j.DataJogo)
+                    .Take(6)
+                    .ToListAsync(),
+
+                LigasPublicas = await _context.Ligas
+                    .Include(l => l.Campeonato)
+                    .Where(l => l.Ativo && l.Publica)
+                    .OrderBy(l => l.Nome)
+                    .Take(6)
                     .ToListAsync(),
 
                 TopParticipantes = await _context.LigaParticipantes

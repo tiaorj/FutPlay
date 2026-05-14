@@ -1,203 +1,282 @@
 ﻿@model FutPlay.ViewModels.DashboardViewModel
 
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Portal de Futebol";
 }
 
 <div class="container mt-4">
-    <div class="mb-4">
-        <h1 class="futplay-page-title mb-1">Dashboard FutPlay</h1>
-        <p class="futplay-subtitle mb-0">
-            Visão geral dos campeonatos, jogos, ligas, palpites e rankings.
-        </p>
+
+    <div class="card shadow-sm border-0 mb-4" style="background: linear-gradient(90deg, #064e3b, #047857); color: white;">
+        <div class="card-body p-4 p-md-5">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="fw-bold mb-2">FutPlay</h1>
+
+                    <p class="lead mb-3">
+                        Acompanhe campeonatos, jogos, classificações, ligas, palpites e rankings de futebol.
+                    </p>
+
+                    <div class="d-flex flex-column flex-md-row gap-2">
+                        <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-light">
+                            Ver Campeonatos
+                        </a>
+
+                        <a asp-controller="Jogos" asp-action="Index" class="btn btn-outline-light">
+                            Ver Jogos
+                        </a>
+
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <a asp-controller="Ligas" asp-action="Index" class="btn btn-warning">
+                                Minhas Ligas
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-warning">
+                                Criar Conta
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-md-4 text-center mt-4 mt-md-0">
+                    <div style="font-size: 5rem;">⚽</div>
+                    <div class="small">
+                        Portal + Ligas + Palpites
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row">
+    @if (User.Identity == null || !User.Identity.IsAuthenticated)
+    {
+        <div class="alert alert-success shadow-sm">
+            <strong>Área pública liberada.</strong>
+            Você pode acompanhar campeonatos, jogos e classificações sem login.
+            Para criar ligas e enviar palpites, entre ou crie uma conta.
+        </div>
+    }
+
+    <div class="row mb-3">
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
+                <div class="card-body futplay-card-content">
                     <div>
                         <h6 class="text-muted">Campeonatos</h6>
                         <h2 class="fw-bold">@Model.TotalCampeonatos</h2>
-                        <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                            Ver Campeonatos
-                        </a>
                     </div>
-                    <div class="futplay-stat-icon">
-                        🏆
-                    </div>
+                    <div class="futplay-stat-icon">🏆</div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="text-muted">Times/Seleções</h6>
-                        <h2 class="fw-bold">@Model.TotalTimes</h2>
-                        <a asp-controller="Times" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                            Ver Times
-                        </a>
-                    </div>
-                    <div class="futplay-stat-icon">
-                        🛡️
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3 mb-3">
-            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
+                <div class="card-body futplay-card-content">
                     <div>
                         <h6 class="text-muted">Jogos</h6>
                         <h2 class="fw-bold">@Model.TotalJogos</h2>
-                        <small class="text-muted">
-                            @Model.TotalJogosAgendados agendados / @Model.TotalJogosFinalizados finalizados
-                        </small>
-                        <div class="mt-2">
-                            <a asp-controller="Jogos" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                                Ver Jogos
-                            </a>
-                        </div>
                     </div>
-                    <div class="futplay-stat-icon">
-                        ⚽
-                    </div>
+                    <div class="futplay-stat-icon">⚽</div>
                 </div>
             </div>
         </div>
 
         <div class="col-md-3 mb-3">
             <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
+                <div class="card-body futplay-card-content">
                     <div>
                         <h6 class="text-muted">Ligas</h6>
                         <h2 class="fw-bold">@Model.TotalLigas</h2>
-                        <a asp-controller="Ligas" asp-action="Index" class="btn btn-sm btn-outline-primary">
-                            Ver Ligas
-                        </a>
                     </div>
-                    <div class="futplay-stat-icon">
-                        👥
+                    <div class="futplay-stat-icon">👥</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
+                <div class="card-body futplay-card-content">
+                    <div>
+                        <h6 class="text-muted">Palpites</h6>
+                        <h2 class="fw-bold">@Model.TotalPalpites</h2>
                     </div>
+                    <div class="futplay-stat-icon">🎯</div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="text-muted">Participantes</h6>
-                        <h2 class="fw-bold">@Model.TotalParticipantes</h2>
-                        <a asp-controller="LigaParticipantes" asp-action="Index" class="btn btn-sm btn-outline-success">
-                            Ver Participantes
-                        </a>
-                    </div>
-                    <div class="futplay-stat-icon">
-                        🙋
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="text-muted">Palpites</h6>
-                        <h2 class="fw-bold">@Model.TotalPalpites</h2>
-                        <a asp-controller="Palpites" asp-action="Index" class="btn btn-sm btn-outline-success">
-                            Ver Palpites
-                        </a>
-                    </div>
-                    <div class="futplay-stat-icon">
-                        🎯
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                <div class="card-body d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="text-muted">Status do MVP</h6>
-                        <h2 class="fw-bold">OK</h2>
-                        <small class="text-muted">
-                            Base inicial funcionando.
-                        </small>
-                    </div>
-                    <div class="futplay-stat-icon">
-                        ✅
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mt-2">
-        <div class="col-lg-7 mb-3">
+        <div class="col-lg-7 mb-4">
             <div class="card shadow-sm futplay-section-card h-100">
-                <div class="card-header bg-white">
-                    <strong>Próximos Jogos</strong>
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <strong>Campeonatos em destaque</strong>
+
+                    <a asp-controller="Campeonatos" asp-action="Index" class="btn btn-sm btn-outline-success">
+                        Ver todos
+                    </a>
                 </div>
 
-                <div class="card-body table-responsive">
-                    @if (Model.ProximosJogos.Any())
+                <div class="card-body">
+                    @if (!Model.CampeonatosAtivos.Any())
                     {
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Campeonato</th>
-                                    <th>Jogo</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var jogo in Model.ProximosJogos)
-                                {
-                                    <tr>
-                                        <td>@jogo.DataJogo.ToString("dd/MM/yyyy HH:mm")</td>
-                                        <td>@jogo.Campeonato?.Nome</td>
-                                        <td>
-                                            <strong>@jogo.TimeCasa?.Nome</strong>
-                                            x
-                                            <strong>@jogo.TimeVisitante?.Nome</strong>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary">@jogo.Status</span>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                        <div class="futplay-empty">
+                            Nenhum campeonato ativo cadastrado.
+                        </div>
                     }
                     else
+                    {
+                        <div class="row">
+                            @foreach (var campeonato in Model.CampeonatosAtivos)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3 h-100">
+                                        <h5 class="mb-1">
+                                            @campeonato.Nome @campeonato.Ano
+                                        </h5>
+
+                                        <p class="text-muted small mb-2">
+                                            @campeonato.Tipo
+                                        </p>
+
+                                        <div class="futplay-actions">
+                                            <a asp-controller="Campeonatos"
+                                               asp-action="Portal"
+                                               asp-route-id="@campeonato.Id"
+                                               class="btn btn-sm btn-success">
+                                                Portal
+                                            </a>
+
+                                            <a asp-controller="Campeonatos"
+                                               asp-action="Classificacao"
+                                               asp-route-id="@campeonato.Id"
+                                               class="btn btn-sm btn-outline-dark">
+                                                Classificação
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm futplay-section-card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <strong>Próximos jogos</strong>
+
+                    <a asp-controller="Jogos" asp-action="Index" class="btn btn-sm btn-outline-success">
+                        Ver jogos
+                    </a>
+                </div>
+
+                <div class="card-body">
+                    @if (!Model.ProximosJogos.Any())
                     {
                         <div class="futplay-empty">
                             Nenhum jogo futuro cadastrado.
                         </div>
                     }
+                    else
+                    {
+                        @foreach (var jogo in Model.ProximosJogos)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <small class="text-muted">
+                                    @jogo.DataJogo.ToString("dd/MM/yyyy HH:mm") - @jogo.Campeonato?.Nome
+                                </small>
+
+                                <div class="fw-bold">
+                                    @jogo.TimeCasa?.Nome
+                                    <span class="text-muted">x</span>
+                                    @jogo.TimeVisitante?.Nome
+                                </div>
+
+                                <span class="badge bg-primary">@jogo.Status</span>
+
+                                @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                                {
+                                    <span class="badge bg-light text-dark border">
+                                        Grupo @jogo.Grupo
+                                    </span>
+                                }
+                            </div>
+                        }
+                    }
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-5 mb-3">
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-7 mb-4">
             <div class="card shadow-sm futplay-section-card h-100">
                 <div class="card-header bg-white">
-                    <strong>Top 5 Participantes</strong>
+                    <strong>Últimos resultados</strong>
+                </div>
+
+                <div class="card-body">
+                    @if (!Model.UltimosResultados.Any())
+                    {
+                        <div class="futplay-empty">
+                            Nenhum resultado cadastrado.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var jogo in Model.UltimosResultados)
+                        {
+                            <div class="border-bottom pb-3 mb-3">
+                                <small class="text-muted">
+                                    @jogo.DataJogo.ToString("dd/MM/yyyy HH:mm") - @jogo.Campeonato?.Nome
+                                </small>
+
+                                <div class="fw-bold">
+                                    @jogo.TimeCasa?.Nome
+                                    <span class="badge bg-dark mx-1">
+                                        @jogo.GolsCasa x @jogo.GolsVisitante
+                                    </span>
+                                    @jogo.TimeVisitante?.Nome
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                                {
+                                    <span class="badge bg-light text-dark border">
+                                        Grupo @jogo.Grupo
+                                    </span>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm futplay-section-card h-100">
+                <div class="card-header bg-white">
+                    <strong>Top participantes</strong>
                 </div>
 
                 <div class="card-body table-responsive">
-                    @if (Model.TopParticipantes.Any())
+                    @if (!Model.TopParticipantes.Any())
                     {
-                        <table class="table table-hover align-middle mb-0">
+                        <div class="futplay-empty">
+                            Nenhum participante pontuando ainda.
+                        </div>
+                    }
+                    else
+                    {
+                        <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>Participante</th>
@@ -209,28 +288,75 @@
                                 @foreach (var participante in Model.TopParticipantes)
                                 {
                                     <tr>
-                                        <td>
-                                            <strong>@participante.Nome</strong>
-                                        </td>
+                                        <td><strong>@participante.Nome</strong></td>
                                         <td>@participante.Liga</td>
                                         <td>
-                                            <span class="badge bg-dark">
-                                                @participante.Pontos
-                                            </span>
+                                            <span class="badge bg-dark">@participante.Pontos</span>
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     }
-                    else
-                    {
-                        <div class="futplay-empty">
-                            Nenhum participante cadastrado.
-                        </div>
-                    }
                 </div>
             </div>
         </div>
+
     </div>
+
+    <div class="card shadow-sm futplay-section-card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <strong>Ligas públicas</strong>
+
+            <a asp-controller="Ligas" asp-action="Index" class="btn btn-sm btn-outline-success">
+                Ver ligas
+            </a>
+        </div>
+
+        <div class="card-body">
+            @if (!Model.LigasPublicas.Any())
+            {
+                <div class="futplay-empty">
+                    Nenhuma liga pública cadastrada ainda.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var liga in Model.LigasPublicas)
+                    {
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3 h-100">
+                                <h5 class="mb-1">@liga.Nome</h5>
+
+                                <p class="text-muted small mb-2">
+                                    @liga.Campeonato?.Nome
+                                </p>
+
+                                <div class="futplay-actions">
+                                    <a asp-controller="Ligas"
+                                       asp-action="Ranking"
+                                       asp-route-id="@liga.Id"
+                                       class="btn btn-sm btn-outline-dark">
+                                        Ranking
+                                    </a>
+
+                                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                    {
+                                        <a asp-controller="Ligas"
+                                           asp-action="Palpitar"
+                                           asp-route-id="@liga.Id"
+                                           class="btn btn-sm btn-success">
+                                            Palpitar
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
 </div>

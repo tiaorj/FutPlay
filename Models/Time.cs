@@ -25,5 +25,7 @@ namespace FutPlay.Models
         public string? EscudoUrl { get; set; }
 
         public bool Ativo { get; set; } = true;
+
+        public int? ApiTeamId { get; set; }
     }
 }

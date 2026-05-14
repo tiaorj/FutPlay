@@ -1,0 +1,150 @@
+﻿@model List<FutPlay.ViewModels.ApiLigaViewModel>
+
+@{
+    ViewData["Title"] = "Importações";
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <h1 class="futplay-page-title mb-1">Importações</h1>
+            <p class="futplay-subtitle mb-0">
+                Integração com API de futebol para importar campeonatos para o FutPlay.
+            </p>
+        </div>
+    </div>
+
+    @if (ViewBag.Erro != null)
+    {
+        <div class="alert alert-danger">
+            @ViewBag.Erro
+        </div>
+    }
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Sucesso"]
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-warning">
+            @TempData["Erro"]
+        </div>
+    }
+
+    <div class="card shadow-sm futplay-section-card mb-4">
+        <div class="card-header bg-white">
+            <strong>Buscar ligas/campeonatos na API</strong>
+        </div>
+
+        <div class="card-body">
+            <form asp-action="BuscarLigas" method="post">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">País</label>
+                        <input name="pais" class="form-control" value="@(ViewBag.Pais ?? "Brazil")" />
+                        <small class="text-muted">
+                            Exemplos: Brazil, England, Spain, Germany, World
+                        </small>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Temporada</label>
+                        <input name="temporada" class="form-control" value="@(ViewBag.Temporada ?? 2024)" />
+                    </div>
+
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <div class="card shadow-sm futplay-section-card">
+            <div class="card-header bg-white">
+                <strong>Campeonatos encontrados</strong>
+            </div>
+
+            <div class="card-body table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th>ID API</th>
+                            <th>Nome</th>
+                            <th>País</th>
+                            <th>Tipo</th>
+                            <th>Temporada</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var liga in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(liga.LogoUrl))
+                                    {
+                                        <img src="@liga.LogoUrl" alt="@liga.Nome" style="width: 36px; height: 36px; object-fit: contain;" />
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+
+                                <td>@liga.ApiLeagueId</td>
+                                <td>
+                                    <strong>@liga.Nome</strong>
+                                </td>
+                                <td>@liga.Pais</td>
+                                <td>@liga.Tipo</td>
+                                <td>@liga.Temporada</td>
+                                <td>
+                                    @if (liga.JaImportado)
+                                    {
+                                        <span class="badge bg-success">Importado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Novo</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (!liga.JaImportado)
+                                    {
+                                        <form asp-action="ImportarLiga" method="post">
+                                            <input type="hidden" name="apiLeagueId" value="@liga.ApiLeagueId" />
+                                            <input type="hidden" name="nome" value="@liga.Nome" />
+                                            <input type="hidden" name="tipo" value="@liga.Tipo" />
+                                            <input type="hidden" name="pais" value="@liga.Pais" />
+                                            <input type="hidden" name="temporada" value="@liga.Temporada" />
+
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                Importar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Já importado</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
