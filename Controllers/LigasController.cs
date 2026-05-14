@@ -28,6 +28,7 @@ namespace FutPlay.Controllers
             return View(ligas);
         }
 
+        [Authorize]
         public async Task<IActionResult> Palpitar(int? id, int? participanteId)
         {
             if (id == null)

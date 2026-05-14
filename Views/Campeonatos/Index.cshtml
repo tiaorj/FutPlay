@@ -13,9 +13,12 @@
             </p>
         </div>
 
-        <a asp-action="Create" class="btn btn-success">
-            Novo Campeonato
-        </a>
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a asp-action="Create" class="btn btn-success">
+                Novo Campeonato
+            </a>
+        }
     </div>
 
     <div class="row">
@@ -57,20 +60,23 @@
                             }
                         </p>
 
-                        <div class="d-flex gap-2 mt-3">
+                        <div class="futplay-actions">
                             <a asp-action="Details" asp-route-id="@campeonato.Id" class="btn btn-outline-primary btn-sm">
                                 Detalhes
                             </a>
 
-                            <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">
-                                Editar
-                            </a>
-
-                            @if (campeonato.Ativo)
+                            @if (User.Identity != null && User.Identity.IsAuthenticated)
                             {
-                                <a asp-action="Delete" asp-route-id="@campeonato.Id" class="btn btn-outline-warning btn-sm">
-                                    Inativar
+                                <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">
+                                    Editar
                                 </a>
+
+                                @if (campeonato.Ativo)
+                                {
+                                    <a asp-action="Delete" asp-route-id="@campeonato.Id" class="btn btn-outline-warning btn-sm">
+                                        Inativar
+                                    </a>
+                                }
                             }
                         </div>
                     </div>

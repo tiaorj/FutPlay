@@ -13,9 +13,12 @@
             </p>
         </div>
 
-        <a asp-action="Create" class="btn btn-success">
-            Novo Jogo
-        </a>
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a asp-action="Create" class="btn btn-success">
+                Novo Jogo
+            </a>
+        }
     </div>
 
     <div class="card shadow-sm">
@@ -67,9 +70,13 @@
                                 <a asp-action="Details" asp-route-id="@jogo.Id" class="btn btn-outline-primary btn-sm">
                                     Detalhes
                                 </a>
-                                <a asp-action="Edit" asp-route-id="@jogo.Id" class="btn btn-outline-success btn-sm">
-                                    Editar
-                                </a>
+
+                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@jogo.Id" class="btn btn-outline-success btn-sm">
+                                        Editar
+                                    </a>
+                                }
                             </td>
                         </tr>
                     }
