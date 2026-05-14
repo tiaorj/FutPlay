@@ -17,6 +17,7 @@ namespace FutPlay.Data
         public DbSet<Liga> Ligas { get; set; }
         public DbSet<LigaParticipante> LigaParticipantes { get; set; }
         public DbSet<Palpite> Palpites { get; set; }
+        public DbSet<Classificacao> Classificacoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,19 @@ namespace FutPlay.Data
             modelBuilder.Entity<Liga>().ToTable("FutPlay_Ligas");
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
+            modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
+
+            modelBuilder.Entity<Classificacao>()
+                .HasOne(c => c.Campeonato)
+                .WithMany()
+                .HasForeignKey(c => c.CampeonatoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Classificacao>()
+                .HasOne(c => c.Time)
+                .WithMany()
+                .HasForeignKey(c => c.TimeId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Jogo>()
                 .HasOne(j => j.Campeonato)

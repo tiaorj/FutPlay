@@ -65,6 +65,10 @@
                                 Detalhes
                             </a>
 
+                            <a asp-action="Classificacao" asp-route-id="@campeonato.Id" class="btn btn-outline-dark btn-sm">
+                                Classificação
+                            </a>
+
                             @if (User.Identity != null && User.Identity.IsAuthenticated)
                             {
                                 <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">

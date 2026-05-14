@@ -3,6 +3,7 @@ using FutPlay.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FutPlay.ViewModels;
 
 namespace FutPlay.Controllers
 {
@@ -156,6 +157,37 @@ namespace FutPlay.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Classificacao(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var campeonato = await _context.Campeonatos
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (campeonato == null)
+            {
+                return NotFound();
+            }
+
+            var classificacoes = await _context.Classificacoes
+                .Include(c => c.Time)
+                .Where(c => c.CampeonatoId == id && c.Ativo)
+                .OrderBy(c => c.Grupo)
+                .ThenBy(c => c.Posicao)
+                .ToListAsync();
+
+            var viewModel = new ClassificacaoCampeonatoViewModel
+            {
+                Campeonato = campeonato,
+                Classificacoes = classificacoes
+            };
+
+            return View(viewModel);
         }
 
     }
