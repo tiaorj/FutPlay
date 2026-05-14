@@ -1,11 +1,13 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutPlay.Controllers
 {
+    [Authorize]
     public class PalpitesController : Controller
     {
         private readonly AppDbContext _context;

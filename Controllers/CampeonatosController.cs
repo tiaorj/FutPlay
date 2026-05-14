@@ -1,5 +1,6 @@
 using FutPlay.Data;
 using FutPlay.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,11 +26,13 @@ namespace FutPlay.Controllers
             return View(campeonatos);
         }
 
+        [Authorize]
         public IActionResult Create()
         {
             return View();
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Campeonato campeonato)
@@ -63,6 +66,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,6 +84,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Campeonato campeonato)
@@ -114,6 +119,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
+        [Authorize]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -132,6 +138,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
+        [Authorize]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

@@ -1,5 +1,6 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -27,12 +28,14 @@ namespace FutPlay.Controllers
             return View(jogos);
         }
 
+        [Authorize]
         public async Task<IActionResult> Create()
         {
             await CarregarCombos();
             return View();
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Jogo jogo)
@@ -71,6 +74,7 @@ namespace FutPlay.Controllers
             return View(jogo);
         }
 
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -85,6 +89,7 @@ namespace FutPlay.Controllers
             return View(jogo);
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Jogo jogo)

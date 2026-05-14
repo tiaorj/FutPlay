@@ -1,9 +1,10 @@
 ﻿using FutPlay.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutPlay.Data
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
@@ -28,36 +29,6 @@ namespace FutPlay.Data
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
 
-            modelBuilder.Entity<Palpite>()
-                .HasOne(p => p.Liga)
-                .WithMany()
-                .HasForeignKey(p => p.LigaId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Palpite>()
-                .HasOne(p => p.LigaParticipante)
-                .WithMany()
-                .HasForeignKey(p => p.LigaParticipanteId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Palpite>()
-                .HasOne(p => p.Jogo)
-                .WithMany()
-                .HasForeignKey(p => p.JogoId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<LigaParticipante>()
-                .HasOne(lp => lp.Liga)
-                .WithMany()
-                .HasForeignKey(lp => lp.LigaId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            modelBuilder.Entity<Liga>()
-                .HasOne(l => l.Campeonato)
-                .WithMany()
-                .HasForeignKey(l => l.CampeonatoId)
-                .OnDelete(DeleteBehavior.NoAction);
-
             modelBuilder.Entity<Jogo>()
                 .HasOne(j => j.Campeonato)
                 .WithMany()
@@ -74,6 +45,36 @@ namespace FutPlay.Data
                 .HasOne(j => j.TimeVisitante)
                 .WithMany()
                 .HasForeignKey(j => j.TimeVisitanteId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Liga>()
+                .HasOne(l => l.Campeonato)
+                .WithMany()
+                .HasForeignKey(l => l.CampeonatoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<LigaParticipante>()
+                .HasOne(lp => lp.Liga)
+                .WithMany()
+                .HasForeignKey(lp => lp.LigaId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.Liga)
+                .WithMany()
+                .HasForeignKey(p => p.LigaId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.LigaParticipante)
+                .WithMany()
+                .HasForeignKey(p => p.LigaParticipanteId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Palpite>()
+                .HasOne(p => p.Jogo)
+                .WithMany()
+                .HasForeignKey(p => p.JogoId)
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }

@@ -1,6 +1,7 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
 using FutPlay.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -53,6 +54,7 @@ namespace FutPlay.Controllers
             return View(viewModel);
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Palpitar(PalpitarLigaViewModel model)
@@ -215,6 +217,7 @@ namespace FutPlay.Controllers
             return viewModel;
         }
 
+        [Authorize]
         public async Task<IActionResult> Create()
         {
             await CarregarCampeonatos();
@@ -226,6 +229,7 @@ namespace FutPlay.Controllers
             });
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Liga liga)
@@ -264,6 +268,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
+        [Authorize]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -278,6 +283,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Liga liga)
