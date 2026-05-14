@@ -12,6 +12,7 @@ namespace FutPlay.Controllers
     public class LigasController : Controller
     {
         private readonly AppDbContext _context;
+        private const int MinutosBloqueioPalpite = 30;
 
         public LigasController(AppDbContext context)
         {
@@ -31,7 +32,7 @@ namespace FutPlay.Controllers
         }
 
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
-        public async Task<IActionResult> Palpitar(int? id, int? participanteId)
+        public async Task<IActionResult> Palpitar(int? id, int? participanteId, string? origem)
         {
             if (id == null)
             {
@@ -47,9 +48,47 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
+            bool veioDeMinhasLigas = string.Equals(origem, "minhasligas", StringComparison.OrdinalIgnoreCase);
+
+            if (veioDeMinhasLigas)
+            {
+                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Challenge();
+                }
+
+                var participanteUsuario = await _context.LigaParticipantes
+                    .FirstOrDefaultAsync(p =>
+                        p.LigaId == liga.Id &&
+                        p.UserId == userId &&
+                        p.Ativo);
+
+                if (participanteUsuario == null)
+                {
+                    TempData["Erro"] = "Não encontramos um participante vinculado ao seu usuário nesta liga.";
+                    return RedirectToAction("Index", "MinhasLigas");
+                }
+
+                var modelMinhasLigas = new PalpitarLigaViewModel
+                {
+                    LigaParticipanteId = participanteUsuario.Id,
+                    ParticipanteBloqueado = true,
+                    NomeParticipanteSelecionado = participanteUsuario.Nome,
+                    Origem = "minhasligas"
+                };
+
+                var viewModelMinhasLigas = await MontarViewModelPalpitar(liga.Id, modelMinhasLigas);
+
+                return View(viewModelMinhasLigas);
+            }
+
             var model = new PalpitarLigaViewModel
             {
-                LigaParticipanteId = participanteId ?? 0
+                LigaParticipanteId = participanteId ?? 0,
+                ParticipanteBloqueado = false,
+                Origem = origem
             };
 
             var viewModel = await MontarViewModelPalpitar(liga.Id, model);
@@ -64,7 +103,26 @@ namespace FutPlay.Controllers
         {
             if (model.LigaParticipanteId <= 0)
             {
-                ModelState.AddModelError("LigaParticipanteId", "Selecione o participante.");
+                if (model.ParticipanteBloqueado || string.Equals(model.Origem, "minhasligas", StringComparison.OrdinalIgnoreCase))
+                {
+                    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+                    var participanteDoUsuario = await _context.LigaParticipantes
+                        .FirstOrDefaultAsync(p =>
+                            p.Id == model.LigaParticipanteId &&
+                            p.LigaId == model.LigaId &&
+                            p.UserId == userId &&
+                            p.Ativo);
+
+                    if (participanteDoUsuario == null)
+                    {
+                        ModelState.AddModelError("", "Você não tem permissão para enviar palpites por este participante.");
+                    }
+
+                    model.ParticipanteBloqueado = true;
+                    model.Origem = "minhasligas";
+                    model.NomeParticipanteSelecionado = participanteDoUsuario?.Nome;
+                }
             }
 
             var participanteExiste = await _context.LigaParticipantes
@@ -98,7 +156,7 @@ namespace FutPlay.Controllers
                     continue;
                 }
 
-                if (jogo.DataJogo <= DateTime.Now)
+                if (jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite))
                 {
                     continue;
                 }
@@ -143,7 +201,8 @@ namespace FutPlay.Controllers
             return RedirectToAction(nameof(Palpitar), new
             {
                 id = model.LigaId,
-                participanteId = model.LigaParticipanteId
+                participanteId = model.LigaParticipanteId,
+                origem = model.Origem
             });
         }
 
@@ -213,7 +272,7 @@ namespace FutPlay.Controllers
                     GolsCasaPalpite = jogoPostado?.GolsCasaPalpite ?? palpiteExistente?.GolsCasaPalpite,
                     GolsVisitantePalpite = jogoPostado?.GolsVisitantePalpite ?? palpiteExistente?.GolsVisitantePalpite,
                     JaPalpitado = palpiteExistente != null,
-                    Bloqueado = jogo.DataJogo <= DateTime.Now
+                    Bloqueado = jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite)
                 });
             }
 

@@ -35,32 +35,59 @@
         <div class="card-body">
             <form asp-action="Palpitar" method="post">
                 <input type="hidden" asp-for="LigaId" />
+                <input type="hidden" asp-for="ParticipanteBloqueado" />
+                <input type="hidden" asp-for="Origem" />
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="row align-items-end mb-4">
-                    <div class="col-md-6">
-                        <label asp-for="LigaParticipanteId" class="form-label fw-semibold"></label>
-                        <select asp-for="LigaParticipanteId"
-                                class="form-select"
-                                asp-items="Model.Participantes"
-                                onchange="carregarParticipante(this.value)">
-                            <option value="">Selecione o participante...</option>
-                        </select>
-                        <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
-                    </div>
+                    @if (Model.ParticipanteBloqueado)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Participante</label>
 
-                    <div class="col-md-6 mt-3 mt-md-0">
-                        <div class="alert alert-light border mb-0">
-                            Selecione o participante para carregar ou editar os palpites existentes.
+                            <input type="hidden" asp-for="LigaParticipanteId" />
+
+                            <div class="form-control bg-light">
+                                @Model.NomeParticipanteSelecionado
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            <div class="alert alert-success border mb-0">
+                                Você está palpitando com o participante vinculado ao seu usuário.
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-md-6">
+                            <label asp-for="LigaParticipanteId" class="form-label fw-semibold"></label>
+                            <select asp-for="LigaParticipanteId"
+                                    class="form-select"
+                                    asp-items="Model.Participantes"
+                                    onchange="carregarParticipante(this.value)">
+                                <option value="">Selecione o participante...</option>
+                            </select>
+                            <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 mt-3 mt-md-0">
+                            <div class="alert alert-light border mb-0">
+                                Selecione o participante para carregar ou editar os palpites existentes.
+                            </div>
+                        </div>
+                    }
                 </div>
 
                 @if (!Model.Jogos.Any())
                 {
                     <div class="futplay-empty">
                         Nenhum jogo cadastrado para o campeonato desta liga.
+                        <br />
+                        <small>
+                            Cadastre jogos manualmente ou importe os jogos do campeonato para liberar os palpites.
+                        </small>
                     </div>
                 }
                 else
@@ -90,6 +117,9 @@
                                                 @if (Model.Jogos[i].Bloqueado)
                                                 {
                                                     <span class="badge bg-secondary">Bloqueado</span>
+                                                    <div class="small text-muted mt-1">
+                                                        Palpites encerrados 30 minutos antes do jogo.
+                                                    </div>
                                                 }
                                                 else if (Model.Jogos[i].JaPalpitado)
                                                 {
@@ -174,11 +204,11 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-    <script>
+    <script>            
         function carregarParticipante(participanteId) {
             if (participanteId) {
                 window.location.href = '@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })' + '?participanteId=' + participanteId;
             }
         }
-    </script>
+    </script>    
 }

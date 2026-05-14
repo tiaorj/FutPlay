@@ -18,6 +18,12 @@ namespace FutPlay.ViewModels
         public List<SelectListItem> Participantes { get; set; } = new();
 
         public List<PalpiteJogoViewModel> Jogos { get; set; } = new();
+
+        public bool ParticipanteBloqueado { get; set; }
+
+        public string? NomeParticipanteSelecionado { get; set; }
+
+        public string? Origem { get; set; }
     }
 
     public class PalpiteJogoViewModel
