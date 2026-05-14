@@ -2,6 +2,7 @@
 using FutPlay.Models;
 using FutPlay.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,14 @@ namespace FutPlay.Controllers
     public class LigaParticipantesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public LigaParticipantesController(AppDbContext context)
+        public LigaParticipantesController(
+            AppDbContext context,
+            UserManager<IdentityUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IActionResult> Index()
@@ -56,6 +61,8 @@ namespace FutPlay.Controllers
 
             if (ModelState.IsValid)
             {
+                await VincularUsuarioLogadoPorEmailAsync(participante);
+
                 _context.LigaParticipantes.Add(participante);
                 await _context.SaveChangesAsync();
 
@@ -115,6 +122,19 @@ namespace FutPlay.Controllers
 
             if (ModelState.IsValid)
             {
+                var participanteAtual = await _context.LigaParticipantes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                await VincularUsuarioLogadoPorEmailAsync(participante);
+
+                if (participante.UserId == null &&
+                    participanteAtual?.UserId != null &&
+                    string.Equals(participante.Email, participanteAtual.Email, StringComparison.OrdinalIgnoreCase))
+                {
+                    participante.UserId = participanteAtual.UserId;
+                }
+
                 _context.Update(participante);
                 await _context.SaveChangesAsync();
 
@@ -135,6 +155,21 @@ namespace FutPlay.Controllers
                 "Id",
                 "Nome"
             );
+        }
+
+        private async Task VincularUsuarioLogadoPorEmailAsync(LigaParticipante participante)
+        {
+            var usuario = await _userManager.GetUserAsync(User);
+
+            if (usuario?.Email == null)
+            {
+                return;
+            }
+
+            if (string.Equals(participante.Email, usuario.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                participante.UserId = usuario.Id;
+            }
         }
     }
 }

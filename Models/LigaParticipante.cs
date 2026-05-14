@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace FutPlay.Models
 {
@@ -13,6 +14,12 @@ namespace FutPlay.Models
 
         [ForeignKey("LigaId")]
         public Liga? Liga { get; set; }
+
+        [StringLength(450)]
+        public string? UserId { get; set; }
+
+        [ForeignKey("UserId")]
+        public IdentityUser? Usuario { get; set; }
 
         [Required(ErrorMessage = "O nome do participante é obrigatório.")]
         [StringLength(100, ErrorMessage = "O nome deve ter no máximo 100 caracteres.")]

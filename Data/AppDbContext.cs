@@ -73,6 +73,12 @@ namespace FutPlay.Data
                 .HasForeignKey(lp => lp.LigaId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            modelBuilder.Entity<LigaParticipante>()
+                .HasOne(lp => lp.Usuario)
+                .WithMany()
+                .HasForeignKey(lp => lp.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             modelBuilder.Entity<Palpite>()
                 .HasOne(p => p.Liga)
                 .WithMany()

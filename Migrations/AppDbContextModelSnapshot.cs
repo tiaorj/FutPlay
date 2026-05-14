@@ -251,9 +251,15 @@ namespace FutPlay.Migrations
                     b.Property<int>("PontuacaoTotal")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("LigaId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("FutPlay_LigaParticipantes", (string)null);
                 });
@@ -609,7 +615,14 @@ namespace FutPlay.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.Navigation("Liga");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("FutPlay.Models.Palpite", b =>

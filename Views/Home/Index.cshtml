@@ -27,7 +27,7 @@
 
                         @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                         {
-                            <a asp-controller="Ligas" asp-action="Index" class="btn btn-warning">
+                            <a asp-controller="MinhasLigas" asp-action="Index" class="btn btn-warning">
                                 Minhas Ligas
                             </a>
                         }
