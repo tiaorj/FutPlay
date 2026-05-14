@@ -27,6 +27,7 @@ builder.Services.AddScoped<ImportacaoJogosService>();
 builder.Services.AddScoped<CampeonatoSincronizacaoService>();
 builder.Services.AddScoped<ClassificacaoService>();
 builder.Services.AddScoped<PontuacaoService>();
+builder.Services.AddScoped<MockDataService>();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {

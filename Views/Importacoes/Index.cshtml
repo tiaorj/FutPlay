@@ -34,10 +34,49 @@
             @TempData["Erro"]
         </div>
     }
+    @if (ViewBag.TotalEncontrado != null)
+    {
+        <div class="alert alert-secondary">
+            Total encontrado na API: @ViewBag.TotalEncontrado
+        </div>
+    }
+    <div class="card shadow-sm futplay-section-card mb-4">
+        <div class="card-header bg-white">
+            <strong>Ambiente de testes</strong>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Use dados mockados para testar o FutPlay sem consumir requisições da API.
+            </p>
+
+            <a asp-controller="MockData" asp-action="Index" class="btn btn-warning">
+                Administrar Dados de Teste
+            </a>
+        </div>
+    </div>
 
     <div class="card shadow-sm futplay-section-card mb-4">
         <div class="card-header bg-white">
             <strong>Buscar ligas/campeonatos na API</strong>
+        </div>
+
+        <div class="card shadow-sm futplay-section-card mb-4">
+            <div class="card-header bg-white">
+                <strong>Dados de teste</strong>
+            </div>
+
+            <div class="card-body">
+                <p class="text-muted">
+                    Gere dados mockados para testar o FutPlay sem consumir requisições da API.
+                </p>
+
+                <form asp-action="GerarDadosTeste" method="post">
+                    <button type="submit" class="btn btn-warning">
+                        Gerar Dados de Teste
+                    </button>
+                </form>
+            </div>
         </div>
 
         <div class="card-body">
@@ -129,6 +168,7 @@
                                             <input type="hidden" name="tipo" value="@liga.Tipo" />
                                             <input type="hidden" name="pais" value="@liga.Pais" />
                                             <input type="hidden" name="temporada" value="@liga.Temporada" />
+                                            <input type="hidden" name="logoUrl" value="@liga.LogoUrl" />
 
                                             <button type="submit" class="btn btn-sm btn-success">
                                                 Importar
@@ -145,6 +185,12 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    }
+    else if (ViewBag.Pais != null)
+    {
+        <div class="alert alert-info">
+            Nenhum campeonato encontrado para a busca informada.
         </div>
     }
 </div>

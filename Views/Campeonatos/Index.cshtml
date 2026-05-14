@@ -40,6 +40,19 @@
             <div class="col-md-4 mb-3">
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
+                        @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
+                        {
+                            <img src="@campeonato.LogoUrl"
+                                 alt="@campeonato.Nome"
+                                 style="width: 42px; height: 42px; object-fit: contain;"
+                                 class="mb-2" />
+                        }
+                        @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
+                        {
+                            <p class="card-text mb-1">
+                                <strong>País:</strong> @campeonato.Pais
+                            </p>
+                        }
                         <h5 class="card-title">
                             @campeonato.Nome @campeonato.Ano
                         </h5>

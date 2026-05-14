@@ -11,15 +11,19 @@ namespace FutPlay.Controllers
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
         private readonly ImportacaoJogosService _importacaoJogosService;
         private readonly CampeonatoSincronizacaoService _campeonatoSincronizacaoService;
+        private readonly MockDataService _mockDataService;
 
         public ImportacoesController(
             ImportacaoCampeonatoService importacaoCampeonatoService,
             ImportacaoJogosService importacaoJogosService,
-            CampeonatoSincronizacaoService campeonatoSincronizacaoService)
+            CampeonatoSincronizacaoService campeonatoSincronizacaoService,
+            MockDataService mockDataService)
         {
             _importacaoCampeonatoService = importacaoCampeonatoService;
             _importacaoJogosService = importacaoJogosService;
             _campeonatoSincronizacaoService = campeonatoSincronizacaoService;
+            _mockDataService = mockDataService;
+
         }
 
         public IActionResult Index()
@@ -39,6 +43,7 @@ namespace FutPlay.Controllers
 
                 ViewBag.Pais = pais;
                 ViewBag.Temporada = temporada;
+                ViewBag.TotalEncontrado = ligas.Count;
             }
             catch (Exception ex)
             {
@@ -55,12 +60,15 @@ namespace FutPlay.Controllers
             string nome,
             string tipo,
             string pais,
+            string? logoUrl,
             int temporada)
         {
             bool importado = await _importacaoCampeonatoService.ImportarLigaAsync(
                 apiLeagueId,
                 nome,
                 tipo,
+                pais,
+                logoUrl,
                 temporada
             );
 
@@ -112,5 +120,24 @@ namespace FutPlay.Controllers
 
             return RedirectToAction("Index", "Campeonatos");
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> GerarDadosTeste()
+        {
+            try
+            {
+                var mensagem = await _mockDataService.GerarDadosTesteAsync();
+
+                TempData["Sucesso"] = mensagem;
+            }
+            catch (Exception ex)
+            {
+                TempData["Erro"] = $"Erro ao gerar dados de teste: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
     }
 }

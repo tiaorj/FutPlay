@@ -28,5 +28,11 @@ namespace FutPlay.Models
         public bool Ativo { get; set; } = true;
 
         public int? ApiLeagueId { get; set; }
+
+        [StringLength(100)]
+        public string? Pais { get; set; }
+
+        [StringLength(300)]
+        public string? LogoUrl { get; set; }
     }
 }

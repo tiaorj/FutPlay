@@ -24,6 +24,17 @@ namespace FutPlay.Services
 
             var response = await _httpClient.GetAsync(url);
 
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var erro = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
+            }
+
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -37,6 +48,17 @@ namespace FutPlay.Services
 
             var response = await _httpClient.GetAsync(url);
 
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var erro = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
+            }
+
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();
@@ -49,6 +71,17 @@ namespace FutPlay.Services
             var url = $"/standings?league={leagueId}&season={temporada}";
 
             var response = await _httpClient.GetAsync(url);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            {
+                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var erro = await response.Content.ReadAsStringAsync();
+                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
+            }
 
             response.EnsureSuccessStatusCode();
 

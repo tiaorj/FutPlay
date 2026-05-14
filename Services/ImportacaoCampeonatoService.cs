@@ -62,6 +62,8 @@ namespace FutPlay.Services
             int apiLeagueId,
             string nome,
             string tipo,
+            string pais,
+            string? logoUrl,
             int temporada)
         {
             var jaExiste = await _context.Campeonatos
@@ -77,6 +79,8 @@ namespace FutPlay.Services
                 Nome = nome,
                 Ano = temporada,
                 Tipo = string.IsNullOrWhiteSpace(tipo) ? "Liga" : tipo,
+                Pais = pais,
+                LogoUrl = logoUrl,
                 Ativo = true,
                 ApiLeagueId = apiLeagueId
             };
