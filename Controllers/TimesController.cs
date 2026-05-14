@@ -1,5 +1,6 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using FutPlay.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -26,13 +27,13 @@ namespace FutPlay.Controllers
             return View(times);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public IActionResult Create()
         {
             return View();
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Time time)
@@ -66,7 +67,7 @@ namespace FutPlay.Controllers
             return View(time);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,7 +85,7 @@ namespace FutPlay.Controllers
             return View(time);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Time time)

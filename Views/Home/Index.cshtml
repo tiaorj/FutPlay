@@ -25,7 +25,7 @@
                             Ver Jogos
                         </a>
 
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                         {
                             <a asp-controller="Ligas" asp-action="Index" class="btn btn-warning">
                                 Minhas Ligas
@@ -341,7 +341,7 @@
                                         Ranking
                                     </a>
 
-                                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                    @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                                     {
                                         <a asp-controller="Ligas"
                                            asp-action="Palpitar"

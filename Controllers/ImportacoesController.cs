@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutPlay.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = AppRoles.Administrador)]
     public class ImportacoesController : Controller
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;

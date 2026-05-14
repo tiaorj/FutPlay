@@ -14,7 +14,7 @@
         </div>
 
         <div class="mt-3 mt-md-0">
-            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            @if (User.IsInRole(AppRoles.Administrador))
             {
                 <a asp-action="Create" class="btn btn-success">
                     + Nova Liga
@@ -80,7 +80,7 @@
                             </div>
 
                             <div class="futplay-actions">
-                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                                 {
                                     <a asp-action="Palpitar" asp-route-id="@liga.Id" class="btn btn-success btn-sm">
                                         Palpitar
@@ -95,7 +95,7 @@
                                     Detalhes
                                 </a>
 
-                                @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                @if (User.IsInRole(AppRoles.Administrador))
                                 {
                                     <a asp-action="Edit" asp-route-id="@liga.Id" class="btn btn-outline-secondary btn-sm">
                                         Editar

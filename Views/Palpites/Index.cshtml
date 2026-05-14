@@ -14,9 +14,12 @@
         </div>
 
         <div class="d-flex gap-2">
-            <a asp-action="RecalcularPontuacao" class="btn btn-primary">
-                Recalcular Pontuação
-            </a>
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <a asp-action="RecalcularPontuacao" class="btn btn-primary">
+                    Recalcular Pontuação
+                </a>
+            }
 
             <a asp-action="Create" class="btn btn-success">
                 Novo Palpite

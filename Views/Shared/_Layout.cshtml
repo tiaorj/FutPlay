@@ -50,14 +50,14 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Ligas" asp-action="Index">
-                                Ligas
-                            </a>
-                        </li>
-
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                         {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Ligas" asp-action="Index">
+                                    Ligas
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="LigaParticipantes" asp-action="Index">
                                     Participantes
@@ -69,6 +69,10 @@
                                     Palpites
                                 </a>
                             </li>
+                        }
+
+                        @if (User.IsInRole(AppRoles.Administrador))
+                        {
                             <li class="nav-item">
                                 <a class="nav-link" asp-controller="Importacoes" asp-action="Index">
                                     Importações

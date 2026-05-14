@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutPlay.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
     public class PalpitesController : Controller
     {
         private readonly AppDbContext _context;
@@ -162,6 +162,7 @@ namespace FutPlay.Controllers
             return View(palpite);
         }
 
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> RecalcularPontuacao()
         {
             await _pontuacaoService.RecalcularPontuacaoPalpitesAsync();

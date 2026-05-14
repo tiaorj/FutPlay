@@ -1,5 +1,6 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using FutPlay.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FutPlay.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
     public class LigaParticipantesController : Controller
     {
         private readonly AppDbContext _context;

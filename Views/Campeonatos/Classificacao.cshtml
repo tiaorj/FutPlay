@@ -14,7 +14,7 @@
         </div>
 
         <div class="mt-3 mt-md-0 futplay-actions">
-            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            @if (User.IsInRole(AppRoles.Administrador))
             {
                 <a asp-action="RecalcularClassificacao"
                    asp-route-id="@Model.Campeonato.Id"

@@ -32,13 +32,13 @@ namespace FutPlay.Controllers
             return View(campeonatos);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public IActionResult Create()
         {
             return View();
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Campeonato campeonato)
@@ -94,7 +94,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -112,7 +112,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Campeonato campeonato)
@@ -169,7 +169,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -188,7 +188,7 @@ namespace FutPlay.Controllers
             return View(campeonato);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -239,7 +239,7 @@ namespace FutPlay.Controllers
             return View(viewModel);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> RecalcularClassificacao(int? id)
         {
             if (id == null)

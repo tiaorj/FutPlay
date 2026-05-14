@@ -78,7 +78,7 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <strong>Classificação</strong>
 
-                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    @if (User.IsInRole(AppRoles.Administrador))
                     {
                         <a asp-action="RecalcularClassificacao"
                            asp-route-id="@Model.Campeonato.Id"

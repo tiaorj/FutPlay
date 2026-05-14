@@ -41,9 +41,12 @@
             </dl>
 
             <div class="d-flex gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                    Editar
-                </a>
+                @if (User.IsInRole(AppRoles.Administrador))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                        Editar
+                    </a>
+                }
 
                 <a asp-action="Index" class="btn btn-outline-secondary">
                     Voltar

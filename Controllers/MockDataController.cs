@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FutPlay.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = AppRoles.Administrador)]
     public class MockDataController : Controller
     {
         private readonly MockDataService _mockDataService;

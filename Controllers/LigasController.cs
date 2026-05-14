@@ -1,5 +1,6 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
+using FutPlay.Services;
 using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,7 @@ namespace FutPlay.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         public async Task<IActionResult> Index()
         {
             var ligas = await _context.Ligas
@@ -28,7 +30,7 @@ namespace FutPlay.Controllers
             return View(ligas);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         public async Task<IActionResult> Palpitar(int? id, int? participanteId)
         {
             if (id == null)
@@ -55,7 +57,7 @@ namespace FutPlay.Controllers
             return View(viewModel);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Palpitar(PalpitarLigaViewModel model)
@@ -218,7 +220,7 @@ namespace FutPlay.Controllers
             return viewModel;
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Create()
         {
             await CarregarCampeonatos();
@@ -230,7 +232,7 @@ namespace FutPlay.Controllers
             });
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Liga liga)
@@ -254,6 +256,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -269,7 +272,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -284,7 +287,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
-        [Authorize]
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Liga liga)

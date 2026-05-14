@@ -13,7 +13,7 @@
             </p>
         </div>
 
-        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        @if (User.IsInRole(AppRoles.Administrador))
         {
             <a asp-action="Create" class="btn btn-success">
                 Novo Campeonato
@@ -98,7 +98,7 @@
                                 Classificação
                             </a>
 
-                            @if (User.Identity != null && User.Identity.IsAuthenticated)
+                            @if (User.IsInRole(AppRoles.Administrador))
                             {
                                 <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">
                                     Editar
