@@ -2,81 +2,148 @@
 
 @{
     ViewData["Title"] = "Minhas Ligas";
+    var totalPontos = Model.Sum(l => l.Pontuacao);
+    var melhorLiga = Model.OrderByDescending(l => l.Pontuacao).FirstOrDefault();
 }
 
-<div class="container mt-4">
-    <section class="futplay-page-hero mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div>
-                <div class="futplay-card-kicker">Seu vestiário</div>
-                <h1 class="futplay-page-title mb-1">Minhas Ligas</h1>
-                <p class="futplay-subtitle mb-0">
-                    Acompanhe suas ligas, pontuação e os próximos palpites vinculados ao seu usuário.
-                </p>
-            </div>
-        </div>
-    </section>
+<div class="container futplay-portal-shell">
+    <div class="row g-4">
+        <div class="col-xl-9">
+            <section class="futplay-league-hero futplay-league-hero-banner mb-4">
+                <div class="futplay-league-hero-content">
+                    <div class="futplay-league-kicker">Meu bolão</div>
+                    <h1 class="futplay-league-title">Desafio FutPlay da Rodada</h1>
+                    <p class="futplay-league-lead">
+                        Entre nas suas ligas, envie palpites e acompanhe a disputa rodada a rodada.
+                    </p>
 
-    @if (!Model.Any())
-    {
-        <div class="futplay-empty">
-            Você ainda não participa de nenhuma liga vinculada ao seu usuário.
-        </div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var liga in Model)
-            {
-                <div class="col-xl-4 col-md-6 mb-3">
-                    <article class="futplay-entity-card">
-                        <div class="d-flex align-items-start gap-3 mb-3">
-                            <span class="futplay-logo">
-                                @if (!string.IsNullOrWhiteSpace(liga.CampeonatoLogoUrl))
-                                {
-                                    <img src="@liga.CampeonatoLogoUrl" alt="@liga.NomeCampeonato" />
-                                }
-                                else
-                                {
-                                    <span>⭐</span>
-                                }
-                            </span>
-
-                            <div>
-                                <div class="futplay-card-kicker">Liga participante</div>
-                                <h5 class="mb-1">@liga.NomeLiga</h5>
-                                <p class="text-muted small mb-0">@liga.NomeCampeonato</p>
-                            </div>
-                        </div>
-
-                        <div class="d-flex align-items-end justify-content-between gap-3 mb-3">
-                            <div>
-                                <span class="text-muted small">Pontuação</span>
-                                <div class="display-6 fw-bold text-success">@liga.Pontuacao</div>
-                            </div>
-                            <span class="futplay-status futplay-status-done">Ativo</span>
-                        </div>
-
-                        <div class="futplay-actions">
-                            <a asp-controller="Ligas"
-                               asp-action="Palpitar"
-                               asp-route-id="@liga.LigaId"
-                               asp-route-participanteId="@liga.LigaParticipanteId"
-                               asp-route-origem="minhasligas"
-                               class="btn btn-success">
-                                Palpitar
-                            </a>
-
-                            <a asp-controller="Ligas"
-                               asp-action="Ranking"
-                               asp-route-id="@liga.LigaId"
-                               class="btn btn-outline-dark">
-                                Ranking
-                            </a>
-                        </div>
-                    </article>
+                    <div class="futplay-league-hero-meta">
+                        <span>@Model.Count ligas</span>
+                        <span>@totalPontos pontos</span>
+                    </div>
                 </div>
+
+                <div class="futplay-league-hero-scoreboard">
+                    <span>FutPlay</span>
+                    <strong>Bolão</strong>
+                    <small>ranking ao vivo</small>
+                </div>
+            </section>
+
+            @if (!Model.Any())
+            {
+                <section class="futplay-league-empty">
+                    <div class="futplay-league-empty-mark">FP</div>
+                    <h2>Nenhuma liga vinculada ainda</h2>
+                    <p>
+                        Quando você entrar em uma liga ou for vinculado pelo mesmo e-mail da sua conta,
+                        seu bolão aparecerá aqui com os atalhos para palpitar e acompanhar o ranking.
+                    </p>
+                    <a asp-controller="Ligas" asp-action="Index">Ver ligas disponíveis</a>
+                </section>
+            }
+            else
+            {
+                <section class="futplay-league-panel">
+                    <div class="futplay-league-panel-head">
+                        <h2>Minhas competições</h2>
+                        <span>Palpites e ranking</span>
+                    </div>
+
+                    <div class="futplay-league-rows">
+                        @foreach (var liga in Model)
+                        {
+                            <article class="futplay-league-row">
+                                <div class="futplay-league-logo">
+                                    @if (!string.IsNullOrWhiteSpace(liga.CampeonatoLogoUrl))
+                                    {
+                                        <img src="@liga.CampeonatoLogoUrl" alt="@liga.NomeCampeonato" />
+                                    }
+                                    else
+                                    {
+                                        <span>FP</span>
+                                    }
+                                </div>
+
+                                <div class="futplay-league-row-info">
+                                    <span>Minha competição</span>
+                                    <h3>@liga.NomeLiga</h3>
+                                    <p>@liga.NomeCampeonato</p>
+                                </div>
+
+                                <div class="futplay-league-row-points">
+                                    <span>Pontos</span>
+                                    <strong>@liga.Pontuacao</strong>
+                                </div>
+
+                                <div class="futplay-league-actions">
+                                    <a asp-controller="Ligas"
+                                       asp-action="Palpitar"
+                                       asp-route-id="@liga.LigaId"
+                                       asp-route-participanteId="@liga.LigaParticipanteId"
+                                       asp-route-origem="minhasligas"
+                                       class="futplay-league-action-primary">
+                                        Palpitar
+                                    </a>
+
+                                    <a asp-controller="Ligas"
+                                       asp-action="Ranking"
+                                       asp-route-id="@liga.LigaId"
+                                       class="futplay-league-action-secondary">
+                                        Ranking
+                                    </a>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
             }
         </div>
-    }
+
+        <aside class="col-xl-3">
+            <section class="futplay-league-side-card mb-4">
+                <div class="futplay-league-side-head">
+                    <h2>Resumo</h2>
+                </div>
+                <div class="futplay-league-side-stats">
+                    <div>
+                        <span>Ligas</span>
+                        <strong>@Model.Count</strong>
+                    </div>
+                    <div>
+                        <span>Pontos</span>
+                        <strong>@totalPontos</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="futplay-league-side-card">
+                <div class="futplay-league-side-head">
+                    <h2>Melhor campanha</h2>
+                </div>
+
+                @if (melhorLiga == null)
+                {
+                    <p class="futplay-league-side-empty">Participe de uma liga para aparecer aqui.</p>
+                }
+                else
+                {
+                    <div class="futplay-league-best">
+                        <div class="futplay-league-logo">
+                            @if (!string.IsNullOrWhiteSpace(melhorLiga.CampeonatoLogoUrl))
+                            {
+                                <img src="@melhorLiga.CampeonatoLogoUrl" alt="@melhorLiga.NomeCampeonato" />
+                            }
+                            else
+                            {
+                                <span>FP</span>
+                            }
+                        </div>
+                        <h3>@melhorLiga.NomeLiga</h3>
+                        <span>@melhorLiga.Pontuacao pontos</span>
+                    </div>
+                }
+            </section>
+        </aside>
+    </div>
 </div>

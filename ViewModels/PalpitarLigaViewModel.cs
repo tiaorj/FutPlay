@@ -32,7 +32,11 @@ namespace FutPlay.ViewModels
 
         public string TimeCasa { get; set; } = string.Empty;
 
+        public string? TimeCasaEscudoUrl { get; set; }
+
         public string TimeVisitante { get; set; } = string.Empty;
+
+        public string? TimeVisitanteEscudoUrl { get; set; }
 
         public DateTime DataJogo { get; set; }
 

@@ -273,6 +273,9 @@ namespace FutPlay.Controllers
                 NomeLiga = liga.Nome,
                 NomeCampeonato = liga.Campeonato?.Nome ?? "",
                 LigaParticipanteId = participanteSelecionado,
+                ParticipanteBloqueado = modelPostado?.ParticipanteBloqueado ?? false,
+                NomeParticipanteSelecionado = modelPostado?.NomeParticipanteSelecionado,
+                Origem = modelPostado?.Origem,
                 Participantes = participantes.Select(p => new SelectListItem
                 {
                     Value = p.Id.ToString(),
@@ -297,7 +300,9 @@ namespace FutPlay.Controllers
                 {
                     JogoId = jogo.Id,
                     TimeCasa = jogo.TimeCasa?.Nome ?? "",
+                    TimeCasaEscudoUrl = jogo.TimeCasa?.EscudoUrl,
                     TimeVisitante = jogo.TimeVisitante?.Nome ?? "",
+                    TimeVisitanteEscudoUrl = jogo.TimeVisitante?.EscudoUrl,
                     DataJogo = jogo.DataJogo,
                     Fase = jogo.Fase,
                     Grupo = jogo.Grupo,

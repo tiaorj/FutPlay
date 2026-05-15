@@ -3,140 +3,169 @@
 @{
     ViewData["Title"] = "Ranking da Liga";
     var top3 = Model.Participantes.Take(3).ToList();
+    var demais = Model.Participantes.Skip(3).ToList();
+    var lider = Model.Participantes.FirstOrDefault();
+    var totalPalpites = Model.Participantes.Sum(p => p.TotalPalpites);
+    var totalExatos = Model.Participantes.Sum(p => p.PlacaresExatos);
 }
 
-<div class="container mt-4">
-    <section class="futplay-page-hero mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <span class="futplay-logo">
-                    @if (!string.IsNullOrWhiteSpace(Model.Liga.Campeonato?.LogoUrl))
-                    {
-                        <img src="@Model.Liga.Campeonato.LogoUrl" alt="@Model.Liga.Campeonato.Nome" />
-                    }
-                    else
-                    {
-                        <span>🏅</span>
-                    }
-                </span>
-
-                <div>
-                    <div class="futplay-card-kicker">Tabela da liga</div>
-                    <h1 class="futplay-page-title mb-1">Ranking da Liga</h1>
-                    <p class="futplay-subtitle mb-0">
-                        @Model.Liga.Nome · @Model.Liga.Campeonato?.Nome
-                    </p>
-                </div>
-            </div>
-
-            <div class="futplay-actions">
-                <a asp-action="Palpitar" asp-route-id="@Model.Liga.Id" class="btn btn-success">
-                    Palpitar
-                </a>
-
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
-            </div>
-        </div>
-    </section>
-
-    @if (!Model.Participantes.Any())
-    {
-        <div class="futplay-empty">
-            Nenhum participante cadastrado nesta liga ainda.
-        </div>
-    }
-    else
-    {
-        <div class="futplay-rank-medals mb-4">
-            @foreach (var item in top3)
-            {
-                <article class="futplay-rank-podium">
-                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
-                        <span class="futplay-rank-number">@item.Posicao</span>
-                        @if (item.Posicao == 1)
+<div class="container futplay-portal-shell">
+    <div class="row g-4">
+        <div class="col-xl-9">
+            <section class="futplay-ranking-hero futplay-ranking-hero-banner mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="futplay-ranking-logo">
+                        @if (!string.IsNullOrWhiteSpace(Model.Liga.Campeonato?.LogoUrl))
                         {
-                            <span class="fs-3">🥇</span>
-                        }
-                        else if (item.Posicao == 2)
-                        {
-                            <span class="fs-3">🥈</span>
+                            <img src="@Model.Liga.Campeonato.LogoUrl" alt="@Model.Liga.Campeonato.Nome" />
                         }
                         else
                         {
-                            <span class="fs-3">🥉</span>
+                            <span>FP</span>
                         }
                     </div>
 
-                    <h5 class="mb-1">@item.Nome</h5>
-                    <p class="text-muted small mb-3">@item.Email</p>
-
-                    <div class="d-flex align-items-end justify-content-between">
-                        <div>
-                            <span class="text-muted small">Pontos</span>
-                            <div class="display-6 fw-bold">@item.PontuacaoTotal</div>
-                        </div>
-                        <span class="badge bg-success">@item.PlacaresExatos exatos</span>
+                    <div>
+                        <div class="futplay-ranking-kicker">Ranking do bolão</div>
+                        <h1 class="futplay-ranking-title">@Model.Liga.Nome</h1>
+                        <p class="futplay-ranking-lead mb-0">@Model.Liga.Campeonato?.Nome</p>
                     </div>
-                </article>
+                </div>
+
+                <div class="futplay-ranking-actions">
+                    <a asp-action="Palpitar" asp-route-id="@Model.Liga.Id" class="futplay-ranking-action-primary">Palpitar</a>
+                    <a asp-action="Index">Voltar</a>
+                </div>
+            </section>
+
+            @if (!Model.Participantes.Any())
+            {
+                <section class="futplay-ranking-empty">
+                    <h2>Ranking ainda sem participantes</h2>
+                    <p>Assim que os participantes entrarem na liga, a classificação do bolão aparecerá aqui.</p>
+                </section>
+            }
+            else
+            {
+                <section class="futplay-ranking-panel mb-4">
+                    <div class="futplay-ranking-panel-head">
+                        <h2>Top da liga</h2>
+                        <span>@Model.Participantes.Count participantes</span>
+                    </div>
+
+                    <div class="futplay-ranking-podium">
+                        @foreach (var item in top3)
+                        {
+                            var podiumClass = item.Posicao == 1
+                                ? "futplay-ranking-card futplay-ranking-card-first"
+                                : item.Posicao == 2
+                                    ? "futplay-ranking-card futplay-ranking-card-second"
+                                    : "futplay-ranking-card futplay-ranking-card-third";
+
+                            <article class="@podiumClass">
+                                <div class="futplay-ranking-card-head">
+                                    <span class="futplay-ranking-position">@(item.Posicao)º</span>
+                                    <span class="futplay-ranking-label">Top @item.Posicao</span>
+                                </div>
+
+                                <h2>@item.Nome</h2>
+                                <p>@item.Email</p>
+
+                                <div class="futplay-ranking-points">
+                                    <span>Pontos</span>
+                                    <strong>@item.PontuacaoTotal</strong>
+                                </div>
+
+                                <div class="futplay-ranking-stats">
+                                    <div>
+                                        <span>Palpites</span>
+                                        <strong>@item.TotalPalpites</strong>
+                                    </div>
+                                    <div>
+                                        <span>Exatos</span>
+                                        <strong>@item.PlacaresExatos</strong>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </section>
+
+                @if (demais.Any())
+                {
+                    <section class="futplay-ranking-list">
+                        <div class="futplay-ranking-list-head">
+                            <h2>Demais participantes</h2>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table futplay-ranking-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Posição</th>
+                                        <th>Participante</th>
+                                        <th>Palpites</th>
+                                        <th>Placares exatos</th>
+                                        <th>Pontos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in demais)
+                                    {
+                                        <tr>
+                                            <td><strong>@(item.Posicao)º</strong></td>
+                                            <td>
+                                                <strong>@item.Nome</strong>
+                                                <small>@item.Email</small>
+                                            </td>
+                                            <td>@item.TotalPalpites</td>
+                                            <td>@item.PlacaresExatos</td>
+                                            <td><span>@item.PontuacaoTotal</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
             }
         </div>
 
-        <div class="futplay-table-card table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th style="width: 90px;">Posição</th>
-                        <th>Participante</th>
-                        <th>E-mail</th>
-                        <th>Palpites</th>
-                        <th>Placares Exatos</th>
-                        <th>Pontos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.Participantes)
-                    {
-                        <tr>
-                            <td>
-                                @if (item.Posicao <= 3)
-                                {
-                                    <span class="futplay-rank-number">@item.Posicao</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-light text-dark border">@(item.Posicao)º</span>
-                                }
-                            </td>
+        <aside class="col-xl-3">
+            <section class="futplay-ranking-side-card mb-4">
+                <div class="futplay-ranking-side-head">
+                    <h2>Líder</h2>
+                </div>
 
-                            <td>
-                                <strong>@item.Nome</strong>
-                            </td>
+                @if (lider == null)
+                {
+                    <p class="futplay-ranking-side-empty">Ranking aguardando participantes.</p>
+                }
+                else
+                {
+                    <div class="futplay-ranking-leader">
+                        <span>1º</span>
+                        <h3>@lider.Nome</h3>
+                        <strong>@lider.PontuacaoTotal pontos</strong>
+                    </div>
+                }
+            </section>
 
-                            <td>@item.Email</td>
-
-                            <td>
-                                <span class="badge bg-primary">
-                                    @item.TotalPalpites
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="badge bg-success">
-                                    @item.PlacaresExatos
-                                </span>
-                            </td>
-
-                            <td>
-                                <span class="badge bg-dark fs-6">
-                                    @item.PontuacaoTotal
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+            <section class="futplay-ranking-side-card">
+                <div class="futplay-ranking-side-head">
+                    <h2>Estatísticas</h2>
+                </div>
+                <div class="futplay-ranking-side-stats">
+                    <div>
+                        <span>Palpites</span>
+                        <strong>@totalPalpites</strong>
+                    </div>
+                    <div>
+                        <span>Exatos</span>
+                        <strong>@totalExatos</strong>
+                    </div>
+                </div>
+            </section>
+        </aside>
+    </div>
 </div>
