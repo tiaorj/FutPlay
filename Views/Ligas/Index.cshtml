@@ -1,27 +1,28 @@
-﻿@model List<FutPlay.Models.Liga>
+@model List<FutPlay.Models.Liga>
 
 @{
     ViewData["Title"] = "Ligas";
 }
 
 <div class="container mt-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <div>
-            <h1 class="futplay-page-title mb-1">Ligas</h1>
-            <p class="futplay-subtitle mb-0">
-                Crie ligas para disputar palpites com amigos, família ou empresa.
-            </p>
-        </div>
+    <section class="futplay-page-hero mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="futplay-card-kicker">Área do participante</div>
+                <h1 class="futplay-page-title mb-1">Ligas</h1>
+                <p class="futplay-subtitle mb-0">
+                    Dispute palpites com amigos, acompanhe ranking e veja o campeonato de cada liga.
+                </p>
+            </div>
 
-        <div class="mt-3 mt-md-0">
             @if (User.IsInRole(AppRoles.Administrador))
             {
                 <a asp-action="Create" class="btn btn-success">
-                    + Nova Liga
+                    Nova Liga
                 </a>
             }
         </div>
-    </div>
+    </section>
 
     @if (!Model.Any())
     {
@@ -34,76 +35,81 @@
         <div class="row">
             @foreach (var liga in Model)
             {
-                <div class="col-lg-4 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100 futplay-stat-card">
-                        <div class="card-body futplay-card-content">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <div>
-                                    <h5 class="card-title mb-1">
-                                        @liga.Nome
-                                    </h5>
-
-                                    <small class="text-muted">
-                                        @liga.Campeonato?.Nome
-                                    </small>
-                                </div>
-
-                                @if (liga.Ativo)
-                                {
-                                    <span class="badge bg-success">Ativa</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Inativa</span>
-                                }
-                            </div>
-
-                            <div class="mb-2">
-                                <span class="text-muted small">Código de convite</span>
-                                <div>
-                                    <span class="badge bg-dark fs-6">@liga.CodigoConvite</span>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <span class="text-muted small">Tipo</span>
-                                <div>
-                                    @if (liga.Publica)
+                <div class="col-xl-4 col-md-6 mb-3">
+                    <article class="futplay-entity-card">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="futplay-logo">
+                                    @if (!string.IsNullOrWhiteSpace(liga.Campeonato?.LogoUrl))
                                     {
-                                        <span class="badge bg-primary">Pública</span>
+                                        <img src="@liga.Campeonato.LogoUrl" alt="@liga.Campeonato.Nome" />
                                     }
                                     else
                                     {
-                                        <span class="badge bg-warning text-dark">Privada</span>
+                                        <span>👥</span>
                                     }
+                                </span>
+
+                                <div>
+                                    <div class="futplay-card-kicker">Liga</div>
+                                    <h5 class="mb-1">@liga.Nome</h5>
+                                    <p class="text-muted small mb-0">@liga.Campeonato?.Nome</p>
                                 </div>
                             </div>
 
-                            <div class="futplay-actions">
-                                @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
+                            @if (liga.Ativo)
+                            {
+                                <span class="futplay-status futplay-status-done">Ativa</span>
+                            }
+                            else
+                            {
+                                <span class="futplay-status futplay-status-locked">Inativa</span>
+                            }
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Convite</span>
+                                <span class="badge bg-dark fs-6">@liga.CodigoConvite</span>
+                            </div>
+
+                            <div class="col-6">
+                                <span class="text-muted small d-block">Visibilidade</span>
+                                @if (liga.Publica)
                                 {
-                                    <a asp-action="Palpitar" asp-route-id="@liga.Id" class="btn btn-success btn-sm">
-                                        Palpitar
-                                    </a>
+                                    <span class="badge bg-primary">Pública</span>
                                 }
-
-                                <a asp-action="Ranking" asp-route-id="@liga.Id" class="btn btn-outline-dark btn-sm">
-                                    Ranking
-                                </a>
-
-                                <a asp-action="Details" asp-route-id="@liga.Id" class="btn btn-outline-primary btn-sm">
-                                    Detalhes
-                                </a>
-
-                                @if (User.IsInRole(AppRoles.Administrador))
+                                else
                                 {
-                                    <a asp-action="Edit" asp-route-id="@liga.Id" class="btn btn-outline-secondary btn-sm">
-                                        Editar
-                                    </a>
+                                    <span class="badge bg-warning text-dark">Privada</span>
                                 }
                             </div>
                         </div>
-                    </div>
+
+                        <div class="futplay-actions">
+                            @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
+                            {
+                                <a asp-action="Palpitar" asp-route-id="@liga.Id" class="btn btn-success btn-sm">
+                                    Palpitar
+                                </a>
+                            }
+
+                            <a asp-action="Ranking" asp-route-id="@liga.Id" class="btn btn-outline-dark btn-sm">
+                                Ranking
+                            </a>
+
+                            <a asp-action="Details" asp-route-id="@liga.Id" class="btn btn-outline-primary btn-sm">
+                                Detalhes
+                            </a>
+
+                            @if (User.IsInRole(AppRoles.Administrador))
+                            {
+                                <a asp-action="Edit" asp-route-id="@liga.Id" class="btn btn-outline-secondary btn-sm">
+                                    Editar
+                                </a>
+                            }
+                        </div>
+                    </article>
                 </div>
             }
         </div>

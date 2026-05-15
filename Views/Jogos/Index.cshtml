@@ -1,28 +1,38 @@
-﻿@model List<FutPlay.Models.Jogo>
+@model List<FutPlay.Models.Jogo>
 
 @{
     ViewData["Title"] = "Jogos";
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-1">Jogos</h1>
-            <p class="text-muted mb-0">
-                Cadastro e acompanhamento dos jogos.
-            </p>
+    <section class="futplay-page-hero mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="futplay-card-kicker">Calendário esportivo</div>
+                <h1 class="futplay-page-title mb-1">Jogos</h1>
+                <p class="futplay-subtitle mb-0">
+                    Acompanhe agenda, status e placares dos jogos cadastrados.
+                </p>
+            </div>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <a asp-action="Create" class="btn btn-success">
+                    Novo Jogo
+                </a>
+            }
         </div>
+    </section>
 
-        @if (User.IsInRole(AppRoles.Administrador))
-        {
-            <a asp-action="Create" class="btn btn-success">
-                Novo Jogo
-            </a>
-        }
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-body table-responsive">
+    @if (!Model.Any())
+    {
+        <div class="futplay-empty">
+            Nenhum jogo cadastrado ainda.
+        </div>
+    }
+    else
+    {
+        <div class="futplay-table-card table-responsive">
             <table class="table table-hover align-middle">
                 <thead>
                     <tr>
@@ -39,56 +49,96 @@
                     @foreach (var jogo in Model)
                     {
                         <tr>
-                            <td>@jogo.DataJogo.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td>@jogo.Campeonato?.Nome</td>
                             <td>
-                                <strong>@jogo.TimeCasa?.Nome</strong>
-                                x
-                                <strong>@jogo.TimeVisitante?.Nome</strong>
+                                <strong>@jogo.DataJogo.ToString("dd/MM")</strong>
+                                <small class="text-muted d-block">@jogo.DataJogo.ToString("HH:mm")</small>
+                            </td>
+                            <td>
+                                <div class="futplay-team-line">
+                                    <span class="futplay-logo-sm">
+                                        @if (!string.IsNullOrWhiteSpace(jogo.Campeonato?.LogoUrl))
+                                        {
+                                            <img src="@jogo.Campeonato.LogoUrl" alt="@jogo.Campeonato.Nome" />
+                                        }
+                                        else
+                                        {
+                                            <span>🏆</span>
+                                        }
+                                    </span>
+                                    <span>@jogo.Campeonato?.Nome</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <div class="futplay-team-line">
+                                        <span class="futplay-logo-sm">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>⚽</span>
+                                            }
+                                        </span>
+                                        <strong>@jogo.TimeCasa?.Nome</strong>
+                                    </div>
+                                    <span class="futplay-versus">x</span>
+                                    <div class="futplay-team-line">
+                                        <span class="futplay-logo-sm">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>⚽</span>
+                                            }
+                                        </span>
+                                        <strong>@jogo.TimeVisitante?.Nome</strong>
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 @(string.IsNullOrWhiteSpace(jogo.Fase) ? "-" : jogo.Fase)
                                 @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
                                 {
-                                    <span> / Grupo @jogo.Grupo</span>
+                                    <span class="badge bg-light text-dark border ms-1">Grupo @jogo.Grupo</span>
                                 }
                             </td>
                             <td>
-                                <span class="badge bg-primary">@jogo.Status</span>
+                                <span class="futplay-status @(jogo.Status == "Finalizado" ? "futplay-status-done" : "futplay-status-live")">
+                                    @jogo.Status
+                                </span>
                             </td>
                             <td>
                                 @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
                                 {
-                                    <strong>@jogo.GolsCasa x @jogo.GolsVisitante</strong>
+                                    <span class="futplay-score">@jogo.GolsCasa x @jogo.GolsVisitante</span>
                                 }
                                 else
                                 {
-                                    <span>-</span>
+                                    <span class="text-muted">-</span>
                                 }
                             </td>
                             <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@jogo.Id" class="btn btn-outline-primary btn-sm">
-                                    Detalhes
-                                </a>
-
-                                @if (User.IsInRole(AppRoles.Administrador))
-                                {
-                                    <a asp-action="Edit" asp-route-id="@jogo.Id" class="btn btn-outline-success btn-sm">
-                                        Editar
+                                <div class="futplay-actions justify-content-end">
+                                    <a asp-action="Details" asp-route-id="@jogo.Id" class="btn btn-outline-primary btn-sm">
+                                        Detalhes
                                     </a>
-                                }
+
+                                    @if (User.IsInRole(AppRoles.Administrador))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@jogo.Id" class="btn btn-outline-success btn-sm">
+                                            Editar
+                                        </a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
-
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info mb-0">
-                    Nenhum jogo cadastrado ainda.
-                </div>
-            }
         </div>
-    </div>
+    }
 </div>

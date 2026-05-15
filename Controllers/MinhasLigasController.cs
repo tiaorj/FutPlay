@@ -48,6 +48,7 @@ namespace FutPlay.Controllers
                     LigaParticipanteId = p.Id,
                     NomeLiga = p.Liga!.Nome,
                     NomeCampeonato = p.Liga.Campeonato != null ? p.Liga.Campeonato.Nome : "",
+                    CampeonatoLogoUrl = p.Liga.Campeonato != null ? p.Liga.Campeonato.LogoUrl : null,
                     Pontuacao = p.PontuacaoTotal
                 })
                 .ToListAsync();

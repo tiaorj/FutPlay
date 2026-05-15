@@ -1,190 +1,192 @@
-﻿@model FutPlay.ViewModels.PalpitarLigaViewModel
+@model FutPlay.ViewModels.PalpitarLigaViewModel
 
 @{
     ViewData["Title"] = "Palpitar na Liga";
 }
 
 <div class="container mt-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <div>
-            <h1 class="futplay-page-title mb-1">Palpitar na Liga</h1>
-            <p class="futplay-subtitle mb-0">
-                @Model.NomeLiga - @Model.NomeCampeonato
-            </p>
-        </div>
+    <section class="futplay-page-hero mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <div class="futplay-card-kicker">Central de palpites</div>
+                <h1 class="futplay-page-title mb-1">Palpitar na Liga</h1>
+                <p class="futplay-subtitle mb-0">
+                    @Model.NomeLiga · @Model.NomeCampeonato
+                </p>
+            </div>
 
-        <div class="mt-3 mt-md-0 futplay-actions">
-            <a asp-action="Ranking" asp-route-id="@Model.LigaId" class="btn btn-outline-dark">
-                Ranking
-            </a>
+            <div class="futplay-actions">
+                <a asp-action="Ranking" asp-route-id="@Model.LigaId" class="btn btn-outline-dark">
+                    Ranking
+                </a>
 
-            <a asp-action="Index" class="btn btn-outline-secondary">
-                Voltar
-            </a>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    Voltar
+                </a>
+            </div>
         </div>
-    </div>
+    </section>
 
     @if (TempData["Sucesso"] != null)
     {
-        <div class="alert alert-success">
+        <div class="alert alert-success border-0 shadow-sm">
             @TempData["Sucesso"]
         </div>
     }
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            <form asp-action="Palpitar" method="post">
-                <input type="hidden" asp-for="LigaId" />
-                <input type="hidden" asp-for="ParticipanteBloqueado" />
-                <input type="hidden" asp-for="Origem" />
+    <form asp-action="Palpitar" method="post">
+        <input type="hidden" asp-for="LigaId" />
+        <input type="hidden" asp-for="ParticipanteBloqueado" />
+        <input type="hidden" asp-for="Origem" />
 
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <div class="row align-items-end mb-4">
-                    @if (Model.ParticipanteBloqueado)
-                    {
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Participante</label>
-
-                            <input type="hidden" asp-for="LigaParticipanteId" />
-
-                            <div class="form-control bg-light">
-                                @Model.NomeParticipanteSelecionado
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 mt-3 mt-md-0">
-                            <div class="alert alert-success border mb-0">
-                                Você está palpitando com o participante vinculado ao seu usuário.
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="col-md-6">
-                            <label asp-for="LigaParticipanteId" class="form-label fw-semibold"></label>
-                            <select asp-for="LigaParticipanteId"
-                                    class="form-select"
-                                    asp-items="Model.Participantes"
-                                    onchange="carregarParticipante(this.value)">
-                                <option value="">Selecione o participante...</option>
-                            </select>
-                            <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6 mt-3 mt-md-0">
-                            <div class="alert alert-light border mb-0">
-                                Selecione o participante para carregar ou editar os palpites existentes.
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                @if (!Model.Jogos.Any())
+        <div class="futplay-panel p-3 p-md-4 mb-4">
+            <div class="row align-items-end">
+                @if (Model.ParticipanteBloqueado)
                 {
-                    <div class="futplay-empty">
-                        Nenhum jogo cadastrado para o campeonato desta liga.
-                        <br />
-                        <small>
-                            Cadastre jogos manualmente ou importe os jogos do campeonato para liberar os palpites.
-                        </small>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Participante</label>
+
+                        <input type="hidden" asp-for="LigaParticipanteId" />
+
+                        <div class="form-control bg-light">
+                            @Model.NomeParticipanteSelecionado
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mt-3 mt-md-0">
+                        <div class="alert alert-success border mb-0">
+                            Você está palpitando com o participante vinculado ao seu usuário.
+                        </div>
                     </div>
                 }
                 else
                 {
-                    <div class="row">
-                        @for (int i = 0; i < Model.Jogos.Count; i++)
-                        {
-                            <div class="col-lg-6 mb-3">
-                                <div class="card border-0 shadow-sm h-100">
-                                    <div class="card-body">
-                                        <input type="hidden" asp-for="Jogos[i].JogoId" />
-
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <div>
-                                                <small class="text-muted">
-                                                    @Model.Jogos[i].DataJogo.ToString("dd/MM/yyyy HH:mm")
-                                                </small>
-
-                                                <h5 class="mt-1 mb-0">
-                                                    @Model.Jogos[i].TimeCasa
-                                                    <span class="text-muted">x</span>
-                                                    @Model.Jogos[i].TimeVisitante
-                                                </h5>
-                                            </div>
-
-                                            <div>
-                                                @if (Model.Jogos[i].Bloqueado)
-                                                {
-                                                    <span class="badge bg-secondary">Bloqueado</span>
-                                                    <div class="small text-muted mt-1">
-                                                        Palpites encerrados 30 minutos antes do jogo.
-                                                    </div>
-                                                }
-                                                else if (Model.Jogos[i].JaPalpitado)
-                                                {
-                                                    <span class="badge bg-success">Já palpitado</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-warning text-dark">Pendente</span>
-                                                }
-                                            </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <small class="text-muted">
-                                                @(string.IsNullOrWhiteSpace(Model.Jogos[i].Fase) ? "Fase não informada" : Model.Jogos[i].Fase)
-
-                                                @if (!string.IsNullOrWhiteSpace(Model.Jogos[i].Grupo))
-                                                {
-                                                    <span> / Grupo @Model.Jogos[i].Grupo</span>
-                                                }
-                                            </small>
-                                        </div>
-
-                                        <div class="d-flex align-items-center justify-content-center gap-2 mt-3">
-                                            @if (Model.Jogos[i].Bloqueado)
-                                            {
-                                                <input asp-for="Jogos[i].GolsCasaPalpite"
-                                                       class="form-control text-center fw-bold"
-                                                       style="max-width: 80px;"
-                                                       readonly />
-
-                                                <span class="fw-bold">x</span>
-
-                                                <input asp-for="Jogos[i].GolsVisitantePalpite"
-                                                       class="form-control text-center fw-bold"
-                                                       style="max-width: 80px;"
-                                                       readonly />
-                                            }
-                                            else
-                                            {
-                                                <input asp-for="Jogos[i].GolsCasaPalpite"
-                                                       class="form-control text-center fw-bold"
-                                                       style="max-width: 80px;"
-                                                       placeholder="0" />
-
-                                                <span class="fw-bold">x</span>
-
-                                                <input asp-for="Jogos[i].GolsVisitantePalpite"
-                                                       class="form-control text-center fw-bold"
-                                                       style="max-width: 80px;"
-                                                       placeholder="0" />
-                                            }
-                                        </div>
-
-                                        <div class="small text-danger text-center mt-2">
-                                            <span asp-validation-for="Jogos[i].GolsCasaPalpite"></span>
-                                            <span asp-validation-for="Jogos[i].GolsVisitantePalpite"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        }
+                    <div class="col-md-6">
+                        <label asp-for="LigaParticipanteId" class="form-label fw-semibold"></label>
+                        <select asp-for="LigaParticipanteId"
+                                class="form-select"
+                                asp-items="Model.Participantes"
+                                onchange="carregarParticipante(this.value)">
+                            <option value="">Selecione o participante...</option>
+                        </select>
+                        <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
                     </div>
 
-                    <div class="futplay-actions mt-3">
+                    <div class="col-md-6 mt-3 mt-md-0">
+                        <div class="alert alert-light border mb-0">
+                            Selecione o participante para carregar ou editar palpites já enviados.
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (!Model.Jogos.Any())
+        {
+            <div class="futplay-empty">
+                Nenhum jogo cadastrado para o campeonato desta liga.
+                <br />
+                <small>
+                    Cadastre jogos manualmente ou importe os jogos do campeonato para liberar os palpites.
+                </small>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @for (int i = 0; i < Model.Jogos.Count; i++)
+                {
+                    <div class="col-lg-6 mb-3">
+                        <article class="futplay-match-card">
+                            <input type="hidden" asp-for="Jogos[i].JogoId" />
+
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                                <div>
+                                    <small class="text-muted">@Model.Jogos[i].DataJogo.ToString("dd/MM/yyyy HH:mm")</small>
+                                    <h5 class="mb-1 mt-1">
+                                        @Model.Jogos[i].TimeCasa
+                                        <span class="futplay-versus">x</span>
+                                        @Model.Jogos[i].TimeVisitante
+                                    </h5>
+                                    <small class="text-muted">
+                                        @(string.IsNullOrWhiteSpace(Model.Jogos[i].Fase) ? "Fase não informada" : Model.Jogos[i].Fase)
+
+                                        @if (!string.IsNullOrWhiteSpace(Model.Jogos[i].Grupo))
+                                        {
+                                            <span> · Grupo @Model.Jogos[i].Grupo</span>
+                                        }
+                                    </small>
+                                </div>
+
+                                <div class="text-end">
+                                    @if (Model.Jogos[i].Bloqueado)
+                                    {
+                                        <span class="futplay-status futplay-status-locked">Bloqueado</span>
+                                    }
+                                    else if (Model.Jogos[i].JaPalpitado)
+                                    {
+                                        <span class="futplay-status futplay-status-done">Já palpitado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="futplay-status futplay-status-pending">Pendente</span>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (Model.Jogos[i].Bloqueado)
+                            {
+                                <div class="alert alert-secondary py-2 mb-3">
+                                    Palpites encerrados 30 minutos antes do jogo.
+                                </div>
+                            }
+
+                            <div class="d-flex align-items-center justify-content-center gap-2 mt-3">
+                                @if (Model.Jogos[i].Bloqueado)
+                                {
+                                    <input asp-for="Jogos[i].GolsCasaPalpite"
+                                           class="form-control text-center fw-bold futplay-prediction-input"
+                                           readonly />
+
+                                    <span class="fw-bold fs-4">x</span>
+
+                                    <input asp-for="Jogos[i].GolsVisitantePalpite"
+                                           class="form-control text-center fw-bold futplay-prediction-input"
+                                           readonly />
+                                }
+                                else
+                                {
+                                    <input asp-for="Jogos[i].GolsCasaPalpite"
+                                           class="form-control text-center fw-bold futplay-prediction-input"
+                                           placeholder="0" />
+
+                                    <span class="fw-bold fs-4">x</span>
+
+                                    <input asp-for="Jogos[i].GolsVisitantePalpite"
+                                           class="form-control text-center fw-bold futplay-prediction-input"
+                                           placeholder="0" />
+                                }
+                            </div>
+
+                            <div class="small text-danger text-center mt-2">
+                                <span asp-validation-for="Jogos[i].GolsCasaPalpite"></span>
+                                <span asp-validation-for="Jogos[i].GolsVisitantePalpite"></span>
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+
+            <div class="futplay-panel p-3 mt-2">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <strong>Pronto para salvar?</strong>
+                        <div class="text-muted small">Os jogos bloqueados ficam somente para consulta.</div>
+                    </div>
+
+                    <div class="futplay-actions">
                         <button type="submit" class="btn btn-success">
                             Salvar Palpites
                         </button>
@@ -193,10 +195,10 @@
                             Detalhes da Liga
                         </a>
                     </div>
-                }
-            </form>
-        </div>
-    </div>
+                </div>
+            </div>
+        }
+    </form>
 </div>
 
 @section Scripts {
@@ -204,11 +206,11 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
-    <script>            
+    <script>
         function carregarParticipante(participanteId) {
             if (participanteId) {
                 window.location.href = '@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })' + '?participanteId=' + participanteId;
             }
         }
-    </script>    
+    </script>
 }

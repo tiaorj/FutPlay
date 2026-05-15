@@ -10,6 +10,8 @@ namespace FutPlay.ViewModels
 
         public string NomeCampeonato { get; set; } = string.Empty;
 
+        public string? CampeonatoLogoUrl { get; set; }
+
         public int Pontuacao { get; set; }
     }
 }

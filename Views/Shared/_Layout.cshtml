@@ -11,11 +11,19 @@
     <link rel="stylesheet" href="~/FutPlay.styles.css" asp-append-version="true" />
 </head>
 <body>
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var isAdmin = User.IsInRole(AppRoles.Administrador);
+        var isParticipante = User.IsInRole(AppRoles.Participante);
+        var canUseParticipantArea = isAdmin || isParticipante;
+    }
+
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark futplay-navbar shadow-sm">
+        <nav class="navbar navbar-expand-lg navbar-dark futplay-navbar sticky-top">
             <div class="container">
-                <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
-                    ⚽ FutPlay
+                <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <span class="futplay-brand-mark">⚽</span>
+                    <span>FutPlay</span>
                 </a>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
@@ -24,70 +32,106 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="menuPrincipal">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-1">
 
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link futplay-nav-pill @(currentController == "Home" ? "active" : "")"
+                               asp-controller="Home"
+                               asp-action="Index">
                                 Início
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Campeonatos" asp-action="Index">
-                                Campeonatos
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle futplay-nav-pill @(currentController == "Campeonatos" || currentController == "Jogos" || currentController == "Times" ? "active" : "")"
+                               href="#"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                Portal
                             </a>
+
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Campeonatos" asp-action="Index">
+                                        🏆 Campeonatos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Jogos" asp-action="Index">
+                                        📅 Jogos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Times" asp-action="Index">
+                                        🛡️ Times
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Times" asp-action="Index">
-                                Times
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Jogos" asp-action="Index">
-                                Jogos
-                            </a>
-                        </li>
-
-                        @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
+                        @if (canUseParticipantArea)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="MinhasLigas" asp-action="Index">
-                                    Minhas Ligas
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle futplay-nav-pill @(currentController == "MinhasLigas" || currentController == "Ligas" || currentController == "LigaParticipantes" || currentController == "Palpites" ? "active" : "")"
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    Participante
                                 </a>
-                            </li>
 
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Ligas" asp-action="Index">
-                                    Ligas
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="LigaParticipantes" asp-action="Index">
-                                    Participantes
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Palpites" asp-action="Index">
-                                    Palpites
-                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="MinhasLigas" asp-action="Index">
+                                            ⭐ Minhas Ligas
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Ligas" asp-action="Index">
+                                            👥 Ligas
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="LigaParticipantes" asp-action="Index">
+                                            🙋 Participantes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Palpites" asp-action="Index">
+                                            🎯 Palpites
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         }
 
-                        @if (User.IsInRole(AppRoles.Administrador))
+                        @if (isAdmin)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="Importacoes" asp-action="Index">
-                                    Importações
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle futplay-nav-pill futplay-admin-link @(currentController == "Importacoes" || currentController == "MockData" ? "active" : "")"
+                                   href="#"
+                                   role="button"
+                                   data-bs-toggle="dropdown"
+                                   aria-expanded="false">
+                                    Admin
                                 </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" asp-controller="MockData" asp-action="Index">
-                                    Dados Teste
-                                </a>
+
+                                <ul class="dropdown-menu dropdown-menu-lg-end">
+                                    <li>
+                                        <h6 class="dropdown-header">Operações</h6>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Importacoes" asp-action="Index">
+                                            ⬆️ Importações
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="MockData" asp-action="Index">
+                                            🧪 Dados Teste
+                                        </a>
+                                    </li>
+                                </ul>
                             </li>
                         }
 

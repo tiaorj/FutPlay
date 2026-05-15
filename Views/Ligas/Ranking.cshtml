@@ -1,28 +1,45 @@
-﻿@model FutPlay.ViewModels.RankingLigaViewModel
+@model FutPlay.ViewModels.RankingLigaViewModel
 
 @{
     ViewData["Title"] = "Ranking da Liga";
+    var top3 = Model.Participantes.Take(3).ToList();
 }
 
 <div class="container mt-4">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-        <div>
-            <h1 class="futplay-page-title mb-1">Ranking da Liga</h1>
-            <p class="futplay-subtitle mb-0">
-                @Model.Liga.Nome - @Model.Liga.Campeonato?.Nome
-            </p>
-        </div>
+    <section class="futplay-page-hero mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="futplay-logo">
+                    @if (!string.IsNullOrWhiteSpace(Model.Liga.Campeonato?.LogoUrl))
+                    {
+                        <img src="@Model.Liga.Campeonato.LogoUrl" alt="@Model.Liga.Campeonato.Nome" />
+                    }
+                    else
+                    {
+                        <span>🏅</span>
+                    }
+                </span>
 
-        <div class="mt-3 mt-md-0 futplay-actions">
-            <a asp-action="Palpitar" asp-route-id="@Model.Liga.Id" class="btn btn-success">
-                Palpitar
-            </a>
+                <div>
+                    <div class="futplay-card-kicker">Tabela da liga</div>
+                    <h1 class="futplay-page-title mb-1">Ranking da Liga</h1>
+                    <p class="futplay-subtitle mb-0">
+                        @Model.Liga.Nome · @Model.Liga.Campeonato?.Nome
+                    </p>
+                </div>
+            </div>
 
-            <a asp-action="Index" class="btn btn-outline-secondary">
-                Voltar
-            </a>
+            <div class="futplay-actions">
+                <a asp-action="Palpitar" asp-route-id="@Model.Liga.Id" class="btn btn-success">
+                    Palpitar
+                </a>
+
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    Voltar
+                </a>
+            </div>
         </div>
-    </div>
+    </section>
 
     @if (!Model.Participantes.Any())
     {
@@ -32,70 +49,94 @@
     }
     else
     {
-        <div class="card shadow-sm futplay-section-card">
-            <div class="card-body table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width: 90px;">Posição</th>
-                            <th>Participante</th>
-                            <th>E-mail</th>
-                            <th>Palpites</th>
-                            <th>Placares Exatos</th>
-                            <th>Pontos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Participantes)
+        <div class="futplay-rank-medals mb-4">
+            @foreach (var item in top3)
+            {
+                <article class="futplay-rank-podium">
+                    <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                        <span class="futplay-rank-number">@item.Posicao</span>
+                        @if (item.Posicao == 1)
                         {
-                            <tr>
-                                <td>
-                                    @if (item.Posicao == 1)
-                                    {
-                                        <span class="badge bg-warning text-dark fs-6">🥇 1º</span>
-                                    }
-                                    else if (item.Posicao == 2)
-                                    {
-                                        <span class="badge bg-secondary fs-6">🥈 2º</span>
-                                    }
-                                    else if (item.Posicao == 3)
-                                    {
-                                        <span class="badge bg-danger fs-6">🥉 3º</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-light text-dark border">@(item.Posicao)º</span>
-                                    }
-                                </td>
-
-                                <td>
-                                    <strong>@item.Nome</strong>
-                                </td>
-
-                                <td>@item.Email</td>
-
-                                <td>
-                                    <span class="badge bg-primary">
-                                        @item.TotalPalpites
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-success">
-                                        @item.PlacaresExatos
-                                    </span>
-                                </td>
-
-                                <td>
-                                    <span class="badge bg-dark fs-6">
-                                        @item.PontuacaoTotal
-                                    </span>
-                                </td>
-                            </tr>
+                            <span class="fs-3">🥇</span>
                         }
-                    </tbody>
-                </table>
-            </div>
+                        else if (item.Posicao == 2)
+                        {
+                            <span class="fs-3">🥈</span>
+                        }
+                        else
+                        {
+                            <span class="fs-3">🥉</span>
+                        }
+                    </div>
+
+                    <h5 class="mb-1">@item.Nome</h5>
+                    <p class="text-muted small mb-3">@item.Email</p>
+
+                    <div class="d-flex align-items-end justify-content-between">
+                        <div>
+                            <span class="text-muted small">Pontos</span>
+                            <div class="display-6 fw-bold">@item.PontuacaoTotal</div>
+                        </div>
+                        <span class="badge bg-success">@item.PlacaresExatos exatos</span>
+                    </div>
+                </article>
+            }
+        </div>
+
+        <div class="futplay-table-card table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 90px;">Posição</th>
+                        <th>Participante</th>
+                        <th>E-mail</th>
+                        <th>Palpites</th>
+                        <th>Placares Exatos</th>
+                        <th>Pontos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Participantes)
+                    {
+                        <tr>
+                            <td>
+                                @if (item.Posicao <= 3)
+                                {
+                                    <span class="futplay-rank-number">@item.Posicao</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-dark border">@(item.Posicao)º</span>
+                                }
+                            </td>
+
+                            <td>
+                                <strong>@item.Nome</strong>
+                            </td>
+
+                            <td>@item.Email</td>
+
+                            <td>
+                                <span class="badge bg-primary">
+                                    @item.TotalPalpites
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-success">
+                                    @item.PlacaresExatos
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-dark fs-6">
+                                    @item.PontuacaoTotal
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
 </div>
