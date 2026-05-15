@@ -1,0 +1,35 @@
+@model FutPlay.ViewModels.LigaEntrarViewModel
+
+@{
+    ViewData["Title"] = "Entrar na Liga";
+}
+
+<div class="container mt-4">
+    <h1>Entrar na Liga</h1>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <form asp-action="Entrar" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="CodigoConvite" class="form-label"></label>
+                    <input asp-for="CodigoConvite" class="form-control" />
+                    <span asp-validation-for="CodigoConvite" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Entrar</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FutPlay.Controllers
 {
@@ -22,16 +23,36 @@ namespace FutPlay.Controllers
             _logger = logger;
         }
 
-        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
+        // Catálogo público de ligas (apenas ligas Ativas e Públicas)
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var ligas = await _context.Ligas
                 .Include(l => l.Campeonato)
-                .OrderByDescending(l => l.Ativo)
-                .ThenBy(l => l.Nome)
+                .Where(l => l.Ativo && l.Publica)
+                .OrderBy(l => l.Nome)
                 .ToListAsync();
 
-            return View(ligas);
+            var lista = new List<LigaCatalogoItemViewModel>();
+
+            foreach (var liga in ligas)
+            {
+                bool participa = false;
+
+                if (User?.Identity?.IsAuthenticated == true)
+                {
+                    var participante = await ObterParticipanteUsuarioAsync(liga.Id, vincularPorEmail: true);
+                    participa = participante != null;
+                }
+
+                lista.Add(new LigaCatalogoItemViewModel
+                {
+                    Liga = liga,
+                    UsuarioParticipa = participa
+                });
+            }
+
+            return View(lista);
         }
 
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
@@ -96,6 +117,7 @@ namespace FutPlay.Controllers
 
                 return View(viewModelMinhasLigas);
             }
+
 
             var model = new PalpitarLigaViewModel
             {
@@ -188,6 +210,7 @@ namespace FutPlay.Controllers
                 var viewModelErro = await MontarViewModelPalpitar(model.LigaId, model);
                 return View(viewModelErro);
             }
+
 
             foreach (var item in model.Jogos)
             {
@@ -345,8 +368,8 @@ namespace FutPlay.Controllers
             int ligaId,
             bool vincularPorEmail)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value
                 ?? User.Identity?.Name;
 
             if (string.IsNullOrWhiteSpace(userId) && string.IsNullOrWhiteSpace(email))
@@ -374,6 +397,7 @@ namespace FutPlay.Controllers
 
             return participante;
         }
+
 
         [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Create()
@@ -480,6 +504,79 @@ namespace FutPlay.Controllers
             return Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper();
         }
 
+        // Entrada em liga por código de convite
+        [AllowAnonymous]
+        public IActionResult Entrar()
+        {
+            return View(new LigaEntrarViewModel());
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Entrar(LigaEntrarViewModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.CodigoConvite))
+            {
+                ModelState.AddModelError("CodigoConvite", "Informe o código de convite.");
+                return View(model);
+            }
+
+            var codigo = model.CodigoConvite.Trim().ToUpper();
+
+            var liga = await _context.Ligas
+                .FirstOrDefaultAsync(l => l.CodigoConvite.ToUpper() == codigo && l.Ativo);
+
+            if (liga == null)
+            {
+                ModelState.AddModelError("", "Código inválido ou liga não encontrada.");
+                return View(model);
+            }
+
+            // Verifica se o usuário já participa
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+            var emailNormalizado = email?.ToUpper();
+
+            var participanteExistente = await _context.LigaParticipantes
+                .FirstOrDefaultAsync(p =>
+                    p.LigaId == liga.Id &&
+                    p.Ativo &&
+                    ((userId != null && p.UserId == userId) ||
+                     (emailNormalizado != null && p.Email.ToUpper() == emailNormalizado)));
+
+            if (participanteExistente != null)
+            {
+                // já participa -> redireciona para MinhasLigas
+                return RedirectToAction("Index", "MinhasLigas");
+            }
+
+            // Cria participante
+            var nome = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(nome) && !string.IsNullOrWhiteSpace(email))
+            {
+                // usa a parte antes do @ como fallback
+                var atIdx = email.IndexOf('@');
+                nome = atIdx > 0 ? email.Substring(0, atIdx) : email;
+            }
+
+            var participante = new LigaParticipante
+            {
+                LigaId = liga.Id,
+                UserId = userId,
+                Nome = nome ?? email ?? "Participante",
+                Email = email ?? "",
+                DataEntrada = DateTime.Now,
+                PontuacaoTotal = 0,
+                Ativo = true
+            };
+
+            _context.LigaParticipantes.Add(participante);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index", "MinhasLigas");
+        }
+
         public async Task<IActionResult> Ranking(int? id)
         {
             if (id == null)
@@ -494,6 +591,29 @@ namespace FutPlay.Controllers
             if (liga == null)
             {
                 return NotFound();
+            }
+
+            // Segurança de acesso:
+            // - Ranking de liga pública é público
+            // - Ranking de liga privada só para Administrador ou participante vinculado
+            if (!liga.Publica)
+            {
+                if (!UsuarioEhAdministrador())
+                {
+                    var participante = await ObterParticipanteUsuarioAsync(liga.Id, vincularPorEmail: true);
+
+                    if (participante == null)
+                    {
+                        if (!User.Identity?.IsAuthenticated ?? true)
+                        {
+                            // visitante -> exigir login
+                            return Challenge();
+                        }
+
+                        // usuário autenticado, mas não participante -> negar
+                        return Forbid();
+                    }
+                }
             }
 
             var participantes = await _context.LigaParticipantes

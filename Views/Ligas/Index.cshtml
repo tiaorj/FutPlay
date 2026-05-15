@@ -1,4 +1,4 @@
-@model List<FutPlay.Models.Liga>
+@model List<FutPlay.ViewModels.LigaCatalogoItemViewModel>
 
 @{
     ViewData["Title"] = "Ligas";
@@ -7,10 +7,10 @@
 <div class="container futplay-portal-shell">
     <section class="futplay-league-hero futplay-league-hero-banner mb-4">
         <div class="futplay-league-hero-content">
-            <div class="futplay-league-kicker">Área do participante</div>
+            <div class="futplay-league-kicker">Catálogo público</div>
             <h1 class="futplay-league-title">Ligas FutPlay</h1>
             <p class="futplay-league-lead">
-                Escolha uma liga para palpitar, acompanhar o ranking e seguir seu campeonato favorito.
+                Confira ligas públicas disponíveis. Use o código de convite para entrar em uma liga.
             </p>
         </div>
 
@@ -26,21 +26,22 @@
     {
         <div class="futplay-league-empty">
             <div class="futplay-league-empty-mark">FP</div>
-            <h2>Nenhuma liga cadastrada ainda</h2>
-            <p>Quando houver ligas disponíveis, elas aparecerão aqui em formato de lista esportiva.</p>
+            <h2>Nenhuma liga pública encontrada</h2>
+            <p>Quando houver ligas públicas disponíveis, elas aparecerão aqui.</p>
         </div>
     }
     else
     {
         <section class="futplay-league-panel">
             <div class="futplay-league-panel-head">
-                <h2>Ligas disponíveis</h2>
+                <h2>Ligas públicas</h2>
                 <span>@Model.Count ligas</span>
             </div>
 
             <div class="futplay-league-rows">
-                @foreach (var liga in Model)
+                @foreach (var item in Model)
                 {
+                    var liga = item.Liga;
                     <article class="futplay-league-row">
                         <div class="futplay-league-logo">
                             @if (!string.IsNullOrWhiteSpace(liga.Campeonato?.LogoUrl))
@@ -54,7 +55,7 @@
                         </div>
 
                         <div class="futplay-league-row-info">
-                            <span>@(liga.Publica ? "Liga pública" : "Liga privada")</span>
+                            <span>Liga pública</span>
                             <h3>@liga.Nome</h3>
                             <p>@liga.Campeonato?.Nome</p>
                         </div>
@@ -65,12 +66,35 @@
                         </div>
 
                         <div class="futplay-league-actions">
-                            @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
+                            @* Comportamento por tipo de usuário *@
+                            @if (!User.Identity.IsAuthenticated)
+                            {
+                                <a href="/Identity/Account/Login?returnUrl=/Ligas"
+                                   class="futplay-league-action-primary">
+                                    Entrar
+                                </a>
+                            }
+                            else if (item.UsuarioParticipa)
                             {
                                 <a asp-action="Palpitar"
                                    asp-route-id="@liga.Id"
+                                   asp-route-origem="minhasligas"
                                    class="futplay-league-action-primary">
                                     Palpitar
+                                </a>
+
+                                <a asp-controller="MinhasLigas"
+                                   asp-action="Index"
+                                   class="futplay-league-action-secondary">
+                                    Ver em Minhas Ligas
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="Entrar"
+                                   asp-route-codigo="@liga.CodigoConvite"
+                                   class="futplay-league-action-primary">
+                                    Entrar na Liga
                                 </a>
                             }
 
