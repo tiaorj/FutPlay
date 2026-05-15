@@ -7,10 +7,13 @@ namespace FutPlay.Services
     public class PontuacaoService
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<PontuacaoService> _logger;
 
-        public PontuacaoService(AppDbContext context)
+        public PontuacaoService(AppDbContext context, ILogger<PontuacaoService> logger)
         {
             _context = context;
+            _logger = logger;
+
         }
 
         public int CalcularPontuacao(Palpite palpite, Jogo jogo)
@@ -57,27 +60,52 @@ namespace FutPlay.Services
 
         public async Task RecalcularPontuacaoPalpitesCampeonatoAsync(int campeonatoId)
         {
-            var palpites = await _context.Palpites
-                .Include(p => p.Jogo)
-                .Where(p =>
-                    p.Ativo &&
-                    p.Jogo != null &&
-                    p.Jogo.CampeonatoId == campeonatoId)
-                .ToListAsync();
+            _logger.LogInformation(
+    "Iniciando recálculo de pontuação dos palpites do campeonato {CampeonatoId}",
+    campeonatoId);
 
-            foreach (var palpite in palpites)
+            try
             {
-                AtualizarPontuacaoPalpite(palpite);
+                var palpites = await _context.Palpites
+                    .Include(p => p.Jogo)
+                    .Where(p =>
+                        p.Ativo &&
+                        p.Jogo != null &&
+                        p.Jogo.CampeonatoId == campeonatoId)
+                    .ToListAsync();
+
+                _logger.LogInformation(
+                    "Foram encontrados {TotalPalpites} palpites para recalcular no campeonato {CampeonatoId}",
+                    palpites.Count,
+                    campeonatoId);
+
+                foreach (var palpite in palpites)
+                {
+                    AtualizarPontuacaoPalpite(palpite);
+                }
+
+                await _context.SaveChangesAsync();
+
+                var participantesAfetados = palpites
+                    .Select(p => p.LigaParticipanteId)
+                    .Distinct()
+                    .ToList();
+
+                await AtualizarPontuacaoParticipantesAsync(participantesAfetados);
+
+                _logger.LogInformation(
+                    "Recálculo de pontuação concluído para o campeonato {CampeonatoId}",
+                    campeonatoId);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Erro ao recalcular pontuação dos palpites do campeonato {CampeonatoId}",
+                    campeonatoId);
 
-            await _context.SaveChangesAsync();
-
-            var participantesAfetados = palpites
-                .Select(p => p.LigaParticipanteId)
-                .Distinct()
-                .ToList();
-
-            await AtualizarPontuacaoParticipantesAsync(participantesAfetados);
+                throw;
+            }
         }
 
         public async Task RecalcularPontuacaoPalpitesAsync()

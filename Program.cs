@@ -3,8 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using FutPlay.Models.Api;
 using FutPlay.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .AddJsonFile("appsettings.Logging.json", optional: true, reloadOnChange: true);
+
+builder.Host.UseSerilog((context, loggerConfig) =>
+{
+    loggerConfig
+        .ReadFrom.Configuration(context.Configuration)
+        .Enrich.FromLogContext();
+});
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -49,6 +60,9 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseSerilogRequestLogging();
+
 app.UseRouting();
 
 app.UseAuthentication();
