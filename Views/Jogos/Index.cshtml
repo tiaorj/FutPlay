@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = "Jogos";
+    var grupos = Model
+        .GroupBy(j => j.Rodada.HasValue ? $"{j.Rodada}ª rodada" : j.DataJogo.ToString("dd/MM/yyyy"))
+        .ToList();
 }
 
 <div class="container futplay-portal-shell">
@@ -24,91 +27,87 @@
         </div>
     </section>
 
-    <section class="futplay-section-block">
-        <div class="futplay-section-header">
-            <h2 class="futplay-section-title">JOGOS</h2>
-        </div>
-
-        @if (!Model.Any())
-        {
-            <div class="futplay-section-empty">Nenhum jogo cadastrado ainda.</div>
-        }
-        else
-        {
-            <div class="futplay-match-list">
-                @foreach (var jogo in Model)
-                {
-                    var statusClass = string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase)
-                        ? "futplay-match-status-finalizado"
-                        : string.Equals(jogo.Status, "Agendado", StringComparison.OrdinalIgnoreCase)
-                            ? "futplay-match-status-agendado"
-                            : "futplay-match-status-default";
-
-                    <article class="futplay-match-item">
-                        <div class="futplay-match-meta">
-                            <strong>@jogo.DataJogo.ToString("dd/MM/yyyy")</strong>
-                            <span>@jogo.DataJogo.ToString("HH:mm")</span>
-                            <span>@jogo.Campeonato?.Nome</span>
-                            @if (!string.IsNullOrWhiteSpace(jogo.Fase))
-                            {
-                                <span>@jogo.Fase</span>
-                            }
-                            @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
-                            {
-                                <span>Grupo @jogo.Grupo</span>
-                            }
-                        </div>
-
-                        <div class="futplay-match-board">
-                            <div class="futplay-match-team">
-                                <span class="futplay-match-crest">
-                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
-                                    {
-                                        <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <span>@(jogo.TimeCasa?.Sigla ?? "CAS")</span>
-                                    }
-                                </span>
-                                <strong>@jogo.TimeCasa?.Nome</strong>
-                            </div>
-
-                            <div class="futplay-match-center">
-                                <span class="futplay-match-score">
-                                    @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
-                                        ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
-                                        : "x")
-                                </span>
-                            </div>
-
-                            <div class="futplay-match-team futplay-match-team-away">
-                                <strong>@jogo.TimeVisitante?.Nome</strong>
-                                <span class="futplay-match-crest">
-                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
-                                    {
-                                        <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <span>@(jogo.TimeVisitante?.Sigla ?? "VIS")</span>
-                                    }
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="futplay-match-actions">
-                            <span class="futplay-match-status @statusClass">@jogo.Status</span>
-                            <a asp-action="Details" asp-route-id="@jogo.Id">Detalhes</a>
-
-                            @if (User.IsInRole(AppRoles.Administrador))
-                            {
-                                <a asp-action="Edit" asp-route-id="@jogo.Id">Editar</a>
-                            }
-                        </div>
-                    </article>
-                }
+    @if (!Model.Any())
+    {
+        <div class="futplay-section-empty">Nenhum jogo cadastrado ainda.</div>
+    }
+    else
+    {
+        <section class="futplay-fixture-panel futplay-fixture-panel-wide">
+            <div class="futplay-fixture-head">
+                <span>‹</span>
+                <h2>JOGOS</h2>
+                <span>›</span>
             </div>
-        }
-    </section>
+
+            @foreach (var grupo in grupos)
+            {
+                <div class="futplay-fixture-round">
+                    <h3>@grupo.Key.ToUpperInvariant()</h3>
+
+                    <div class="futplay-fixture-list">
+                        @foreach (var jogo in grupo.OrderBy(j => j.DataJogo))
+                        {
+                            <article class="futplay-fixture-item futplay-fixture-item-row">
+                                <div class="futplay-fixture-meta">
+                                    <span>@jogo.Campeonato?.Nome</span>
+                                    <strong>@jogo.DataJogo.ToString("dd/MM") · @jogo.DataJogo.ToString("HH:mm")</strong>
+                                    @if (!string.IsNullOrWhiteSpace(jogo.Fase))
+                                    {
+                                        <span>@jogo.Fase</span>
+                                    }
+                                </div>
+
+                                <div class="futplay-fixture-board">
+                                    <div class="futplay-fixture-team">
+                                        <span>@jogo.TimeCasa?.Nome</span>
+                                        <span class="futplay-match-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>@(jogo.TimeCasa?.Sigla ?? "CAS")</span>
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <strong class="futplay-fixture-versus">
+                                        @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}" : "x")
+                                    </strong>
+
+                                    <div class="futplay-fixture-team">
+                                        <span class="futplay-match-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>@(jogo.TimeVisitante?.Sigla ?? "VIS")</span>
+                                            }
+                                        </span>
+                                        <span>@jogo.TimeVisitante?.Nome</span>
+                                    </div>
+                                </div>
+
+                                <div class="futplay-fixture-actions">
+                                    <span class="futplay-match-status @(jogo.Status == "Finalizado" ? "futplay-match-status-finalizado" : "futplay-match-status-agendado")">
+                                        @jogo.Status
+                                    </span>
+                                    <a asp-action="Details" asp-route-id="@jogo.Id">Fique por dentro</a>
+
+                                    @if (User.IsInRole(AppRoles.Administrador))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@jogo.Id">Editar</a>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </div>
+            }
+        </section>
+    }
 </div>

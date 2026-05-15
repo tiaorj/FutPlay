@@ -2306,3 +2306,628 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Competition selector */
+.futplay-competition-shell {
+    background: #ffffff;
+    border: 1px solid #e4e9ee;
+    border-radius: 18px;
+    box-shadow: 0 10px 32px rgba(30, 48, 72, 0.05);
+    margin: 0 auto 2rem;
+    max-width: 980px;
+    overflow: hidden;
+}
+
+.futplay-competition-tabs {
+    align-items: center;
+    border-bottom: 1px solid #d8dde6;
+    display: flex;
+    gap: 2rem;
+    padding: 1.15rem 1.5rem 0;
+}
+
+.futplay-competition-tabs span,
+.futplay-competition-tabs strong {
+    color: #7b86a6;
+    display: inline-flex;
+    font-weight: 900;
+    padding: 0 0 1rem;
+}
+
+.futplay-competition-tabs strong {
+    border-bottom: 3px solid #0f5b49;
+    color: #0f5b49;
+}
+
+.futplay-competition-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem 1.5rem 0;
+}
+
+.futplay-competition-head h1,
+.futplay-competition-featured h2,
+.futplay-competition-groups h2 {
+    color: #101820;
+    font-size: 1.1rem;
+    font-weight: 900;
+    margin: 0;
+}
+
+.futplay-competition-head p {
+    color: #687386;
+    margin: 0.25rem 0 0;
+}
+
+.futplay-competition-admin-link {
+    border: 1px solid #0f5b49;
+    color: #0f5b49;
+    font-weight: 900;
+    padding: 0.5rem 0.75rem;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.futplay-competition-admin-link:hover {
+    background: #0f5b49;
+    color: #ffffff;
+}
+
+.futplay-competition-featured,
+.futplay-competition-groups {
+    padding: 1rem 1.5rem 1.25rem;
+}
+
+.futplay-competition-grid {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-top: 0.65rem;
+}
+
+.futplay-competition-card {
+    background: #f1f4f8;
+    border-radius: 10px;
+    min-height: 104px;
+    padding: 0.8rem;
+    position: relative;
+}
+
+.futplay-competition-card-link {
+    align-items: center;
+    color: #101820;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    height: 100%;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+}
+
+.futplay-competition-card-link:hover {
+    color: #0f5b49;
+}
+
+.futplay-competition-card strong {
+    display: -webkit-box;
+    font-size: 0.86rem;
+    font-weight: 900;
+    line-height: 1.12;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.futplay-competition-logo {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    color: #0f5b49;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 900;
+    height: 42px;
+    justify-content: center;
+    overflow: hidden;
+    width: 42px;
+}
+
+.futplay-competition-logo-small {
+    height: 34px;
+    width: 34px;
+}
+
+.futplay-competition-logo img {
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+    width: 100%;
+}
+
+.futplay-competition-favorite {
+    color: #9aa5b4;
+    font-size: 1.35rem;
+    line-height: 1;
+    position: absolute;
+    right: 0.65rem;
+    top: 0.55rem;
+}
+
+.futplay-competition-groups {
+    padding-top: 0;
+}
+
+.futplay-competition-group {
+    border-bottom: 1px solid #eef1f5;
+}
+
+.futplay-competition-group-button {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: #101820;
+    display: flex;
+    justify-content: space-between;
+    padding: 0.9rem 0;
+    text-align: left;
+    width: 100%;
+}
+
+.futplay-competition-country {
+    align-items: center;
+    display: flex;
+    font-size: 1.02rem;
+    gap: 0.75rem;
+}
+
+.futplay-competition-country-mark {
+    align-items: center;
+    background: #e8fbef;
+    border: 1px solid #b9ddca;
+    border-radius: 50%;
+    color: #0f5b49;
+    display: inline-flex;
+    font-size: 0.8rem;
+    font-weight: 900;
+    height: 28px;
+    justify-content: center;
+    width: 28px;
+}
+
+.futplay-competition-group-button > span:last-child {
+    color: #8a95a3;
+    font-size: 0.85rem;
+    font-weight: 900;
+}
+
+.futplay-competition-group-list {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0 0 0.85rem 2.5rem;
+}
+
+.futplay-competition-row {
+    align-items: center;
+    background: #fbfcfd;
+    border: 1px solid #edf1f4;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.65rem;
+}
+
+.futplay-competition-row-body strong,
+.futplay-competition-row-body span {
+    display: block;
+}
+
+.futplay-competition-row-body strong {
+    color: #172231;
+    font-weight: 900;
+}
+
+.futplay-competition-row-body span {
+    color: #7c8794;
+    font-size: 0.84rem;
+}
+
+.futplay-competition-row-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.futplay-competition-row-actions a,
+.futplay-competition-row-actions button {
+    background: transparent;
+    border: 0;
+    color: #0f5b49;
+    font-size: 0.83rem;
+    font-weight: 900;
+    padding: 0;
+    text-decoration: none;
+}
+
+.futplay-competition-row-actions a:hover,
+.futplay-competition-row-actions button:hover {
+    text-decoration: underline;
+}
+
+/* GE-like standings and fixtures */
+.futplay-standings-card,
+.futplay-fixture-panel {
+    background: #ffffff;
+    border: 0;
+    box-shadow: none;
+}
+
+.futplay-standings-head,
+.futplay-fixture-head {
+    align-items: center;
+    border-bottom: 1px solid #d7d7d7;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0;
+    min-height: 56px;
+}
+
+.futplay-standings-head h2,
+.futplay-fixture-head h2 {
+    color: #090909;
+    font-size: 1.75rem;
+    font-weight: 900;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.futplay-fixture-head span {
+    color: #0f9d58;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.futplay-standings-group {
+    margin-top: 0.5rem;
+}
+
+.futplay-standings-group-title {
+    color: #8a8f99;
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 0.55rem 0 0.25rem;
+}
+
+.futplay-standings-table {
+    color: #14213d;
+    font-size: 0.9rem;
+    min-width: 760px;
+}
+
+.futplay-standings-table thead th {
+    background: #ffffff;
+    border-bottom: 1px solid #cfcfcf;
+    color: #8a8f99;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.5rem 0.55rem;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.futplay-standings-table thead .futplay-standings-club-head {
+    text-align: left;
+}
+
+.futplay-standings-table tbody td {
+    border-bottom: 1px solid #dedede;
+    padding: 0.68rem 0.55rem;
+    text-align: center;
+}
+
+.futplay-standings-table tbody td:nth-child(2),
+.futplay-standings-table tbody td:nth-child(4),
+.futplay-standings-table tbody td:nth-child(6),
+.futplay-standings-table tbody td:nth-child(8),
+.futplay-standings-table tbody td:nth-child(10) {
+    background: #f6f6f6;
+}
+
+.futplay-standings-club {
+    align-items: center;
+    display: flex;
+    gap: 0.7rem;
+    min-width: 250px;
+    text-align: left !important;
+}
+
+.futplay-standings-position {
+    color: #142dff;
+    display: inline-flex;
+    font-size: 1rem;
+    justify-content: center;
+    min-width: 24px;
+}
+
+.futplay-standings-club strong {
+    color: #14213d;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.futplay-standings-points {
+    color: #07121f;
+    font-weight: 900;
+}
+
+.futplay-form-dots {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.25rem;
+    justify-content: center;
+    min-width: 74px;
+}
+
+.futplay-form-dot {
+    border-radius: 50%;
+    display: inline-block;
+    height: 7px;
+    width: 7px;
+}
+
+.futplay-form-win {
+    background: #39a935;
+}
+
+.futplay-form-draw {
+    background: #bfc4c8;
+}
+
+.futplay-form-loss {
+    background: #f10f22;
+}
+
+.futplay-form-empty {
+    background: #d7d7d7;
+}
+
+.futplay-fixture-panel {
+    border-left: 1px solid #d7d7d7;
+    padding-left: 2rem;
+}
+
+.futplay-fixture-panel-wide {
+    border-left: 0;
+    padding-left: 0;
+}
+
+.futplay-fixture-list {
+    display: grid;
+}
+
+.futplay-fixture-round {
+    border-bottom: 1px solid #dedede;
+}
+
+.futplay-fixture-round h3 {
+    color: #3d3d3d;
+    font-size: 0.92rem;
+    font-weight: 900;
+    margin: 0;
+    padding: 0.9rem 0 0.2rem;
+    text-align: center;
+}
+
+.futplay-fixture-item {
+    border-bottom: 1px solid #dedede;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.futplay-fixture-item-row {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1.6fr) auto;
+    text-align: left;
+}
+
+.futplay-fixture-item-row .futplay-fixture-meta {
+    justify-content: flex-start;
+    margin-bottom: 0;
+}
+
+.futplay-fixture-meta {
+    color: #666;
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+    gap: 0.45rem;
+    justify-content: center;
+    margin-bottom: 0.65rem;
+}
+
+.futplay-fixture-meta strong {
+    color: #3d3d3d;
+}
+
+.futplay-fixture-board {
+    align-items: center;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.futplay-fixture-team {
+    align-items: center;
+    color: #757575;
+    display: flex;
+    gap: 0.45rem;
+    justify-content: center;
+    min-width: 0;
+}
+
+.futplay-fixture-team span:first-child,
+.futplay-fixture-team span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.futplay-fixture-versus {
+    color: #c8c8c8;
+    font-weight: 900;
+}
+
+.futplay-fixture-item a {
+    color: #0f9d58;
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 900;
+    margin-top: 0.55rem;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.futplay-fixture-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    justify-content: flex-end;
+}
+
+.futplay-fixture-actions a {
+    color: #0f9d58;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.futplay-fixture-actions a:hover {
+    text-decoration: underline;
+}
+
+.futplay-league-hero-scoreboard a {
+    color: #ffffff;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.futplay-league-hero-scoreboard a:hover {
+    text-decoration: underline;
+}
+
+.futplay-fixture-item a:hover {
+    text-decoration: underline;
+}
+
+.futplay-fixture-results {
+    display: grid;
+}
+
+.futplay-fixture-result {
+    align-items: center;
+    border-bottom: 1px solid #dedede;
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: 70px minmax(0, 1fr) auto minmax(0, 1fr) auto;
+    padding: 0.75rem 0;
+}
+
+.futplay-fixture-result span {
+    color: #757575;
+    font-size: 0.84rem;
+}
+
+.futplay-fixture-result strong {
+    color: #14213d;
+    font-weight: 700;
+}
+
+.futplay-fixture-result b {
+    color: #07121f;
+    font-weight: 900;
+}
+
+.futplay-fixture-result a {
+    color: #0f5b49;
+    font-size: 0.84rem;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+@media (max-width: 991.98px) {
+    .futplay-competition-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .futplay-fixture-panel {
+        border-left: 0;
+        padding-left: 0;
+    }
+
+    .futplay-fixture-item-row {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .futplay-fixture-item-row .futplay-fixture-meta,
+    .futplay-fixture-actions {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .futplay-competition-shell {
+        border-radius: 12px;
+    }
+
+    .futplay-competition-tabs {
+        gap: 1.25rem;
+        overflow-x: auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .futplay-competition-head,
+    .futplay-competition-featured,
+    .futplay-competition-groups {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .futplay-competition-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .futplay-competition-row {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .futplay-competition-row-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+
+    .futplay-competition-group-list {
+        padding-left: 0;
+    }
+
+    .futplay-standings-head h2,
+    .futplay-fixture-head h2 {
+        font-size: 1.35rem;
+    }
+
+    .futplay-fixture-result {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}

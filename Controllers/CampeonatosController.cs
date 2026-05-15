@@ -233,7 +233,8 @@ namespace FutPlay.Controllers
             var viewModel = new ClassificacaoCampeonatoViewModel
             {
                 Campeonato = campeonato,
-                Classificacoes = classificacoes
+                Classificacoes = classificacoes,
+                UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value)
             };
 
             return View(viewModel);
@@ -310,10 +311,66 @@ namespace FutPlay.Controllers
                 Campeonato = campeonato,
                 Classificacoes = classificacoes,
                 ProximosJogos = proximosJogos,
-                JogosFinalizados = jogosFinalizados
+                JogosFinalizados = jogosFinalizados,
+                UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value)
             };
 
             return View(viewModel);
+        }
+
+        private async Task<Dictionary<int, List<string>>> ObterUltimosResultadosPorTimeAsync(int campeonatoId)
+        {
+            var jogos = await _context.Jogos
+                .Where(j =>
+                    j.CampeonatoId == campeonatoId &&
+                    j.Ativo &&
+                    j.Status == "Finalizado" &&
+                    j.GolsCasa.HasValue &&
+                    j.GolsVisitante.HasValue)
+                .OrderByDescending(j => j.DataJogo)
+                .Select(j => new
+                {
+                    j.TimeCasaId,
+                    j.TimeVisitanteId,
+                    j.GolsCasa,
+                    j.GolsVisitante
+                })
+                .ToListAsync();
+
+            var ultimosResultados = new Dictionary<int, List<string>>();
+
+            foreach (var jogo in jogos)
+            {
+                var resultadoCasa = jogo.GolsCasa == jogo.GolsVisitante
+                    ? "E"
+                    : jogo.GolsCasa > jogo.GolsVisitante ? "V" : "D";
+
+                var resultadoVisitante = jogo.GolsCasa == jogo.GolsVisitante
+                    ? "E"
+                    : jogo.GolsVisitante > jogo.GolsCasa ? "V" : "D";
+
+                AdicionarResultado(ultimosResultados, jogo.TimeCasaId, resultadoCasa);
+                AdicionarResultado(ultimosResultados, jogo.TimeVisitanteId, resultadoVisitante);
+            }
+
+            return ultimosResultados;
+        }
+
+        private static void AdicionarResultado(
+            Dictionary<int, List<string>> ultimosResultados,
+            int timeId,
+            string resultado)
+        {
+            if (!ultimosResultados.TryGetValue(timeId, out var resultados))
+            {
+                resultados = new List<string>();
+                ultimosResultados[timeId] = resultados;
+            }
+
+            if (resultados.Count < 5)
+            {
+                resultados.Add(resultado);
+            }
         }
     }
 }

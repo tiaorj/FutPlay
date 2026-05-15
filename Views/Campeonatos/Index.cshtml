@@ -2,163 +2,169 @@
 
 @{
     ViewData["Title"] = "Campeonatos";
+    var principais = Model.Where(c => c.Ativo).Take(12).ToList();
+    var grupos = Model
+        .GroupBy(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
+        .OrderBy(g => g.Key)
+        .ToList();
 }
 
-<div class="container mt-4">
-    <section class="futplay-page-hero mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+<div class="container futplay-portal-shell">
+    <section class="futplay-competition-shell">
+        <div class="futplay-competition-tabs">
+            <span>Todos</span>
+            <span>Favoritos</span>
+            <strong>Competições</strong>
+        </div>
+
+        <div class="futplay-competition-head">
             <div>
-                <div class="futplay-card-kicker">Portal público</div>
-                <h1 class="futplay-page-title mb-1">Campeonatos</h1>
-                <p class="futplay-subtitle mb-0">
-                    Escolha um campeonato para acompanhar tabela, calendário, resultados e classificação.
-                </p>
+                <h1>Competições</h1>
+                <p>Escolha um campeonato para ver portal, tabela, jogos e resultados.</p>
             </div>
 
             @if (User.IsInRole(AppRoles.Administrador))
             {
-                <a asp-action="Create" class="btn btn-success">
-                    Novo Campeonato
-                </a>
+                <a asp-action="Create" class="futplay-competition-admin-link">Novo campeonato</a>
             }
         </div>
-    </section>
 
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success border-0 shadow-sm">
-            @TempData["Sucesso"]
-        </div>
-    }
+        @if (TempData["Sucesso"] != null)
+        {
+            <div class="alert alert-success border-0">
+                @TempData["Sucesso"]
+            </div>
+        }
 
-    @if (TempData["Erro"] != null)
-    {
-        <div class="alert alert-warning border-0 shadow-sm">
-            @TempData["Erro"]
-        </div>
-    }
+        @if (TempData["Erro"] != null)
+        {
+            <div class="alert alert-warning border-0">
+                @TempData["Erro"]
+            </div>
+        }
 
-    @if (!Model.Any())
-    {
-        <div class="futplay-empty">
-            Nenhum campeonato cadastrado ainda.
-        </div>
-    }
-    else
-    {
-        <div class="row">
-            @foreach (var campeonato in Model)
-            {
-                <div class="col-xl-4 col-md-6 mb-3">
-                    <article class="futplay-entity-card">
-                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                            <div class="d-flex align-items-start gap-3">
-                                <span class="futplay-logo">
+        @if (!Model.Any())
+        {
+            <div class="futplay-section-empty">Nenhum campeonato cadastrado ainda.</div>
+        }
+        else
+        {
+            <section class="futplay-competition-featured">
+                <h2>Principais competições</h2>
+
+                <div class="futplay-competition-grid">
+                    @foreach (var campeonato in principais)
+                    {
+                        <article class="futplay-competition-card">
+                            <a asp-action="Portal"
+                               asp-route-id="@campeonato.Id"
+                               class="futplay-competition-card-link">
+                                <span class="futplay-competition-logo">
                                     @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
                                     {
                                         <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
                                     }
                                     else
                                     {
-                                        <span>🏆</span>
+                                        <span>FP</span>
                                     }
                                 </span>
-
-                                <div>
-                                    <div class="futplay-card-kicker">@campeonato.Tipo</div>
-                                    <h5 class="mb-1">@campeonato.Nome @campeonato.Ano</h5>
-
-                                    @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
-                                    {
-                                        <p class="text-muted small mb-0">@campeonato.Pais</p>
-                                    }
-                                </div>
-                            </div>
-
-                            @if (campeonato.Ativo)
-                            {
-                                <span class="futplay-status futplay-status-done">Ativo</span>
-                            }
-                            else
-                            {
-                                <span class="futplay-status futplay-status-locked">Inativo</span>
-                            }
-                        </div>
-
-                        <div class="row g-2 mb-3 small">
-                            <div class="col-6">
-                                <span class="text-muted d-block">Início</span>
-                                <strong>@(campeonato.DataInicio.HasValue ? campeonato.DataInicio.Value.ToString("dd/MM/yyyy") : "-")</strong>
-                            </div>
-                            <div class="col-6">
-                                <span class="text-muted d-block">Fim</span>
-                                <strong>@(campeonato.DataFim.HasValue ? campeonato.DataFim.Value.ToString("dd/MM/yyyy") : "-")</strong>
-                            </div>
-                        </div>
-
-                        <div class="futplay-actions">
-                            <a asp-action="Portal" asp-route-id="@campeonato.Id" class="btn btn-success btn-sm">
-                                Portal
+                                <strong>@campeonato.Nome</strong>
                             </a>
 
-                            <a asp-action="Classificacao" asp-route-id="@campeonato.Id" class="btn btn-outline-dark btn-sm">
-                                Classificação
-                            </a>
-
-                            <a asp-action="Details" asp-route-id="@campeonato.Id" class="btn btn-outline-primary btn-sm">
-                                Detalhes
-                            </a>
-
-                            @if (User.IsInRole(AppRoles.Administrador))
-                            {
-                                <a asp-action="Edit" asp-route-id="@campeonato.Id" class="btn btn-outline-success btn-sm">
-                                    Editar
-                                </a>
-
-                                @if (campeonato.Ativo)
-                                {
-                                    <a asp-action="Delete" asp-route-id="@campeonato.Id" class="btn btn-outline-warning btn-sm">
-                                        Inativar
-                                    </a>
-                                }
-
-                                @if (campeonato.ApiLeagueId.HasValue)
-                                {
-                                    <form asp-controller="Importacoes"
-                                          asp-action="ImportarJogos"
-                                          method="post">
-                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-
-                                        <button type="submit" class="btn btn-outline-dark btn-sm">
-                                            Importar Jogos
-                                        </button>
-                                    </form>
-
-                                    <form asp-controller="Importacoes"
-                                          asp-action="AtualizarResultados"
-                                          method="post">
-                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-
-                                        <button type="submit" class="btn btn-outline-primary btn-sm">
-                                            Atualizar Resultados
-                                        </button>
-                                    </form>
-
-                                    <form asp-controller="Importacoes"
-                                          asp-action="SincronizarCampeonato"
-                                          method="post">
-                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-
-                                        <button type="submit" class="btn btn-primary btn-sm">
-                                            Sincronizar
-                                        </button>
-                                    </form>
-                                }
-                            }
-                        </div>
-                    </article>
+                            <span class="futplay-competition-favorite" aria-label="Favorito">☆</span>
+                        </article>
+                    }
                 </div>
-            }
-        </div>
-    }
+            </section>
+
+            <section class="futplay-competition-groups">
+                <h2>Ligas</h2>
+
+                @for (int grupoIndex = 0; grupoIndex < grupos.Count; grupoIndex++)
+                {
+                    var grupo = grupos[grupoIndex];
+
+                    <div class="futplay-competition-group">
+                        <button type="button"
+                                class="futplay-competition-group-button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#competicao-@grupoIndex"
+                                aria-expanded="false">
+                            <span class="futplay-competition-country">
+                                <span class="futplay-competition-country-mark">@grupo.Key.Substring(0, 1).ToUpperInvariant()</span>
+                                @grupo.Key
+                            </span>
+                            <span>@grupo.Count(c => c.Ativo)/@grupo.Count()</span>
+                        </button>
+
+                        <div class="collapse" id="competicao-@grupoIndex">
+                            <div class="futplay-competition-group-list">
+                                @foreach (var campeonato in grupo.OrderByDescending(c => c.Ativo).ThenByDescending(c => c.Ano).ThenBy(c => c.Nome))
+                                {
+                                    <article class="futplay-competition-row">
+                                        <div class="futplay-competition-logo futplay-competition-logo-small">
+                                            @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
+                                            {
+                                                <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>FP</span>
+                                            }
+                                        </div>
+
+                                        <div class="futplay-competition-row-body">
+                                            <strong>@campeonato.Nome @campeonato.Ano</strong>
+                                            <span>@campeonato.Tipo</span>
+                                        </div>
+
+                                        <div class="futplay-competition-row-actions">
+                                            <a asp-action="Portal" asp-route-id="@campeonato.Id">Portal</a>
+                                            <a asp-action="Classificacao" asp-route-id="@campeonato.Id">Tabela</a>
+                                            <a asp-action="Details" asp-route-id="@campeonato.Id">Detalhes</a>
+
+                                            @if (User.IsInRole(AppRoles.Administrador))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@campeonato.Id">Editar</a>
+
+                                                @if (campeonato.Ativo)
+                                                {
+                                                    <a asp-action="Delete" asp-route-id="@campeonato.Id">Inativar</a>
+                                                }
+
+                                                @if (campeonato.ApiLeagueId.HasValue)
+                                                {
+                                                    <form asp-controller="Importacoes"
+                                                          asp-action="ImportarJogos"
+                                                          method="post">
+                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
+                                                        <button type="submit">Importar jogos</button>
+                                                    </form>
+
+                                                    <form asp-controller="Importacoes"
+                                                          asp-action="AtualizarResultados"
+                                                          method="post">
+                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
+                                                        <button type="submit">Atualizar</button>
+                                                    </form>
+
+                                                    <form asp-controller="Importacoes"
+                                                          asp-action="SincronizarCampeonato"
+                                                          method="post">
+                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
+                                                        <button type="submit">Sincronizar</button>
+                                                    </form>
+                                                }
+                                            }
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </section>
+        }
+    </section>
 </div>

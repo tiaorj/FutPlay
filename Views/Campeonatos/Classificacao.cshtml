@@ -32,7 +32,7 @@
                     <a asp-action="RecalcularClassificacao" asp-route-id="@Model.Campeonato.Id">Recalcular</a>
                 }
                 <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Portal</a>
-                <a asp-action="Index">Campeonatos</a>
+                <a asp-action="Index">Competições</a>
             </div>
         </div>
     </section>
@@ -42,9 +42,9 @@
         <div class="alert alert-success">@TempData["Sucesso"]</div>
     }
 
-    <section class="futplay-section-block">
-        <div class="futplay-section-header">
-            <h2 class="futplay-section-title">TABELA</h2>
+    <section class="futplay-standings-card">
+        <div class="futplay-standings-head">
+            <h2>TABELA</h2>
         </div>
 
         @if (!Model.Classificacoes.Any())
@@ -54,19 +54,19 @@
         else
         {
             var grupos = Model.Classificacoes
-                .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Tabela geral" : $"Grupo {c.Grupo}")
+                .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Classificação" : $"Grupo {c.Grupo}")
                 .ToList();
 
             foreach (var grupo in grupos)
             {
-                <div class="futplay-table-card">
-                    <div class="futplay-table-group">@grupo.Key.ToUpperInvariant()</div>
+                <div class="futplay-standings-group">
+                    <div class="futplay-standings-group-title">@grupo.Key.ToUpperInvariant()</div>
+
                     <div class="table-responsive">
-                        <table class="table futplay-table futplay-table-classificacao align-middle">
+                        <table class="table futplay-standings-table align-middle">
                             <thead>
                                 <tr>
-                                    <th></th>
-                                    <th>Clube</th>
+                                    <th class="futplay-standings-club-head">Classificação</th>
                                     <th>P</th>
                                     <th>J</th>
                                     <th>V</th>
@@ -75,35 +75,36 @@
                                     <th>GP</th>
                                     <th>GC</th>
                                     <th>SG</th>
+                                    <th>%</th>
+                                    <th>Últ. jogos</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var item in grupo)
                                 {
+                                    var aproveitamento = item.Jogos > 0
+                                        ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
+                                        : 0;
+                                    var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
+                                        ? resultados
+                                        : new List<string>();
+
                                     <tr>
-                                        <td class="futplay-table-position">@item.Posicao</td>
-                                        <td>
-                                            <div class="futplay-table-team">
-                                                <span class="futplay-table-crest">
-                                                    @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
-                                                    {
-                                                        <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <span>@(item.Time?.Sigla ?? "FC")</span>
-                                                    }
-                                                </span>
-                                                <div>
-                                                    <strong>@item.Time?.Nome</strong>
-                                                    @if (!string.IsNullOrWhiteSpace(item.Time?.Sigla))
-                                                    {
-                                                        <small>@item.Time.Sigla</small>
-                                                    }
-                                                </div>
-                                            </div>
+                                        <td class="futplay-standings-club">
+                                            <span class="futplay-standings-position">@item.Posicao</span>
+                                            <span class="futplay-table-crest">
+                                                @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
+                                                {
+                                                    <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
+                                                }
+                                                else
+                                                {
+                                                    <span>@(item.Time?.Sigla ?? "FC")</span>
+                                                }
+                                            </span>
+                                            <strong>@item.Time?.Nome</strong>
                                         </td>
-                                        <td class="futplay-table-points">@item.Pontos</td>
+                                        <td class="futplay-standings-points">@item.Pontos</td>
                                         <td>@item.Jogos</td>
                                         <td>@item.Vitorias</td>
                                         <td>@item.Empates</td>
@@ -111,6 +112,23 @@
                                         <td>@item.GolsPro</td>
                                         <td>@item.GolsContra</td>
                                         <td>@item.SaldoGols</td>
+                                        <td>@aproveitamento.ToString("0")</td>
+                                        <td>
+                                            <div class="futplay-form-dots">
+                                                @foreach (var resultado in forma)
+                                                {
+                                                    var dotClass = resultado == "V"
+                                                        ? "futplay-form-win"
+                                                        : resultado == "E" ? "futplay-form-draw" : "futplay-form-loss";
+
+                                                    <span class="futplay-form-dot @dotClass" title="@resultado"></span>
+                                                }
+                                                @for (int i = forma.Count; i < 5; i++)
+                                                {
+                                                    <span class="futplay-form-dot futplay-form-empty"></span>
+                                                }
+                                            </div>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>

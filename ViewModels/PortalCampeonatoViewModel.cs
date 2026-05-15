@@ -11,5 +11,7 @@ namespace FutPlay.ViewModels
         public List<Jogo> ProximosJogos { get; set; } = new();
 
         public List<Jogo> JogosFinalizados { get; set; } = new();
+
+        public Dictionary<int, List<string>> UltimosResultadosPorTime { get; set; } = new();
     }
 }

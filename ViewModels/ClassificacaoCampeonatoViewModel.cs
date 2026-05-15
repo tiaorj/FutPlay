@@ -7,5 +7,7 @@ namespace FutPlay.ViewModels
         public Campeonato Campeonato { get; set; } = new Campeonato();
 
         public List<Classificacao> Classificacoes { get; set; } = new();
+
+        public Dictionary<int, List<string>> UltimosResultadosPorTime { get; set; } = new();
     }
 }

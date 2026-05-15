@@ -4,114 +4,100 @@
     ViewData["Title"] = "Ligas";
 }
 
-<div class="container mt-4">
-    <section class="futplay-page-hero mb-4">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div>
-                <div class="futplay-card-kicker">Área do participante</div>
-                <h1 class="futplay-page-title mb-1">Ligas</h1>
-                <p class="futplay-subtitle mb-0">
-                    Dispute palpites com amigos, acompanhe ranking e veja o campeonato de cada liga.
-                </p>
-            </div>
-
-            @if (User.IsInRole(AppRoles.Administrador))
-            {
-                <a asp-action="Create" class="btn btn-success">
-                    Nova Liga
-                </a>
-            }
+<div class="container futplay-portal-shell">
+    <section class="futplay-league-hero futplay-league-hero-banner mb-4">
+        <div class="futplay-league-hero-content">
+            <div class="futplay-league-kicker">Área do participante</div>
+            <h1 class="futplay-league-title">Ligas FutPlay</h1>
+            <p class="futplay-league-lead">
+                Escolha uma liga para palpitar, acompanhar o ranking e seguir seu campeonato favorito.
+            </p>
         </div>
+
+        @if (User.IsInRole(AppRoles.Administrador))
+        {
+            <div class="futplay-league-hero-scoreboard">
+                <a asp-action="Create">Nova liga</a>
+            </div>
+        }
     </section>
 
     @if (!Model.Any())
     {
-        <div class="futplay-empty">
-            Nenhuma liga cadastrada ainda.
+        <div class="futplay-league-empty">
+            <div class="futplay-league-empty-mark">FP</div>
+            <h2>Nenhuma liga cadastrada ainda</h2>
+            <p>Quando houver ligas disponíveis, elas aparecerão aqui em formato de lista esportiva.</p>
         </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var liga in Model)
-            {
-                <div class="col-xl-4 col-md-6 mb-3">
-                    <article class="futplay-entity-card">
-                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
-                            <div class="d-flex align-items-start gap-3">
-                                <span class="futplay-logo">
-                                    @if (!string.IsNullOrWhiteSpace(liga.Campeonato?.LogoUrl))
-                                    {
-                                        <img src="@liga.Campeonato.LogoUrl" alt="@liga.Campeonato.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <span>👥</span>
-                                    }
-                                </span>
+        <section class="futplay-league-panel">
+            <div class="futplay-league-panel-head">
+                <h2>Ligas disponíveis</h2>
+                <span>@Model.Count ligas</span>
+            </div>
 
-                                <div>
-                                    <div class="futplay-card-kicker">Liga</div>
-                                    <h5 class="mb-1">@liga.Nome</h5>
-                                    <p class="text-muted small mb-0">@liga.Campeonato?.Nome</p>
-                                </div>
-                            </div>
-
-                            @if (liga.Ativo)
+            <div class="futplay-league-rows">
+                @foreach (var liga in Model)
+                {
+                    <article class="futplay-league-row">
+                        <div class="futplay-league-logo">
+                            @if (!string.IsNullOrWhiteSpace(liga.Campeonato?.LogoUrl))
                             {
-                                <span class="futplay-status futplay-status-done">Ativa</span>
+                                <img src="@liga.Campeonato.LogoUrl" alt="@liga.Campeonato.Nome" />
                             }
                             else
                             {
-                                <span class="futplay-status futplay-status-locked">Inativa</span>
+                                <span>FP</span>
                             }
                         </div>
 
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <span class="text-muted small d-block">Convite</span>
-                                <span class="badge bg-dark fs-6">@liga.CodigoConvite</span>
-                            </div>
-
-                            <div class="col-6">
-                                <span class="text-muted small d-block">Visibilidade</span>
-                                @if (liga.Publica)
-                                {
-                                    <span class="badge bg-primary">Pública</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-warning text-dark">Privada</span>
-                                }
-                            </div>
+                        <div class="futplay-league-row-info">
+                            <span>@(liga.Publica ? "Liga pública" : "Liga privada")</span>
+                            <h3>@liga.Nome</h3>
+                            <p>@liga.Campeonato?.Nome</p>
                         </div>
 
-                        <div class="futplay-actions">
+                        <div class="futplay-league-row-points">
+                            <span>Convite</span>
+                            <strong>@liga.CodigoConvite</strong>
+                        </div>
+
+                        <div class="futplay-league-actions">
                             @if (User.IsInRole(AppRoles.Administrador) || User.IsInRole(AppRoles.Participante))
                             {
-                                <a asp-action="Palpitar" asp-route-id="@liga.Id" class="btn btn-success btn-sm">
+                                <a asp-action="Palpitar"
+                                   asp-route-id="@liga.Id"
+                                   class="futplay-league-action-primary">
                                     Palpitar
                                 </a>
                             }
 
-                            <a asp-action="Ranking" asp-route-id="@liga.Id" class="btn btn-outline-dark btn-sm">
+                            <a asp-action="Ranking"
+                               asp-route-id="@liga.Id"
+                               class="futplay-league-action-secondary">
                                 Ranking
                             </a>
 
-                            <a asp-action="Details" asp-route-id="@liga.Id" class="btn btn-outline-primary btn-sm">
+                            <a asp-action="Details"
+                               asp-route-id="@liga.Id"
+                               class="futplay-league-action-secondary">
                                 Detalhes
                             </a>
 
                             @if (User.IsInRole(AppRoles.Administrador))
                             {
-                                <a asp-action="Edit" asp-route-id="@liga.Id" class="btn btn-outline-secondary btn-sm">
+                                <a asp-action="Edit"
+                                   asp-route-id="@liga.Id"
+                                   class="futplay-league-action-secondary">
                                     Editar
                                 </a>
                             }
                         </div>
                     </article>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        </section>
     }
 </div>
