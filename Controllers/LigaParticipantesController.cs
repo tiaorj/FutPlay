@@ -25,8 +25,13 @@ namespace FutPlay.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var participantes = await _context.LigaParticipantes
+            var query = _context.LigaParticipantes
                 .Include(p => p.Liga)
+                .AsQueryable();
+
+            query = AplicarFiltroUsuario(query);
+
+            var participantes = await query
                 .OrderBy(p => p.Liga!.Nome)
                 .ThenBy(p => p.Nome)
                 .ToListAsync();
@@ -50,6 +55,21 @@ namespace FutPlay.Controllers
         public async Task<IActionResult> Create(LigaParticipante participante)
         {
             participante.DataEntrada = DateTime.Now;
+
+            if (!UsuarioEhAdministrador())
+            {
+                var usuario = await _userManager.GetUserAsync(User);
+
+                if (usuario?.Email == null)
+                {
+                    return Challenge();
+                }
+
+                participante.Email = usuario.Email;
+                participante.UserId = usuario.Id;
+                participante.Ativo = true;
+                participante.PontuacaoTotal = 0;
+            }
 
             var emailJaExisteNaLiga = await _context.LigaParticipantes
                 .AnyAsync(p => p.LigaId == participante.LigaId && p.Email == participante.Email);
@@ -85,6 +105,9 @@ namespace FutPlay.Controllers
             if (participante == null)
                 return NotFound();
 
+            if (!UsuarioPodeAcessarParticipante(participante))
+                return Forbid();
+
             return View(participante);
         }
 
@@ -98,6 +121,9 @@ namespace FutPlay.Controllers
             if (participante == null)
                 return NotFound();
 
+            if (!UsuarioPodeAcessarParticipante(participante))
+                return Forbid();
+
             await CarregarLigas();
             return View(participante);
         }
@@ -108,6 +134,33 @@ namespace FutPlay.Controllers
         {
             if (id != participante.Id)
                 return NotFound();
+
+            var participanteAtualParaPermissao = await _context.LigaParticipantes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (participanteAtualParaPermissao == null)
+                return NotFound();
+
+            if (!UsuarioPodeAcessarParticipante(participanteAtualParaPermissao))
+                return Forbid();
+
+            if (!UsuarioEhAdministrador())
+            {
+                var usuario = await _userManager.GetUserAsync(User);
+
+                if (usuario?.Email == null)
+                {
+                    return Challenge();
+                }
+
+                participante.LigaId = participanteAtualParaPermissao.LigaId;
+                participante.Email = usuario.Email;
+                participante.UserId = usuario.Id;
+                participante.PontuacaoTotal = participanteAtualParaPermissao.PontuacaoTotal;
+                participante.DataEntrada = participanteAtualParaPermissao.DataEntrada;
+                participante.Ativo = participanteAtualParaPermissao.Ativo;
+            }
 
             var emailJaExisteNaLiga = await _context.LigaParticipantes
                 .AnyAsync(p =>
@@ -170,6 +223,44 @@ namespace FutPlay.Controllers
             {
                 participante.UserId = usuario.Id;
             }
+        }
+
+        private bool UsuarioEhAdministrador()
+        {
+            return User.IsInRole(AppRoles.Administrador);
+        }
+
+        private IQueryable<LigaParticipante> AplicarFiltroUsuario(IQueryable<LigaParticipante> query)
+        {
+            if (UsuarioEhAdministrador())
+            {
+                return query;
+            }
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Identity?.Name;
+            var emailNormalizado = email?.ToUpper();
+
+            return query.Where(p =>
+                (userId != null && p.UserId == userId) ||
+                (emailNormalizado != null && p.Email.ToUpper() == emailNormalizado));
+        }
+
+        private bool UsuarioPodeAcessarParticipante(LigaParticipante participante)
+        {
+            if (UsuarioEhAdministrador())
+            {
+                return true;
+            }
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Identity?.Name;
+
+            return (!string.IsNullOrWhiteSpace(userId) && participante.UserId == userId) ||
+                (!string.IsNullOrWhiteSpace(email) &&
+                 string.Equals(participante.Email, email, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

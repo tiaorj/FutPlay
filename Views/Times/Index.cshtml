@@ -1,77 +1,74 @@
-﻿@model List<FutPlay.Models.Time>
+@model List<FutPlay.Models.Time>
 
 @{
     ViewData["Title"] = "Times e Seleções";
+    var grupos = Model.GroupBy(t => t.Tipo).OrderBy(g => g.Key).ToList();
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-1">Times e Seleções</h1>
-            <p class="text-muted mb-0">
-                Cadastre clubes e seleções usados nos campeonatos.
-            </p>
+<div class="container futplay-portal-shell">
+    <section class="futplay-portal-header mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div>
+                <div class="futplay-portal-kicker">Elencos e escudos</div>
+                <h1 class="futplay-portal-title">Times e Seleções</h1>
+                <p class="futplay-portal-lead mb-0">
+                    Clubes e seleções usados nos campeonatos, jogos e classificações.
+                </p>
+            </div>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <div class="futplay-portal-actions">
+                    <a asp-action="Create">Novo time/seleção</a>
+                </div>
+            }
         </div>
+    </section>
 
-        @if (User.IsInRole(AppRoles.Administrador))
-        {
-            <a asp-action="Create" class="btn btn-success">
-                Novo Time/Seleção
-            </a>
-        }
-    </div>
+    @foreach (var grupo in grupos)
+    {
+        <section class="futplay-team-section mb-4">
+            <div class="futplay-team-section-head">
+                <h2>@grupo.Key</h2>
+                <span>@grupo.Count() times</span>
+            </div>
 
-    <div class="row">
-        @foreach (var time in Model)
-        {
-            <div class="col-md-4 mb-3">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            @time.Nome
-                            @if (!string.IsNullOrWhiteSpace(time.Sigla))
+            <div class="futplay-team-grid">
+                @foreach (var time in grupo)
+                {
+                    <article class="futplay-team-card">
+                        <div class="futplay-detail-crest">
+                            @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
                             {
-                                <small class="text-muted">(@time.Sigla)</small>
-                            }
-                        </h5>
-
-                        <p class="card-text mb-1">
-                            <strong>Tipo:</strong> @time.Tipo
-                        </p>
-
-                        @if (!string.IsNullOrWhiteSpace(time.Pais))
-                        {
-                            <p class="card-text mb-1">
-                                <strong>País:</strong> @time.Pais
-                            </p>
-                        }
-
-                        <p class="card-text mt-2">
-                            @if (time.Ativo)
-                            {
-                                <span class="badge bg-success">Ativo</span>
+                                <img src="@time.EscudoUrl" alt="@time.Nome" />
                             }
                             else
                             {
-                                <span class="badge bg-secondary">Inativo</span>
-                            }
-                        </p>
-
-                        <div class="futplay-actions">
-                            <a asp-action="Details" asp-route-id="@time.Id" class="btn btn-outline-primary btn-sm">
-                                Detalhes
-                            </a>
-
-                            @if (User.IsInRole(AppRoles.Administrador))
-                            {
-                                <a asp-action="Edit" asp-route-id="@time.Id" class="btn btn-outline-success btn-sm">
-                                    Editar
-                                </a>
+                                <span>@(time.Sigla ?? "FC")</span>
                             }
                         </div>
-                    </div>
-                </div>
+
+                        <div>
+                            <h3>@time.Nome</h3>
+                            <p>
+                                @(string.IsNullOrWhiteSpace(time.Pais) ? "País não informado" : time.Pais)
+                                @if (!string.IsNullOrWhiteSpace(time.Sigla))
+                                {
+                                    <span> · @time.Sigla</span>
+                                }
+                            </p>
+                        </div>
+
+                        <div class="futplay-team-actions">
+                            <a asp-action="Details" asp-route-id="@time.Id">Detalhes</a>
+                            @if (User.IsInRole(AppRoles.Administrador))
+                            {
+                                <a asp-action="Edit" asp-route-id="@time.Id">Editar</a>
+                            }
+                        </div>
+                    </article>
+                }
             </div>
-        }
-    </div>
+        </section>
+    }
 </div>

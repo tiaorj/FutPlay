@@ -1,0 +1,63 @@
+@page
+@model FutPlay.Areas.Identity.Pages.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Entrar";
+}
+
+<div class="container futplay-portal-shell">
+    <section class="futplay-auth-shell">
+        <div class="futplay-auth-hero">
+            <div class="futplay-auth-kicker">FutPlay</div>
+            <h1>Entre no seu bolão</h1>
+            <p>
+                Acesse suas ligas, envie palpites e acompanhe rankings com uma experiência de portal esportivo.
+            </p>
+
+            <div class="futplay-auth-score">
+                <span>Casa</span>
+                <strong>x</strong>
+                <span>Visitante</span>
+            </div>
+        </div>
+
+        <div class="futplay-auth-card">
+            <h2>Entrar</h2>
+            <p>Use seu e-mail e senha para continuar.</p>
+
+            <form id="account" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="nome@exemplo.com" />
+                    <label asp-for="Input.Email"></label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" placeholder="senha" />
+                    <label asp-for="Input.Password"></label>
+                    <span asp-validation-for="Input.Password" class="text-danger"></span>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label class="form-check-label" asp-for="Input.RememberMe"></label>
+                </div>
+
+                <button id="login-submit" type="submit" class="futplay-auth-submit">
+                    Entrar no FutPlay
+                </button>
+
+                <div class="futplay-auth-links">
+                    <a asp-page="./ForgotPassword">Esqueci minha senha</a>
+                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Criar conta</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

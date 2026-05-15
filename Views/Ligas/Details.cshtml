@@ -1,57 +1,48 @@
-﻿@model FutPlay.Models.Liga
+@model FutPlay.Models.Liga
 
 @{
     ViewData["Title"] = "Detalhes da Liga";
 }
 
-<div class="container mt-4">
-    <h1>Detalhes da Liga</h1>
+<div class="container futplay-portal-shell">
+    <section class="futplay-league-hero futplay-league-hero-banner mb-4">
+        <div class="futplay-league-hero-content">
+            <div class="futplay-league-kicker">Detalhes da liga</div>
+            <h1 class="futplay-league-title">@Model.Nome</h1>
+            <p class="futplay-league-lead">@Model.Campeonato?.Nome</p>
+        </div>
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Nome</dt>
-                <dd class="col-sm-9">@Model.Nome</dd>
+        <div class="futplay-league-hero-scoreboard">
+            <span>Convite</span>
+            <strong>@Model.CodigoConvite</strong>
+            <small>@(Model.Publica ? "pública" : "privada")</small>
+        </div>
+    </section>
 
-                <dt class="col-sm-3">Campeonato</dt>
-                <dd class="col-sm-9">@Model.Campeonato?.Nome</dd>
-
-                <dt class="col-sm-3">Código de Convite</dt>
-                <dd class="col-sm-9">
-                    <span class="badge bg-dark">@Model.CodigoConvite</span>
-                </dd>
-
-                <dt class="col-sm-3">Tipo</dt>
-                <dd class="col-sm-9">@(Model.Publica ? "Pública" : "Privada")</dd>
-
-                <dt class="col-sm-3">Data de Criação</dt>
-                <dd class="col-sm-9">@Model.DataCriacao.ToString("dd/MM/yyyy HH:mm")</dd>
-
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">
-                    @if (Model.Ativo)
-                    {
-                        <span class="badge bg-success">Ativa</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Inativa</span>
-                    }
-                </dd>
+    <section class="futplay-detail-grid">
+        <article class="futplay-detail-panel">
+            <h2>Informações</h2>
+            <dl>
+                <dt>Campeonato</dt>
+                <dd>@Model.Campeonato?.Nome</dd>
+                <dt>Criada em</dt>
+                <dd>@Model.DataCriacao.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt>Status</dt>
+                <dd>@(Model.Ativo ? "Ativa" : "Inativa")</dd>
             </dl>
+        </article>
 
-            <div class="d-flex gap-2">
+        <article class="futplay-detail-panel">
+            <h2>Ações</h2>
+            <div class="futplay-detail-actions">
+                <a asp-action="Ranking" asp-route-id="@Model.Id" class="futplay-detail-primary">Ranking</a>
+                <a asp-action="Palpitar" asp-route-id="@Model.Id">Palpitar</a>
                 @if (User.IsInRole(AppRoles.Administrador))
                 {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                        Editar
-                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id">Editar</a>
                 }
-
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
+                <a asp-action="Index">Voltar para ligas</a>
             </div>
-        </div>
-    </div>
+        </article>
+    </section>
 </div>

@@ -1,67 +1,86 @@
-﻿@model FutPlay.Models.Jogo
+@model FutPlay.Models.Jogo
 
 @{
     ViewData["Title"] = "Detalhes do Jogo";
+    var placar = Model.GolsCasa.HasValue && Model.GolsVisitante.HasValue
+        ? $"{Model.GolsCasa} x {Model.GolsVisitante}"
+        : "x";
 }
 
-<div class="container mt-4">
-    <h1>Detalhes do Jogo</h1>
+<div class="container futplay-portal-shell">
+    <section class="futplay-detail-match">
+        <div class="futplay-detail-match-meta">
+            <span>@Model.Campeonato?.Nome</span>
+            <strong>@Model.DataJogo.ToString("dd/MM/yyyy") · @Model.DataJogo.ToString("HH:mm")</strong>
+            <span>@(string.IsNullOrWhiteSpace(Model.Fase) ? "Fase não informada" : Model.Fase)</span>
+        </div>
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <h3>
-                @Model.TimeCasa?.Nome
-                x
-                @Model.TimeVisitante?.Nome
-            </h3>
-
-            <p class="text-muted">
-                @Model.Campeonato?.Nome
-            </p>
-
-            <dl class="row">
-                <dt class="col-sm-3">Data</dt>
-                <dd class="col-sm-9">@Model.DataJogo.ToString("dd/MM/yyyy HH:mm")</dd>
-
-                <dt class="col-sm-3">Fase</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Fase) ? "-" : Model.Fase)</dd>
-
-                <dt class="col-sm-3">Grupo</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Grupo) ? "-" : Model.Grupo)</dd>
-
-                <dt class="col-sm-3">Rodada</dt>
-                <dd class="col-sm-9">@(Model.Rodada.HasValue? Model.Rodada.ToString() : "-")</dd>
-
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">
-                    <span class="badge bg-primary">@Model.Status</span>
-                </dd>
-
-                <dt class="col-sm-3">Placar</dt>
-                <dd class="col-sm-9">
-                    @if (Model.GolsCasa.HasValue && Model.GolsVisitante.HasValue)
+        <div class="futplay-detail-scoreboard">
+            <div class="futplay-detail-team">
+                <span class="futplay-detail-crest">
+                    @if (!string.IsNullOrWhiteSpace(Model.TimeCasa?.EscudoUrl))
                     {
-                        <strong>@Model.GolsCasa x @Model.GolsVisitante</strong>
+                        <img src="@Model.TimeCasa.EscudoUrl" alt="@Model.TimeCasa.Nome" />
                     }
                     else
                     {
-                        <span>-</span>
+                        <span>@(Model.TimeCasa?.Sigla ?? "CAS")</span>
                     }
-                </dd>
-            </dl>
+                </span>
+                <h1>@Model.TimeCasa?.Nome</h1>
+            </div>
 
-            <div class="d-flex gap-2">
-                @if (User.IsInRole(AppRoles.Administrador))
-                {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                        Editar
-                    </a>
-                }
+            <div class="futplay-detail-score">
+                <strong>@placar</strong>
+                <span>@Model.Status</span>
+            </div>
 
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
+            <div class="futplay-detail-team futplay-detail-team-away">
+                <span class="futplay-detail-crest">
+                    @if (!string.IsNullOrWhiteSpace(Model.TimeVisitante?.EscudoUrl))
+                    {
+                        <img src="@Model.TimeVisitante.EscudoUrl" alt="@Model.TimeVisitante.Nome" />
+                    }
+                    else
+                    {
+                        <span>@(Model.TimeVisitante?.Sigla ?? "VIS")</span>
+                    }
+                </span>
+                <h1>@Model.TimeVisitante?.Nome</h1>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="futplay-detail-grid mt-4">
+        <article class="futplay-detail-panel">
+            <h2>Informações da partida</h2>
+            <dl>
+                <dt>Campeonato</dt>
+                <dd>@Model.Campeonato?.Nome</dd>
+                <dt>Fase</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Fase) ? "-" : Model.Fase)</dd>
+                <dt>Grupo</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Grupo) ? "-" : Model.Grupo)</dd>
+                <dt>Rodada</dt>
+                <dd>@(Model.Rodada.HasValue ? Model.Rodada.ToString() : "-")</dd>
+            </dl>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Ações</h2>
+            <div class="futplay-detail-actions">
+                @if (User.IsInRole(AppRoles.Administrador))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar jogo</a>
+                }
+                <a asp-action="Index">Voltar para jogos</a>
+                @if (Model.CampeonatoId > 0)
+                {
+                    <a asp-controller="Campeonatos" asp-action="Portal" asp-route-id="@Model.CampeonatoId">
+                        Ver campeonato
+                    </a>
+                }
+            </div>
+        </article>
+    </section>
 </div>

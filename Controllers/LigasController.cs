@@ -53,21 +53,31 @@ namespace FutPlay.Controllers
 
             bool veioDeMinhasLigas = string.Equals(origem, "minhasligas", StringComparison.OrdinalIgnoreCase);
 
-            if (veioDeMinhasLigas)
+            if (!UsuarioEhAdministrador())
             {
-                var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-                if (string.IsNullOrWhiteSpace(userId))
+                var participanteUsuario = await ObterParticipanteUsuarioAsync(liga.Id, vincularPorEmail: true);
+                if (participanteUsuario == null)
                 {
-                    return Challenge();
+                    TempData["Erro"] = "Não encontramos um participante vinculado ao seu usuário nesta liga.";
+                    return RedirectToAction("Index", "MinhasLigas");
                 }
 
-                var participanteUsuario = await _context.LigaParticipantes
-                    .FirstOrDefaultAsync(p =>
-                        p.LigaId == liga.Id &&
-                        p.UserId == userId &&
-                        p.Ativo);
+                var modelUsuario = new PalpitarLigaViewModel
+                {
+                    LigaParticipanteId = participanteUsuario.Id,
+                    ParticipanteBloqueado = true,
+                    NomeParticipanteSelecionado = participanteUsuario.Nome,
+                    Origem = "minhasligas"
+                };
 
+                var viewModelUsuario = await MontarViewModelPalpitar(liga.Id, modelUsuario);
+
+                return View(viewModelUsuario);
+            }
+
+            if (veioDeMinhasLigas)
+            {
+                var participanteUsuario = await ObterParticipanteUsuarioAsync(liga.Id, vincularPorEmail: true);
                 if (participanteUsuario == null)
                 {
                     TempData["Erro"] = "Não encontramos um participante vinculado ao seu usuário nesta liga.";
@@ -128,18 +138,28 @@ namespace FutPlay.Controllers
 
         private async Task<IActionResult> SalvarPalpitesAsync(PalpitarLigaViewModel model)
         {
+            if (!UsuarioEhAdministrador())
+            {
+                var participanteUsuario = await ObterParticipanteUsuarioAsync(model.LigaId, vincularPorEmail: true);
+
+                if (participanteUsuario == null)
+                {
+                    ModelState.AddModelError("", "Você não tem um participante vinculado ao seu usuário nesta liga.");
+                }
+                else
+                {
+                    model.LigaParticipanteId = participanteUsuario.Id;
+                    model.ParticipanteBloqueado = true;
+                    model.Origem = "minhasligas";
+                    model.NomeParticipanteSelecionado = participanteUsuario.Nome;
+                }
+            }
+
             if (model.LigaParticipanteId <= 0)
             {
                 if (model.ParticipanteBloqueado || string.Equals(model.Origem, "minhasligas", StringComparison.OrdinalIgnoreCase))
                 {
-                    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-                    var participanteDoUsuario = await _context.LigaParticipantes
-                        .FirstOrDefaultAsync(p =>
-                            p.Id == model.LigaParticipanteId &&
-                            p.LigaId == model.LigaId &&
-                            p.UserId == userId &&
-                            p.Ativo);
+                    var participanteDoUsuario = await ObterParticipanteUsuarioAsync(model.LigaId, vincularPorEmail: true);
 
                     if (participanteDoUsuario == null)
                     {
@@ -314,6 +334,45 @@ namespace FutPlay.Controllers
             }
 
             return viewModel;
+        }
+
+        private bool UsuarioEhAdministrador()
+        {
+            return User.IsInRole(AppRoles.Administrador);
+        }
+
+        private async Task<LigaParticipante?> ObterParticipanteUsuarioAsync(
+            int ligaId,
+            bool vincularPorEmail)
+        {
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Identity?.Name;
+
+            if (string.IsNullOrWhiteSpace(userId) && string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            var emailNormalizado = email?.ToUpper();
+
+            var participante = await _context.LigaParticipantes
+                .FirstOrDefaultAsync(p =>
+                    p.LigaId == ligaId &&
+                    p.Ativo &&
+                    ((userId != null && p.UserId == userId) ||
+                     (emailNormalizado != null && p.Email.ToUpper() == emailNormalizado)));
+
+            if (participante != null &&
+                vincularPorEmail &&
+                participante.UserId == null &&
+                !string.IsNullOrWhiteSpace(userId))
+            {
+                participante.UserId = userId;
+                await _context.SaveChangesAsync();
+            }
+
+            return participante;
         }
 
         [Authorize(Roles = AppRoles.Administrador)]

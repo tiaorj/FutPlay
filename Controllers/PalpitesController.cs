@@ -24,19 +24,25 @@ namespace FutPlay.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var palpites = await _context.Palpites
+            var query = _context.Palpites
                 .Include(p => p.Liga)
                 .Include(p => p.LigaParticipante)
                 .Include(p => p.Jogo)
                     .ThenInclude(j => j!.TimeCasa)
                 .Include(p => p.Jogo)
                     .ThenInclude(j => j!.TimeVisitante)
+                .AsQueryable();
+
+            query = AplicarFiltroUsuario(query);
+
+            var palpites = await query
                 .OrderByDescending(p => p.DataPalpite)
                 .ToListAsync();
 
             return View(palpites);
         }
 
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Create()
         {
             await CarregarCombos();
@@ -105,9 +111,15 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
+            if (!UsuarioPodeAcessarPalpite(palpite))
+            {
+                return Forbid();
+            }
+
             return View(palpite);
         }
 
+        [Authorize(Roles = AppRoles.Administrador)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -134,6 +146,7 @@ namespace FutPlay.Controllers
             return View(palpite);
         }
 
+        [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Palpite palpite)
@@ -208,6 +221,46 @@ namespace FutPlay.Controllers
                 "Id",
                 "Descricao"
             );
+        }
+
+        private bool UsuarioEhAdministrador()
+        {
+            return User.IsInRole(AppRoles.Administrador);
+        }
+
+        private IQueryable<Palpite> AplicarFiltroUsuario(IQueryable<Palpite> query)
+        {
+            if (UsuarioEhAdministrador())
+            {
+                return query;
+            }
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Identity?.Name;
+            var emailNormalizado = email?.ToUpper();
+
+            return query.Where(p =>
+                p.LigaParticipante != null &&
+                ((userId != null && p.LigaParticipante.UserId == userId) ||
+                 (emailNormalizado != null && p.LigaParticipante.Email.ToUpper() == emailNormalizado)));
+        }
+
+        private bool UsuarioPodeAcessarPalpite(Palpite palpite)
+        {
+            if (UsuarioEhAdministrador())
+            {
+                return true;
+            }
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.Identity?.Name;
+
+            return palpite.LigaParticipante != null &&
+                ((!string.IsNullOrWhiteSpace(userId) && palpite.LigaParticipante.UserId == userId) ||
+                 (!string.IsNullOrWhiteSpace(email) &&
+                  string.Equals(palpite.LigaParticipante.Email, email, StringComparison.OrdinalIgnoreCase)));
         }
     }
 }

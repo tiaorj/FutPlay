@@ -1,101 +1,119 @@
-﻿@model List<FutPlay.Models.Palpite>
+@model List<FutPlay.Models.Palpite>
 
 @{
-    ViewData["Title"] = "Palpites";
+    ViewData["Title"] = User.IsInRole(AppRoles.Administrador) ? "Palpites" : "Meus Palpites";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-1">Palpites</h1>
-            <p class="text-muted mb-0">
-                Palpites cadastrados pelos participantes.
-            </p>
-        </div>
+<div class="container futplay-portal-shell">
+    <section class="futplay-portal-header mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div>
+                <div class="futplay-portal-kicker">Histórico do bolão</div>
+                <h1 class="futplay-portal-title">@ViewData["Title"]</h1>
+                <p class="futplay-portal-lead mb-0">
+                    @if (User.IsInRole(AppRoles.Administrador))
+                    {
+                        <span>Palpites cadastrados pelos participantes.</span>
+                    }
+                    else
+                    {
+                        <span>Somente os palpites vinculados ao seu usuário.</span>
+                    }
+                </p>
+            </div>
 
-        <div class="d-flex gap-2">
             @if (User.IsInRole(AppRoles.Administrador))
             {
-                <a asp-action="RecalcularPontuacao" class="btn btn-primary">
-                    Recalcular Pontuação
-                </a>
-            }
-
-            <a asp-action="Create" class="btn btn-success">
-                Novo Palpite
-            </a>
-        </div>
-    </div>
-
-    @if (TempData["Erro"] != null)
-    {
-        <div class="alert alert-warning">
-            @TempData["Erro"]
-        </div>
-    }
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Sucesso"]
-        </div>
-    }
-
-    <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Liga</th>
-                        <th>Participante</th>
-                        <th>Jogo</th>
-                        <th>Palpite</th>
-                        <th>Pontos</th>
-                        <th>Data</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var palpite in Model)
-                    {
-                        <tr>
-                            <td>@palpite.Liga?.Nome</td>
-                            <td>@palpite.LigaParticipante?.Nome</td>
-                            <td>
-                                <strong>@palpite.Jogo?.TimeCasa?.Nome</strong>
-                                x
-                                <strong>@palpite.Jogo?.TimeVisitante?.Nome</strong>
-                            </td>
-                            <td>
-                                <span class="badge bg-primary">
-                                    @palpite.GolsCasaPalpite x @palpite.GolsVisitantePalpite
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge bg-dark">
-                                    @palpite.PontosGanhos
-                                </span>
-                            </td>
-                            <td>@palpite.DataPalpite.ToString("dd/MM/yyyy HH:mm")</td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@palpite.Id" class="btn btn-outline-primary btn-sm">
-                                    Detalhes
-                                </a>
-
-                                <a asp-action="Edit" asp-route-id="@palpite.Id" class="btn btn-outline-success btn-sm">
-                                    Editar
-                                </a>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info mb-0">
-                    Nenhum palpite cadastrado ainda.
+                <div class="futplay-portal-actions">
+                    <a asp-action="RecalcularPontuacao">Recalcular pontuação</a>
+                    <a asp-action="Create">Novo palpite</a>
                 </div>
             }
         </div>
-    </div>
+    </section>
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-warning">@TempData["Erro"]</div>
+    }
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">@TempData["Sucesso"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="futplay-league-empty">
+            <div class="futplay-league-empty-mark">FP</div>
+            <h2>Nenhum palpite encontrado</h2>
+            <p>Use Minhas Ligas para enviar seus palpites nos jogos disponíveis.</p>
+        </div>
+    }
+    else
+    {
+        <section class="futplay-pick-panel">
+            <div class="futplay-pick-panel-head">
+                <h2>Últimos palpites</h2>
+                <span>@Model.Count registros</span>
+            </div>
+
+            <div class="futplay-pick-list">
+                @foreach (var palpite in Model)
+                {
+                    <article class="futplay-pick-card futplay-pick-card-done">
+                        <div class="futplay-pick-card-head">
+                            <div class="futplay-pick-meta">
+                                <strong>@palpite.DataPalpite.ToString("dd/MM/yyyy")</strong>
+                                <span>@palpite.Liga?.Nome</span>
+                                <span>@palpite.LigaParticipante?.Nome</span>
+                            </div>
+                            <span class="futplay-pick-status futplay-pick-status-done">@palpite.PontosGanhos pontos</span>
+                        </div>
+
+                        <div class="futplay-pick-board">
+                            <div class="futplay-match-team futplay-pick-team">
+                                <span class="futplay-match-crest">
+                                    @if (!string.IsNullOrWhiteSpace(palpite.Jogo?.TimeCasa?.EscudoUrl))
+                                    {
+                                        <img src="@palpite.Jogo.TimeCasa.EscudoUrl" alt="@palpite.Jogo.TimeCasa.Nome" />
+                                    }
+                                    else
+                                    {
+                                        <span>@(palpite.Jogo?.TimeCasa?.Sigla ?? "CAS")</span>
+                                    }
+                                </span>
+                                <strong>@palpite.Jogo?.TimeCasa?.Nome</strong>
+                            </div>
+
+                            <div class="futplay-pick-score">
+                                <strong>@palpite.GolsCasaPalpite x @palpite.GolsVisitantePalpite</strong>
+                            </div>
+
+                            <div class="futplay-match-team futplay-match-team-away futplay-pick-team">
+                                <strong>@palpite.Jogo?.TimeVisitante?.Nome</strong>
+                                <span class="futplay-match-crest">
+                                    @if (!string.IsNullOrWhiteSpace(palpite.Jogo?.TimeVisitante?.EscudoUrl))
+                                    {
+                                        <img src="@palpite.Jogo.TimeVisitante.EscudoUrl" alt="@palpite.Jogo.TimeVisitante.Nome" />
+                                    }
+                                    else
+                                    {
+                                        <span>@(palpite.Jogo?.TimeVisitante?.Sigla ?? "VIS")</span>
+                                    }
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="futplay-match-actions">
+                            <a asp-action="Details" asp-route-id="@palpite.Id">Detalhes</a>
+                            @if (User.IsInRole(AppRoles.Administrador))
+                            {
+                                <a asp-action="Edit" asp-route-id="@palpite.Id">Editar</a>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
 </div>

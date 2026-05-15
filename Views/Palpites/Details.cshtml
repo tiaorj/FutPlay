@@ -1,51 +1,75 @@
-﻿@model FutPlay.Models.Palpite
+@model FutPlay.Models.Palpite
 
 @{
     ViewData["Title"] = "Detalhes do Palpite";
 }
 
-<div class="container mt-4">
-    <h1>Detalhes do Palpite</h1>
+<div class="container futplay-portal-shell">
+    <section class="futplay-detail-match">
+        <div class="futplay-detail-match-meta">
+            <span>@Model.Liga?.Nome</span>
+            <strong>@Model.DataPalpite.ToString("dd/MM/yyyy HH:mm")</strong>
+            <span>@Model.LigaParticipante?.Nome</span>
+        </div>
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Liga</dt>
-                <dd class="col-sm-9">@Model.Liga?.Nome</dd>
+        <div class="futplay-detail-scoreboard">
+            <div class="futplay-detail-team">
+                <span class="futplay-detail-crest">
+                    @if (!string.IsNullOrWhiteSpace(Model.Jogo?.TimeCasa?.EscudoUrl))
+                    {
+                        <img src="@Model.Jogo.TimeCasa.EscudoUrl" alt="@Model.Jogo.TimeCasa.Nome" />
+                    }
+                    else
+                    {
+                        <span>@(Model.Jogo?.TimeCasa?.Sigla ?? "CAS")</span>
+                    }
+                </span>
+                <h1>@Model.Jogo?.TimeCasa?.Nome</h1>
+            </div>
 
-                <dt class="col-sm-3">Participante</dt>
-                <dd class="col-sm-9">@Model.LigaParticipante?.Nome</dd>
+            <div class="futplay-detail-score">
+                <strong>@Model.GolsCasaPalpite x @Model.GolsVisitantePalpite</strong>
+                <span>@Model.PontosGanhos pontos</span>
+            </div>
 
-                <dt class="col-sm-3">Jogo</dt>
-                <dd class="col-sm-9">
-                    @Model.Jogo?.TimeCasa?.Nome x @Model.Jogo?.TimeVisitante?.Nome
-                </dd>
-
-                <dt class="col-sm-3">Palpite</dt>
-                <dd class="col-sm-9">
-                    <span class="badge bg-primary">
-                        @Model.GolsCasaPalpite x @Model.GolsVisitantePalpite
-                    </span>
-                </dd>
-
-                <dt class="col-sm-3">Pontos</dt>
-                <dd class="col-sm-9">
-                    <span class="badge bg-dark">@Model.PontosGanhos</span>
-                </dd>
-
-                <dt class="col-sm-3">Data do Palpite</dt>
-                <dd class="col-sm-9">@Model.DataPalpite.ToString("dd/MM/yyyy HH:mm")</dd>
-            </dl>
-
-            <div class="d-flex gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                    Editar
-                </a>
-
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
+            <div class="futplay-detail-team futplay-detail-team-away">
+                <span class="futplay-detail-crest">
+                    @if (!string.IsNullOrWhiteSpace(Model.Jogo?.TimeVisitante?.EscudoUrl))
+                    {
+                        <img src="@Model.Jogo.TimeVisitante.EscudoUrl" alt="@Model.Jogo.TimeVisitante.Nome" />
+                    }
+                    else
+                    {
+                        <span>@(Model.Jogo?.TimeVisitante?.Sigla ?? "VIS")</span>
+                    }
+                </span>
+                <h1>@Model.Jogo?.TimeVisitante?.Nome</h1>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="futplay-detail-grid mt-4">
+        <article class="futplay-detail-panel">
+            <h2>Informações</h2>
+            <dl>
+                <dt>Liga</dt>
+                <dd>@Model.Liga?.Nome</dd>
+                <dt>Participante</dt>
+                <dd>@Model.LigaParticipante?.Nome</dd>
+                <dt>Data do palpite</dt>
+                <dd>@Model.DataPalpite.ToString("dd/MM/yyyy HH:mm")</dd>
+            </dl>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Ações</h2>
+            <div class="futplay-detail-actions">
+                @if (User.IsInRole(AppRoles.Administrador))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar</a>
+                }
+                <a asp-action="Index">Voltar para palpites</a>
+            </div>
+        </article>
+    </section>
 </div>

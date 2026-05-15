@@ -1,78 +1,83 @@
-﻿@model List<FutPlay.Models.LigaParticipante>
+@model List<FutPlay.Models.LigaParticipante>
 
 @{
-    ViewData["Title"] = "Participantes das Ligas";
+    ViewData["Title"] = User.IsInRole(AppRoles.Administrador) ? "Participantes" : "Meu Cadastro";
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h1 class="mb-1">Participantes</h1>
-            <p class="text-muted mb-0">
-                Participantes cadastrados nas ligas do FutPlay.
-            </p>
-        </div>
-
-        <a asp-action="Create" class="btn btn-success">
-            Novo Participante
-        </a>
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>E-mail</th>
-                        <th>Liga</th>
-                        <th>Pontos</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var participante in Model)
+<div class="container futplay-portal-shell">
+    <section class="futplay-portal-header mb-4">
+        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
+            <div>
+                <div class="futplay-portal-kicker">Bolão por usuário</div>
+                <h1 class="futplay-portal-title">@ViewData["Title"]</h1>
+                <p class="futplay-portal-lead mb-0">
+                    @if (User.IsInRole(AppRoles.Administrador))
                     {
-                        <tr>
-                            <td>@participante.Nome</td>
-                            <td>@participante.Email</td>
-                            <td>@participante.Liga?.Nome</td>
-                            <td>
-                                <span class="badge bg-dark">
-                                    @participante.PontuacaoTotal
-                                </span>
-                            </td>
-                            <td>
-                                @if (participante.Ativo)
-                                {
-                                    <span class="badge bg-success">Ativo</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-secondary">Inativo</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@participante.Id" class="btn btn-outline-primary btn-sm">
-                                    Detalhes
-                                </a>
-
-                                <a asp-action="Edit" asp-route-id="@participante.Id" class="btn btn-outline-success btn-sm">
-                                    Editar
-                                </a>
-                            </td>
-                        </tr>
+                        <span>Participantes cadastrados nas ligas do FutPlay.</span>
                     }
-                </tbody>
-            </table>
+                    else
+                    {
+                        <span>Seus vínculos de participante nas ligas do FutPlay.</span>
+                    }
+                </p>
+            </div>
 
-            @if (!Model.Any())
-            {
-                <div class="alert alert-info mb-0">
-                    Nenhum participante cadastrado ainda.
-                </div>
-            }
+            <div class="futplay-portal-actions">
+                <a asp-action="Create">Novo participante</a>
+            </div>
         </div>
-    </div>
+    </section>
+
+    @if (!Model.Any())
+    {
+        <div class="futplay-league-empty">
+            <div class="futplay-league-empty-mark">FP</div>
+            <h2>Nenhum vínculo encontrado</h2>
+            <p>Entre em uma liga para seus dados de participante aparecerem aqui.</p>
+        </div>
+    }
+    else
+    {
+        <section class="futplay-league-panel">
+            <div class="futplay-league-panel-head">
+                <h2>Participantes</h2>
+                <span>@Model.Count registros</span>
+            </div>
+
+            <div class="futplay-league-rows">
+                @foreach (var participante in Model)
+                {
+                    <article class="futplay-league-row">
+                        <div class="futplay-detail-crest">
+                            <span>@participante.Nome.Substring(0, Math.Min(2, participante.Nome.Length)).ToUpperInvariant()</span>
+                        </div>
+
+                        <div class="futplay-league-row-info">
+                            <span>@participante.Email</span>
+                            <h3>@participante.Nome</h3>
+                            <p>@participante.Liga?.Nome</p>
+                        </div>
+
+                        <div class="futplay-league-row-points">
+                            <span>Pontos</span>
+                            <strong>@participante.PontuacaoTotal</strong>
+                        </div>
+
+                        <div class="futplay-league-actions">
+                            <a asp-action="Details"
+                               asp-route-id="@participante.Id"
+                               class="futplay-league-action-secondary">
+                                Detalhes
+                            </a>
+                            <a asp-action="Edit"
+                               asp-route-id="@participante.Id"
+                               class="futplay-league-action-secondary">
+                                Editar
+                            </a>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+    }
 </div>

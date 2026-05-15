@@ -1,54 +1,43 @@
-﻿@model FutPlay.Models.LigaParticipante
+@model FutPlay.Models.LigaParticipante
 
 @{
     ViewData["Title"] = "Detalhes do Participante";
 }
 
-<div class="container mt-4">
-    <h1>Detalhes do Participante</h1>
-
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Nome</dt>
-                <dd class="col-sm-9">@Model.Nome</dd>
-
-                <dt class="col-sm-3">E-mail</dt>
-                <dd class="col-sm-9">@Model.Email</dd>
-
-                <dt class="col-sm-3">Liga</dt>
-                <dd class="col-sm-9">@Model.Liga?.Nome</dd>
-
-                <dt class="col-sm-3">Data de Entrada</dt>
-                <dd class="col-sm-9">@Model.DataEntrada.ToString("dd/MM/yyyy HH:mm")</dd>
-
-                <dt class="col-sm-3">Pontuação</dt>
-                <dd class="col-sm-9">
-                    <span class="badge bg-dark">@Model.PontuacaoTotal</span>
-                </dd>
-
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">
-                    @if (Model.Ativo)
-                    {
-                        <span class="badge bg-success">Ativo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Inativo</span>
-                    }
-                </dd>
-            </dl>
-
-            <div class="d-flex gap-2">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                    Editar
-                </a>
-
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
+<div class="container futplay-portal-shell">
+    <section class="futplay-detail-match">
+        <div class="futplay-detail-scoreboard futplay-detail-scoreboard-single">
+            <div class="futplay-detail-team">
+                <span class="futplay-detail-crest futplay-detail-crest-large">
+                    <span>@Model.Nome.Substring(0, Math.Min(2, Model.Nome.Length)).ToUpperInvariant()</span>
+                </span>
+                <h1>@Model.Nome</h1>
+                <p>@Model.Liga?.Nome</p>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="futplay-detail-grid mt-4">
+        <article class="futplay-detail-panel">
+            <h2>Resumo no bolão</h2>
+            <dl>
+                <dt>E-mail</dt>
+                <dd>@Model.Email</dd>
+                <dt>Data de entrada</dt>
+                <dd>@Model.DataEntrada.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt>Pontuação</dt>
+                <dd>@Model.PontuacaoTotal pontos</dd>
+                <dt>Status</dt>
+                <dd>@(Model.Ativo ? "Ativo" : "Inativo")</dd>
+            </dl>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Ações</h2>
+            <div class="futplay-detail-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar cadastro</a>
+                <a asp-action="Index">Voltar</a>
+            </div>
+        </article>
+    </section>
 </div>

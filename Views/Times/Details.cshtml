@@ -1,64 +1,51 @@
-﻿@model FutPlay.Models.Time
+@model FutPlay.Models.Time
 
 @{
     ViewData["Title"] = "Detalhes do Time/Seleção";
 }
 
-<div class="container mt-4">
-    <h1>Detalhes do Time/Seleção</h1>
-
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Nome</dt>
-                <dd class="col-sm-9">@Model.Nome</dd>
-
-                <dt class="col-sm-3">Sigla</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Sigla) ? "-" : Model.Sigla)</dd>
-
-                <dt class="col-sm-3">País</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Pais) ? "-" : Model.Pais)</dd>
-
-                <dt class="col-sm-3">Tipo</dt>
-                <dd class="col-sm-9">@Model.Tipo</dd>
-
-                <dt class="col-sm-3">Escudo</dt>
-                <dd class="col-sm-9">
+<div class="container futplay-portal-shell">
+    <section class="futplay-detail-match">
+        <div class="futplay-detail-scoreboard futplay-detail-scoreboard-single">
+            <div class="futplay-detail-team">
+                <span class="futplay-detail-crest futplay-detail-crest-large">
                     @if (!string.IsNullOrWhiteSpace(Model.EscudoUrl))
                     {
-                        <img src="@Model.EscudoUrl" alt="@Model.Nome" style="max-width: 80px;" />
+                        <img src="@Model.EscudoUrl" alt="@Model.Nome" />
                     }
                     else
                     {
-                        <span>-</span>
+                        <span>@(Model.Sigla ?? "FC")</span>
                     }
-                </dd>
-
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">
-                    @if (Model.Ativo)
-                    {
-                        <span class="badge bg-success">Ativo</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-secondary">Inativo</span>
-                    }
-                </dd>
-            </dl>
-
-            <div class="d-flex gap-2">
-                @if (User.IsInRole(AppRoles.Administrador))
-                {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                        Editar
-                    </a>
-                }
-
-                <a asp-action="Index" class="btn btn-outline-secondary">
-                    Voltar
-                </a>
+                </span>
+                <h1>@Model.Nome</h1>
+                <p>@Model.Tipo</p>
             </div>
         </div>
-    </div>
+    </section>
+
+    <section class="futplay-detail-grid mt-4">
+        <article class="futplay-detail-panel">
+            <h2>Ficha do time</h2>
+            <dl>
+                <dt>Sigla</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Sigla) ? "-" : Model.Sigla)</dd>
+                <dt>País</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.Pais) ? "-" : Model.Pais)</dd>
+                <dt>Status</dt>
+                <dd>@(Model.Ativo ? "Ativo" : "Inativo")</dd>
+            </dl>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Ações</h2>
+            <div class="futplay-detail-actions">
+                @if (User.IsInRole(AppRoles.Administrador))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar time</a>
+                }
+                <a asp-action="Index">Voltar para times</a>
+            </div>
+        </article>
+    </section>
 </div>
