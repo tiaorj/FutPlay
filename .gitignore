@@ -1,7 +1,171 @@
-﻿*.user
-*.suo
+﻿# =========================
+# Visual Studio / .NET
+# =========================
+
 .vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
 bin/
 obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
 
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# =========================
+# ASP.NET Core / Configurações
+# =========================
+
+# Arquivo local com connection string, API keys e senhas
 appsettings.Development.json
+appsettings.Local.json
+appsettings.Production.json
+
+# Nunca versionar arquivos com secrets
+*.secrets.json
+secrets.json
+
+# =========================
+# User Secrets
+# =========================
+# Observação:
+# dotnet user-secrets NÃO salva os segredos dentro do projeto.
+# O UserSecretsId no .csproj pode ir para o Git.
+# Não precisa ignorar nada específico aqui.
+
+# =========================
+# Logs
+# =========================
+
+logs/
+*.log
+Log/
+Logs/
+
+# Serilog / arquivos locais
+*.txt.log
+
+# =========================
+# Banco de dados local
+# =========================
+
+*.mdf
+*.ldf
+*.db
+*.sqlite
+*.sqlite3
+
+# =========================
+# NuGet
+# =========================
+
+*.nupkg
+*.snupkg
+packages/
+.nuget/
+project.lock.json
+project.assets.json
+
+# =========================
+# Testes / Cobertura
+# =========================
+
+TestResults/
+coverage/
+coverage.xml
+coverage.json
+*.coverage
+*.coveragexml
+
+# =========================
+# Arquivos temporários
+# =========================
+
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*.cache
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# Sistema operacional
+# =========================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# =========================
+# Publicação / Deploy local
+# =========================
+
+publish/
+Publish/
+artifacts/
+artifacts-*/
+deploy/
+Deploy/
+
+# =========================
+# Node / Front-end, caso use futuramente
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Docker / ambiente local
+# =========================
+
+.docker/
+docker-compose.override.yml
+
+# =========================
+# Certificados / chaves
+# =========================
+
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+
+# =========================
+# Arquivos de ambiente
+# =========================
+
+.env
+.env.*
+!.env.example
