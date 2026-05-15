@@ -1,10 +1,12 @@
 ﻿using FutPlay.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FutPlay.Controllers
 {
     [Authorize(Roles = AppRoles.Administrador)]
+    [EnableRateLimiting("CriticalActions")]
     public class MockDataController : Controller
     {
         private readonly MockDataService _mockDataService;

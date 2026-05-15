@@ -11,37 +11,46 @@ namespace FutPlay.Services
         private readonly AppDbContext _context;
         private readonly ClassificacaoService _classificacaoService;
         private readonly PontuacaoService _pontuacaoService;
+        private readonly ILogger<CampeonatoSincronizacaoService> _logger;
 
         public CampeonatoSincronizacaoService(
             FootballApiService footballApiService,
             AppDbContext context,
             ClassificacaoService classificacaoService,
-            PontuacaoService pontuacaoService)
+            PontuacaoService pontuacaoService,
+            ILogger<CampeonatoSincronizacaoService> logger)
         {
             _footballApiService = footballApiService;
             _context = context;
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
+            _logger = logger;
         }
 
         public async Task<CampeonatoSincronizacaoResultado> AtualizarResultadosAsync(int campeonatoId)
         {
+            _logger.LogInformation("Iniciando atualizacao de resultados. CampeonatoId: {CampeonatoId}", campeonatoId);
+
             var campeonato = await _context.Campeonatos
                 .FirstOrDefaultAsync(c => c.Id == campeonatoId);
 
             if (campeonato == null)
             {
+                _logger.LogWarning("Campeonato nao encontrado. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return CampeonatoSincronizacaoResultado.Falha("Campeonato não encontrado.");
             }
 
             if (!campeonato.ApiLeagueId.HasValue)
             {
+                _logger.LogWarning("Campeonato sem ApiLeagueId. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return CampeonatoSincronizacaoResultado.Falha("Este campeonato não possui ID da API.");
             }
 
             try
             {
                 int jogosAtualizados = await AtualizarResultadosCampeonatoAsync(campeonato);
+
+                _logger.LogInformation("Resultados atualizados com sucesso. CampeonatoId: {CampeonatoId}", campeonato.Id);
 
                 return CampeonatoSincronizacaoResultado.Ok(
                     $"Resultados atualizados com sucesso. Jogos atualizados: {jogosAtualizados}.",
@@ -51,22 +60,28 @@ namespace FutPlay.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao atualizar resultados. CampeonatoId: {CampeonatoId}", campeonato.Id);
+
                 return CampeonatoSincronizacaoResultado.Falha($"Erro ao atualizar resultados: {ex.Message}");
             }
         }
 
         public async Task<CampeonatoSincronizacaoResultado> SincronizarCampeonatoAsync(int campeonatoId)
         {
+            _logger.LogInformation("Iniciando sincronizacao de campeonato. CampeonatoId: {CampeonatoId}", campeonatoId);
+
             var campeonato = await _context.Campeonatos
                 .FirstOrDefaultAsync(c => c.Id == campeonatoId);
 
             if (campeonato == null)
             {
+                _logger.LogWarning("Campeonato nao encontrado. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return CampeonatoSincronizacaoResultado.Falha("Campeonato não encontrado.");
             }
 
             if (!campeonato.ApiLeagueId.HasValue)
             {
+                _logger.LogWarning("Campeonato sem ApiLeagueId. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return CampeonatoSincronizacaoResultado.Falha("Este campeonato não possui ID da API.");
             }
 
@@ -75,6 +90,8 @@ namespace FutPlay.Services
                 int jogosAtualizados = await AtualizarResultadosCampeonatoAsync(campeonato);
                 await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
                 await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+
+                _logger.LogInformation("Sincronizacao concluida com sucesso. CampeonatoId: {CampeonatoId}", campeonato.Id);
 
                 return CampeonatoSincronizacaoResultado.Ok(
                     $"Sincronização concluída. Jogos atualizados: {jogosAtualizados}. Classificação e palpites recalculados.",
@@ -85,6 +102,8 @@ namespace FutPlay.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao sincronizar campeonato. CampeonatoId: {CampeonatoId}", campeonato.Id);
+
                 return CampeonatoSincronizacaoResultado.Falha(
                     $"Erro ao sincronizar campeonato: {ex.Message}",
                     campeonato.Id,

@@ -6,6 +6,9 @@ namespace FutPlay.Services
 {
     public class FootballApiService
     {
+        private const string LimiteApiMensagem = "Limite de requisições da API atingido. Tente novamente mais tarde.";
+        private const string ErroApiMensagem = "Erro ao consultar API de futebol. Tente novamente mais tarde.";
+
         private readonly HttpClient _httpClient;
         private readonly ApiFootballOptions _options;
         private readonly ILogger<FootballApiService> _logger;
@@ -16,7 +19,7 @@ namespace FutPlay.Services
             _options = options.Value;
 
             _httpClient.BaseAddress = new Uri(_options.BaseUrl);
-            _httpClient.DefaultRequestHeaders.Add("x-apisports-key", _options.ApiKey);
+            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("x-apisports-key", _options.ApiKey);
             _logger = logger;
         }
 
@@ -24,80 +27,80 @@ namespace FutPlay.Services
         {
             var url = $"/leagues?country={Uri.EscapeDataString(pais)}&season={temporada}";
 
-            _logger.LogInformation("Consultando API-Football: {Url}", url);
-            var response = await _httpClient.GetAsync(url);
-
-            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-            {
-                _logger.LogError("Erro ao consultar API-Football. StatusCode: {StatusCode}", response.StatusCode);
-                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var erro = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Erro ao consultar API-Football. StatusCode: {StatusCode}", response.StatusCode);
-                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
-            }
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            return JsonDocument.Parse(json);
+            return await ConsultarApiAsync(url, "ligas");
         }
 
         public async Task<JsonDocument> BuscarJogosAsync(int leagueId, int temporada)
         {
             var url = $"/fixtures?league={leagueId}&season={temporada}";
 
-            _logger.LogInformation("Consultando API-Football: {Url}", url);
-            var response = await _httpClient.GetAsync(url);
-
-            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-            {
-                _logger.LogError("Erro ao consultar API-Football. StatusCode: {StatusCode}", response.StatusCode);
-                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
-            }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var erro = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Erro ao consultar API-Football. StatusCode: {StatusCode}", response.StatusCode);
-                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
-            }
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            return JsonDocument.Parse(json);
+            return await ConsultarApiAsync(url, "jogos", leagueId);
         }
 
         public async Task<JsonDocument> BuscarClassificacaoAsync(int leagueId, int temporada)
         {
             var url = $"/standings?league={leagueId}&season={temporada}";
 
-            _logger.LogInformation("Consultando API-Football: {Url}", url);
-            var response = await _httpClient.GetAsync(url);
+            return await ConsultarApiAsync(url, "classificacao", leagueId);
+        }
 
-            if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+        private async Task<JsonDocument> ConsultarApiAsync(string url, string recurso, int? apiLeagueId = null)
+        {
+            _logger.LogInformation(
+                "Iniciando consulta API-Football. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                recurso,
+                apiLeagueId);
+
+            HttpResponseMessage response;
+
+            try
             {
-                throw new Exception("Limite diário da API atingido. Tente novamente mais tarde ou utilize uma temporada já importada.");
+                response = await _httpClient.GetAsync(url);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(
+                    ex,
+                    "Erro ao consultar API-Football. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                    recurso,
+                    apiLeagueId);
+
+                throw new Exception(ErroApiMensagem);
             }
 
-            if (!response.IsSuccessStatusCode)
+            using (response)
             {
-                var erro = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Erro ao consultar API-Football. StatusCode: {StatusCode}", response.StatusCode);
-                throw new Exception($"Erro ao consultar API de futebol: {(int)response.StatusCode} - {erro}");
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    _logger.LogWarning(
+                        "Limite de requisicoes da API-Football atingido. StatusCode: {StatusCode}. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                        response.StatusCode,
+                        recurso,
+                        apiLeagueId);
+
+                    throw new Exception(LimiteApiMensagem);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError(
+                        "Erro HTTP ao consultar API-Football. StatusCode: {StatusCode}. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                        response.StatusCode,
+                        recurso,
+                        apiLeagueId);
+
+                    throw new Exception(ErroApiMensagem);
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation(
+                    "Consulta API-Football concluida com sucesso. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                    recurso,
+                    apiLeagueId);
+
+                return JsonDocument.Parse(json);
             }
-
-            response.EnsureSuccessStatusCode();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            return JsonDocument.Parse(json);
         }
     }
 }

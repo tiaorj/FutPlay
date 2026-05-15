@@ -5,6 +5,7 @@ using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
 namespace FutPlay.Controllers
@@ -12,11 +13,13 @@ namespace FutPlay.Controllers
     public class LigasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<LigasController> _logger;
         private const int MinutosBloqueioPalpite = 30;
 
-        public LigasController(AppDbContext context)
+        public LigasController(AppDbContext context, ILogger<LigasController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
@@ -99,7 +102,31 @@ namespace FutPlay.Controllers
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("CriticalActions")]
         public async Task<IActionResult> Palpitar(PalpitarLigaViewModel model)
+        {
+            _logger.LogInformation(
+                "Iniciando envio de palpites. LigaId: {LigaId}. LigaParticipanteId: {LigaParticipanteId}",
+                model.LigaId,
+                model.LigaParticipanteId);
+
+            try
+            {
+                return await SalvarPalpitesAsync(model);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Erro ao salvar palpites. LigaId: {LigaId}. LigaParticipanteId: {LigaParticipanteId}",
+                    model.LigaId,
+                    model.LigaParticipanteId);
+
+                throw;
+            }
+        }
+
+        private async Task<IActionResult> SalvarPalpitesAsync(PalpitarLigaViewModel model)
         {
             if (model.LigaParticipanteId <= 0)
             {
@@ -195,6 +222,11 @@ namespace FutPlay.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Palpites salvos com sucesso. LigaId: {LigaId}. LigaParticipanteId: {LigaParticipanteId}",
+                model.LigaId,
+                model.LigaParticipanteId);
 
             TempData["Sucesso"] = "Palpites salvos com sucesso.";
 

@@ -31,6 +31,45 @@ namespace FutPlay.Data
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
             modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
 
+            modelBuilder.Entity<LigaParticipante>()
+                .HasIndex(lp => lp.LigaId);
+
+            modelBuilder.Entity<LigaParticipante>()
+                .HasIndex(lp => lp.UserId);
+
+            modelBuilder.Entity<LigaParticipante>()
+                .HasIndex(lp => lp.Email);
+
+            modelBuilder.Entity<Palpite>()
+                .HasIndex(p => p.LigaId);
+
+            modelBuilder.Entity<Palpite>()
+                .HasIndex(p => p.LigaParticipanteId);
+
+            modelBuilder.Entity<Palpite>()
+                .HasIndex(p => p.JogoId);
+
+            modelBuilder.Entity<Jogo>()
+                .HasIndex(j => j.CampeonatoId);
+
+            modelBuilder.Entity<Jogo>()
+                .HasIndex(j => j.Status);
+
+            modelBuilder.Entity<Jogo>()
+                .HasIndex(j => j.ApiFixtureId);
+
+            modelBuilder.Entity<Campeonato>()
+                .HasIndex(c => c.ApiLeagueId);
+
+            modelBuilder.Entity<Time>()
+                .HasIndex(t => t.ApiTeamId);
+
+            modelBuilder.Entity<Classificacao>()
+                .HasIndex(c => c.CampeonatoId);
+
+            modelBuilder.Entity<Classificacao>()
+                .HasIndex(c => c.TimeId);
+
             modelBuilder.Entity<Classificacao>()
                 .HasOne(c => c.Campeonato)
                 .WithMany()

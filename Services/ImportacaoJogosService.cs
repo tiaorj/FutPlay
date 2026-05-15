@@ -9,27 +9,34 @@ namespace FutPlay.Services
     {
         private readonly FootballApiService _footballApiService;
         private readonly AppDbContext _context;
+        private readonly ILogger<ImportacaoJogosService> _logger;
 
         public ImportacaoJogosService(
             FootballApiService footballApiService,
-            AppDbContext context)
+            AppDbContext context,
+            ILogger<ImportacaoJogosService> logger)
         {
             _footballApiService = footballApiService;
             _context = context;
+            _logger = logger;
         }
 
         public async Task<ImportacaoJogosResultado> ImportarJogosAsync(int campeonatoId)
         {
+            _logger.LogInformation("Iniciando importacao de jogos. CampeonatoId: {CampeonatoId}", campeonatoId);
+
             var campeonato = await _context.Campeonatos
                 .FirstOrDefaultAsync(c => c.Id == campeonatoId);
 
             if (campeonato == null)
             {
+                _logger.LogWarning("Campeonato nao encontrado para importacao de jogos. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return ImportacaoJogosResultado.Falha("Campeonato não encontrado.");
             }
 
             if (!campeonato.ApiLeagueId.HasValue)
             {
+                _logger.LogWarning("Campeonato sem ApiLeagueId para importacao de jogos. CampeonatoId: {CampeonatoId}", campeonatoId);
                 return ImportacaoJogosResultado.Falha("Este campeonato não possui ID da API.");
             }
 
@@ -152,10 +159,14 @@ namespace FutPlay.Services
                     await _context.SaveChangesAsync();
                 }
 
+                _logger.LogInformation("Importacao de jogos concluida com sucesso. CampeonatoId: {CampeonatoId}", campeonato.Id);
+
                 return ImportacaoJogosResultado.Ok(jogosImportados, timesImportados);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro ao importar jogos. CampeonatoId: {CampeonatoId}", campeonato.Id);
+
                 return ImportacaoJogosResultado.Falha($"Erro ao importar jogos: {ex.Message}");
             }
         }

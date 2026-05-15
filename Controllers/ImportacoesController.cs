@@ -2,10 +2,12 @@ using FutPlay.Services;
 using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FutPlay.Controllers
 {
     [Authorize(Roles = AppRoles.Administrador)]
+    [EnableRateLimiting("CriticalActions")]
     public class ImportacoesController : Controller
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
