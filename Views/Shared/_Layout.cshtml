@@ -42,74 +42,64 @@
                             </a>
                         </li>
 
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle futplay-nav-pill @(currentController == "Campeonatos" || currentController == "Jogos" || currentController == "Times" ? "active" : "")"
-                               href="#"
-                               role="button"
-                               data-bs-toggle="dropdown"
-                               aria-expanded="false">
-                                Portal
+                        <li class="nav-item">
+                            <a class="nav-link futplay-nav-pill @(currentController == "Campeonatos" ? "active" : "")"
+                               asp-controller="Campeonatos"
+                               asp-action="Index">
+                                Campeonatos
                             </a>
-
-                            <ul class="dropdown-menu">
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Campeonatos" asp-action="Index">
-                                        🏆 Campeonatos
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Jogos" asp-action="Index">
-                                        📅 Jogos
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" asp-controller="Times" asp-action="Index">
-                                        🛡️ Times
-                                    </a>
-                                </li>
-                            </ul>
                         </li>
 
-                        @if (canUseParticipantArea)
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle futplay-nav-pill @(currentController == "MinhasLigas" || currentController == "Ligas" || currentController == "LigaParticipantes" || currentController == "Palpites" ? "active" : "")"
-                                   href="#"
-                                   role="button"
-                                   data-bs-toggle="dropdown"
-                                   aria-expanded="false">
-                                    Participante
-                                </a>
+                        <li class="nav-item">
+                            <a class="nav-link futplay-nav-pill @(currentController == "Jogos" ? "active" : "")"
+                               asp-controller="Jogos"
+                               asp-action="Index">
+                                Jogos
+                            </a>
+                        </li>
 
-                                <ul class="dropdown-menu">
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="MinhasLigas" asp-action="Index">
-                                            ⭐ Minhas Ligas
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Ligas" asp-action="Index">
-                                            👥 Ligas
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="LigaParticipantes" asp-action="Index">
-                                            🙋 Meu Cadastro
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Palpites" asp-action="Index">
-                                            🎯 Meus Palpites
-                                        </a>
-                                    </li>
-                                </ul>
+                        <li class="nav-item">
+                            <a class="nav-link futplay-nav-pill @(currentController == "Times" ? "active" : "")"
+                               asp-controller="Times"
+                               asp-action="Index">
+                                Times
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link futplay-nav-pill @(currentController == "Ligas" ? "active" : "")"
+                               asp-controller="Ligas"
+                               asp-action="Index">
+                                Ligas
+                            </a>
+                        </li>
+
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link futplay-nav-pill @(currentController == "MinhasLigas" ? "active" : "")"
+                                   asp-controller="MinhasLigas"
+                                   asp-action="Index">
+                                    Minhas Ligas
+                                </a>
                             </li>
+
+                            @if (isAdmin)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link futplay-nav-pill"
+                                       asp-controller="Ligas"
+                                       asp-action="Create">
+                                        Criar Liga
+                                    </a>
+                                </li>
+                            }
                         }
 
                         @if (isAdmin)
                         {
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle futplay-nav-pill futplay-admin-link @(currentController == "Importacoes" || currentController == "MockData" ? "active" : "")"
+                                <a class="nav-link dropdown-toggle futplay-nav-pill futplay-admin-link @(currentController == "Importacoes" || currentController == "MockData" || currentController == "LigaParticipantes" || currentController == "Palpites" ? "active" : "")"
                                    href="#"
                                    role="button"
                                    data-bs-toggle="dropdown"
@@ -119,26 +109,31 @@
 
                                 <ul class="dropdown-menu dropdown-menu-lg-end">
                                     <li>
-                                        <h6 class="dropdown-header">Operações</h6>
+                                        <h6 class="dropdown-header">Administração</h6>
                                     </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="Importacoes" asp-action="Index">
-                                            ⬆️ Importações
+                                            Importações
                                         </a>
                                     </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="MockData" asp-action="Index">
-                                            🧪 Dados Teste
+                                            Dados de Teste
                                         </a>
                                     </li>
+
                                     <li>
                                         <hr class="dropdown-divider" />
                                     </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="LigaParticipantes" asp-action="Index">
                                             Participantes
                                         </a>
                                     </li>
+
                                     <li>
                                         <a class="dropdown-item" asp-controller="Palpites" asp-action="Index">
                                             Palpites
