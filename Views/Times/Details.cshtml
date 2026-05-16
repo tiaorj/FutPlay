@@ -1,51 +1,285 @@
-@model FutPlay.Models.Time
+@model FutPlay.ViewModels.TimeDetalhesViewModel
 
 @{
-    ViewData["Title"] = "Detalhes do Time/Seleção";
+    ViewData["Title"] = Model.Time.Nome;
 }
 
-<div class="container futplay-portal-shell">
-    <section class="futplay-detail-match">
-        <div class="futplay-detail-scoreboard futplay-detail-scoreboard-single">
-            <div class="futplay-detail-team">
-                <span class="futplay-detail-crest futplay-detail-crest-large">
-                    @if (!string.IsNullOrWhiteSpace(Model.EscudoUrl))
+<div class="container futplay-team-profile-shell">
+
+    <section class="futplay-team-profile-hero mb-4">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="futplay-team-profile-crest">
+                        @if (!string.IsNullOrWhiteSpace(Model.Time.EscudoUrl))
+                        {
+                            <img src="@Model.Time.EscudoUrl" alt="@Model.Time.Nome" />
+                        }
+                        else
+                        {
+                            <span>@(Model.Time.Sigla ?? "FC")</span>
+                        }
+                    </div>
+
+                    <div>
+                        <div class="futplay-team-profile-kicker">
+                            @Model.Time.Tipo
+                        </div>
+
+                        <h1 class="futplay-team-profile-title">
+                            @Model.Time.Nome
+                        </h1>
+
+                        <p class="futplay-team-profile-subtitle">
+                            @(string.IsNullOrWhiteSpace(Model.Time.Pais) ? "País não informado" : Model.Time.Pais)
+                            @if (!string.IsNullOrWhiteSpace(Model.Time.Sigla))
+                            {
+                                <span> • @Model.Time.Sigla</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="futplay-team-profile-status">
+                    <span>Status</span>
+                    @if (Model.Time.Ativo)
                     {
-                        <img src="@Model.EscudoUrl" alt="@Model.Nome" />
+                        <strong class="text-success">Ativo</strong>
                     }
                     else
                     {
-                        <span>@(Model.Sigla ?? "FC")</span>
+                        <strong class="text-muted">Inativo</strong>
                     }
-                </span>
-                <h1>@Model.Nome</h1>
-                <p>@Model.Tipo</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="futplay-detail-grid mt-4">
-        <article class="futplay-detail-panel">
-            <h2>Ficha do time</h2>
-            <dl>
-                <dt>Sigla</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Model.Sigla) ? "-" : Model.Sigla)</dd>
-                <dt>País</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Model.Pais) ? "-" : Model.Pais)</dd>
-                <dt>Status</dt>
-                <dd>@(Model.Ativo ? "Ativo" : "Inativo")</dd>
-            </dl>
+    <section class="futplay-team-stats-grid mb-4">
+        <article>
+            <span>Jogos</span>
+            <strong>@Model.TotalJogos</strong>
         </article>
 
-        <article class="futplay-detail-panel">
-            <h2>Ações</h2>
-            <div class="futplay-detail-actions">
-                @if (User.IsInRole(AppRoles.Administrador))
-                {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar time</a>
-                }
-                <a asp-action="Index">Voltar para times</a>
-            </div>
+        <article>
+            <span>Vitórias</span>
+            <strong>@Model.TotalVitorias</strong>
+        </article>
+
+        <article>
+            <span>Empates</span>
+            <strong>@Model.TotalEmpates</strong>
+        </article>
+
+        <article>
+            <span>Derrotas</span>
+            <strong>@Model.TotalDerrotas</strong>
+        </article>
+
+        <article>
+            <span>Gols Pró</span>
+            <strong>@Model.GolsPro</strong>
+        </article>
+
+        <article>
+            <span>Saldo</span>
+            <strong>@Model.SaldoGols</strong>
         </article>
     </section>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+
+            <section class="futplay-home-section">
+                <div class="futplay-home-section-title">
+                    <div>
+                        <span>Agenda</span>
+                        <h2>Próximos jogos</h2>
+                    </div>
+                </div>
+
+                @if (!Model.ProximosJogos.Any())
+                {
+                    <div class="futplay-empty-state">
+                        Nenhum jogo futuro encontrado para este time.
+                    </div>
+                }
+                else
+                {
+                    <div class="futplay-home-match-list">
+                        @foreach (var jogo in Model.ProximosJogos)
+                        {
+                            <article class="futplay-home-match-row">
+                                <div class="futplay-home-match-date">
+                                    <strong>@jogo.DataJogo.ToString("dd/MM")</strong>
+                                    <span>@jogo.DataJogo.ToString("HH:mm")</span>
+                                </div>
+
+                                <div class="futplay-home-match-teams">
+                                    <div class="futplay-home-team">
+                                        <span>@jogo.TimeCasa?.Nome</span>
+                                    </div>
+
+                                    <div class="futplay-home-score">
+                                        x
+                                    </div>
+
+                                    <div class="futplay-home-team futplay-home-team-away">
+                                        <span>@jogo.TimeVisitante?.Nome</span>
+                                    </div>
+                                </div>
+
+                                <div class="futplay-home-match-status">
+                                    @jogo.Status
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="futplay-home-section mt-4">
+                <div class="futplay-home-section-title">
+                    <div>
+                        <span>Resultados</span>
+                        <h2>Últimos resultados</h2>
+                    </div>
+                </div>
+
+                @if (!Model.UltimosResultados.Any())
+                {
+                    <div class="futplay-empty-state">
+                        Nenhum resultado encontrado para este time.
+                    </div>
+                }
+                else
+                {
+                    <div class="futplay-home-match-list">
+                        @foreach (var jogo in Model.UltimosResultados)
+                        {
+                            <article class="futplay-home-match-row">
+                                <div class="futplay-home-match-date">
+                                    <strong>@jogo.DataJogo.ToString("dd/MM")</strong>
+                                    <span>@jogo.DataJogo.ToString("HH:mm")</span>
+                                </div>
+
+                                <div class="futplay-home-match-teams">
+                                    <div class="futplay-home-team">
+                                        <span>@jogo.TimeCasa?.Nome</span>
+                                    </div>
+
+                                    <div class="futplay-home-score">
+                                        @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
+                                                                        ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
+                                                                        : "x")
+                            </div>
+
+                                    <div class="futplay-home-team futplay-home-team-away">
+                                        <span>@jogo.TimeVisitante?.Nome</span>
+                                    </div>
+                                </div>
+
+                                <div class="futplay-home-match-status">
+                                    @jogo.Status
+                                </div>
+                            </article>
+                                        }
+                    </div>
+                }
+            </section>
+
+        </div>
+
+        <aside class="col-lg-4">
+
+            <section class="futplay-home-side-card">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Ficha</span>
+                        <h2>Informações</h2>
+                    </div>
+                </div>
+
+                <dl class="futplay-team-info-list">
+                    <dt>Nome</dt>
+                    <dd>@Model.Time.Nome</dd>
+
+                    <dt>Sigla</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Time.Sigla) ? "-" : Model.Time.Sigla)</dd>
+
+                    <dt>País</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.Time.Pais) ? "-" : Model.Time.Pais)</dd>
+
+                    <dt>Tipo</dt>
+                    <dd>@Model.Time.Tipo</dd>
+
+                    <dt>ID API</dt>
+                    <dd>@(Model.Time.ApiTeamId.HasValue? Model.Time.ApiTeamId.Value.ToString() : "-")</dd>
+                </dl>
+            </section>
+
+            <section class="futplay-home-side-card mt-4">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Competições</span>
+                        <h2>Campeonatos</h2>
+                    </div>
+                </div>
+
+                @if (!Model.Campeonatos.Any())
+                {
+                    <div class="futplay-empty-state">
+                        Nenhum campeonato encontrado para este time.
+                    </div>
+                }
+                else
+                {
+                    <div class="futplay-public-league-list">
+                        @foreach (var campeonato in Model.Campeonatos)
+                        {
+                            <article class="futplay-public-league">
+                                <div>
+                                    <h3>@campeonato.Nome @campeonato.Ano</h3>
+                                    <p>@campeonato.Tipo</p>
+                                </div>
+
+                                <a asp-controller="Campeonatos"
+                                   asp-action="Portal"
+                                   asp-route-id="@campeonato.Id">
+                                    Portal
+                                </a>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+
+            <section class="futplay-home-side-card mt-4">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Ações</span>
+                        <h2>Navegação</h2>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    @if (User.IsInRole(AppRoles.Administrador))
+                    {
+                        <a asp-action="Edit"
+                           asp-route-id="@Model.Time.Id"
+                           class="btn btn-success">
+                            Editar time
+                        </a>
+                    }
+
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        Voltar para times
+                    </a>
+                </div>
+            </section>
+
+        </aside>
+    </div>
 </div>

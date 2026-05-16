@@ -4,6 +4,7 @@ using FutPlay.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FutPlay.ViewModels;
 
 namespace FutPlay.Controllers
 {
@@ -64,7 +65,88 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
-            return View(time);
+            var jogosDoTime = await _context.Jogos
+                .Include(j => j.Campeonato)
+                .Include(j => j.TimeCasa)
+                .Include(j => j.TimeVisitante)
+                .Where(j =>
+                    j.Ativo &&
+                    (j.TimeCasaId == time.Id || j.TimeVisitanteId == time.Id))
+                .OrderBy(j => j.DataJogo)
+                .ToListAsync();
+
+            var proximosJogos = jogosDoTime
+                .Where(j =>
+                    j.DataJogo >= DateTime.Now &&
+                    !string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase))
+                .OrderBy(j => j.DataJogo)
+                .Take(6)
+                .ToList();
+
+            var ultimosResultados = jogosDoTime
+                .Where(j =>
+                    string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(j => j.DataJogo)
+                .Take(6)
+                .ToList();
+
+            var campeonatos = jogosDoTime
+                .Where(j => j.Campeonato != null)
+                .Select(j => j.Campeonato!)
+                .GroupBy(c => c.Id)
+                .Select(g => g.First())
+                .OrderByDescending(c => c.Ano)
+                .ThenBy(c => c.Nome)
+                .ToList();
+
+            int totalVitorias = 0;
+            int totalEmpates = 0;
+            int totalDerrotas = 0;
+            int golsPro = 0;
+            int golsContra = 0;
+
+            foreach (var jogo in jogosDoTime.Where(j =>
+                string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) &&
+                j.GolsCasa.HasValue &&
+                j.GolsVisitante.HasValue))
+            {
+                bool timeCasa = jogo.TimeCasaId == time.Id;
+
+                int golsTime = timeCasa ? jogo.GolsCasa!.Value : jogo.GolsVisitante!.Value;
+                int golsAdversario = timeCasa ? jogo.GolsVisitante!.Value : jogo.GolsCasa!.Value;
+
+                golsPro += golsTime;
+                golsContra += golsAdversario;
+
+                if (golsTime > golsAdversario)
+                {
+                    totalVitorias++;
+                }
+                else if (golsTime < golsAdversario)
+                {
+                    totalDerrotas++;
+                }
+                else
+                {
+                    totalEmpates++;
+                }
+            }
+
+            var viewModel = new TimeDetalhesViewModel
+            {
+                Time = time,
+                ProximosJogos = proximosJogos,
+                UltimosResultados = ultimosResultados,
+                Campeonatos = campeonatos,
+                TotalJogos = jogosDoTime.Count,
+                TotalVitorias = totalVitorias,
+                TotalEmpates = totalEmpates,
+                TotalDerrotas = totalDerrotas,
+                GolsPro = golsPro,
+                GolsContra = golsContra
+            };
+
+            return View(viewModel);
         }
 
         [Authorize(Roles = AppRoles.Administrador)]

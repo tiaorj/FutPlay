@@ -3375,3 +3375,624 @@ body {
         padding: 1.35rem;
     }
 }
+
+/* Home estilo portal esportivo */
+
+.futplay-home-shell {
+    padding-top: 24px;
+}
+
+.futplay-home-hero {
+    background: linear-gradient(135deg, #063f2d, #087a4f);
+    color: #fff;
+    border-radius: 24px;
+    padding: 32px;
+    overflow: hidden;
+}
+
+.futplay-home-kicker {
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-weight: 700;
+    color: #b7f7d2;
+    margin-bottom: 8px;
+}
+
+.futplay-home-title {
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 16px;
+}
+
+.futplay-home-lead {
+    font-size: 1.05rem;
+    color: rgba(255,255,255,.85);
+    max-width: 620px;
+}
+
+.futplay-home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.futplay-home-live-card {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 20px;
+    padding: 20px;
+    backdrop-filter: blur(8px);
+}
+
+.futplay-home-live-label {
+    display: inline-block;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #d8ffe8;
+    margin-bottom: 14px;
+}
+
+.futplay-home-live-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+}
+
+    .futplay-home-live-grid div {
+        background: rgba(255,255,255,.12);
+        border-radius: 14px;
+        padding: 14px;
+    }
+
+    .futplay-home-live-grid strong {
+        display: block;
+        font-size: 1.7rem;
+        line-height: 1;
+    }
+
+    .futplay-home-live-grid span {
+        display: block;
+        font-size: .8rem;
+        color: rgba(255,255,255,.78);
+        margin-top: 5px;
+    }
+
+.futplay-score-strip {
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.futplay-score-strip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid #edf0f2;
+    font-weight: 700;
+}
+
+    .futplay-score-strip-header span {
+        text-transform: uppercase;
+        font-size: .78rem;
+        letter-spacing: .08em;
+        color: #52616b;
+    }
+
+    .futplay-score-strip-header a {
+        color: #087a4f;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+.futplay-score-strip-body {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: center;
+    padding: 18px;
+}
+
+.futplay-score-team {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.futplay-score-team-away {
+    justify-content: flex-end;
+}
+
+.futplay-score-crest {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #f1f5f4;
+    border: 1px solid #e1e7e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: .75rem;
+    font-weight: 800;
+    color: #087a4f;
+}
+
+    .futplay-score-crest img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 5px;
+    }
+
+.futplay-score-center {
+    text-align: center;
+    min-width: 120px;
+}
+
+    .futplay-score-center span {
+        display: block;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #151b1f;
+        line-height: 1;
+    }
+
+    .futplay-score-center small {
+        display: block;
+        color: #69767f;
+        font-size: .75rem;
+    }
+
+.futplay-home-section,
+.futplay-home-side-card {
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.futplay-home-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+    .futplay-home-section-title.compact {
+        align-items: center;
+    }
+
+    .futplay-home-section-title span {
+        display: block;
+        color: #087a4f;
+        text-transform: uppercase;
+        font-size: .72rem;
+        letter-spacing: .1em;
+        font-weight: 800;
+        margin-bottom: 3px;
+    }
+
+    .futplay-home-section-title h2 {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #111820;
+        margin: 0;
+    }
+
+    .futplay-home-section-title a {
+        color: #087a4f;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: .9rem;
+    }
+
+.futplay-empty-state {
+    background: #f7f9fa;
+    border: 1px dashed #d9e0df;
+    color: #6b7780;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+}
+
+.futplay-competition-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.futplay-competition-card {
+    display: flex;
+    gap: 14px;
+    border: 1px solid #eef1f2;
+    border-radius: 16px;
+    padding: 14px;
+    background: #fff;
+    transition: transform .15s ease, border-color .15s ease;
+}
+
+    .futplay-competition-card:hover {
+        transform: translateY(-2px);
+        border-color: #b9dfcf;
+    }
+
+.futplay-competition-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: #f3f8f6;
+    border: 1px solid #e4eeea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+    font-weight: 800;
+    color: #087a4f;
+}
+
+    .futplay-competition-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 6px;
+    }
+
+.futplay-competition-info small {
+    color: #69767f;
+    font-size: .78rem;
+}
+
+.futplay-competition-info h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    margin: 3px 0 10px;
+    color: #111820;
+}
+
+.futplay-competition-actions {
+    display: flex;
+    gap: 12px;
+}
+
+    .futplay-competition-actions a {
+        color: #087a4f;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: .86rem;
+    }
+
+.futplay-home-match-list,
+.futplay-side-match-list,
+.futplay-public-league-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.futplay-home-match-row {
+    display: grid;
+    grid-template-columns: 70px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eef1f2;
+}
+
+    .futplay-home-match-row:last-child {
+        border-bottom: none;
+    }
+
+.futplay-home-match-date strong {
+    display: block;
+    color: #111820;
+    font-size: .9rem;
+}
+
+.futplay-home-match-date span {
+    display: block;
+    color: #69767f;
+    font-size: .78rem;
+}
+
+.futplay-home-match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.futplay-home-team {
+    font-weight: 700;
+    color: #182026;
+}
+
+.futplay-home-team-away {
+    text-align: right;
+}
+
+.futplay-home-score {
+    font-weight: 900;
+    color: #111820;
+    min-width: 52px;
+    text-align: center;
+}
+
+.futplay-home-match-status {
+    color: #087a4f;
+    background: #e9f8f0;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: .75rem;
+    font-weight: 800;
+}
+
+.futplay-side-match {
+    border: 1px solid #eef1f2;
+    border-radius: 14px;
+    padding: 12px;
+    background: #fff;
+}
+
+.futplay-side-match-header,
+.futplay-side-match-footer {
+    display: flex;
+    justify-content: space-between;
+    color: #69767f;
+    font-size: .76rem;
+}
+
+    .futplay-side-match-header small {
+        color: #087a4f;
+        font-weight: 800;
+    }
+
+.futplay-side-match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    align-items: center;
+    margin: 10px 0;
+    font-size: .9rem;
+}
+
+    .futplay-side-match-teams div:last-child {
+        text-align: right;
+    }
+
+    .futplay-side-match-teams span {
+        font-weight: 900;
+        color: #111820;
+    }
+
+.futplay-public-league {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #eef1f2;
+    border-radius: 14px;
+    padding: 12px;
+    align-items: center;
+}
+
+    .futplay-public-league h3 {
+        font-size: .95rem;
+        margin: 0;
+        font-weight: 800;
+    }
+
+    .futplay-public-league p {
+        margin: 2px 0 0;
+        font-size: .78rem;
+        color: #69767f;
+    }
+
+    .futplay-public-league a {
+        color: #087a4f;
+        font-weight: 800;
+        text-decoration: none;
+        font-size: .85rem;
+    }
+
+.futplay-home-join-text {
+    color: #63707a;
+    font-size: .92rem;
+}
+
+@media (max-width: 991px) {
+    .futplay-score-strip-body {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .futplay-score-team,
+    .futplay-score-team-away {
+        justify-content: center;
+    }
+
+    .futplay-competition-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .futplay-home-hero {
+        padding: 24px;
+        border-radius: 18px;
+    }
+
+    .futplay-home-live-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .futplay-home-match-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .futplay-home-match-status {
+        width: fit-content;
+    }
+}
+
+/* Perfil do time */
+
+.futplay-team-profile-shell {
+    padding-top: 24px;
+}
+
+.futplay-team-profile-hero {
+    background: linear-gradient(135deg, #063f2d, #0b8c57);
+    color: #fff;
+    border-radius: 24px;
+    padding: 30px;
+}
+
+.futplay-team-profile-crest {
+    width: 92px;
+    height: 92px;
+    border-radius: 24px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.24);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+    font-size: 1.3rem;
+    font-weight: 900;
+}
+
+    .futplay-team-profile-crest img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 12px;
+    }
+
+.futplay-team-profile-kicker {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-weight: 800;
+    color: #b7f7d2;
+    margin-bottom: 6px;
+}
+
+.futplay-team-profile-title {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 900;
+    line-height: 1;
+    margin: 0 0 8px;
+}
+
+.futplay-team-profile-subtitle {
+    margin: 0;
+    color: rgba(255,255,255,.82);
+}
+
+.futplay-team-profile-status {
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 18px;
+    padding: 18px;
+}
+
+    .futplay-team-profile-status span {
+        display: block;
+        color: rgba(255,255,255,.74);
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-bottom: 6px;
+    }
+
+    .futplay-team-profile-status strong {
+        display: block;
+        font-size: 1.6rem;
+    }
+
+.futplay-team-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+}
+
+    .futplay-team-stats-grid article {
+        background: #fff;
+        border: 1px solid #e7e9ed;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .futplay-team-stats-grid span {
+        display: block;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #66727b;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .futplay-team-stats-grid strong {
+        display: block;
+        font-size: 1.6rem;
+        color: #111820;
+        font-weight: 900;
+    }
+
+.futplay-team-info-list {
+    margin: 0;
+}
+
+    .futplay-team-info-list dt {
+        color: #66727b;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+        margin-top: 12px;
+    }
+
+        .futplay-team-info-list dt:first-child {
+            margin-top: 0;
+        }
+
+    .futplay-team-info-list dd {
+        margin: 3px 0 0;
+        color: #111820;
+        font-weight: 700;
+    }
+
+@media (max-width: 991px) {
+    .futplay-team-stats-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .futplay-team-profile-hero {
+        padding: 22px;
+        border-radius: 18px;
+    }
+
+    .futplay-team-profile-crest {
+        width: 72px;
+        height: 72px;
+        border-radius: 18px;
+    }
+
+    .futplay-team-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
