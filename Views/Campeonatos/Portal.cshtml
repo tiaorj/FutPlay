@@ -2,151 +2,218 @@
 
 @{
     ViewData["Title"] = "Portal do Campeonato";
+
     var rodada = Model.ProximosJogos.FirstOrDefault(j => j.Rodada.HasValue)?.Rodada;
+
+    var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
+    var totalJogosFuturos = Model.ProximosJogos.Count;
+    var totalResultados = Model.JogosFinalizados.Count;
+
+    var gruposClassificacao = Model.Classificacoes
+        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Classificação" : $"Grupo {c.Grupo}")
+        .ToList();
 }
 
-<div class="container futplay-portal-shell">
-    <section class="futplay-portal-header mb-4">
-        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="futplay-portal-logo futplay-portal-logo-large">
-                    @if (!string.IsNullOrWhiteSpace(Model.Campeonato.LogoUrl))
-                    {
-                        <img src="@Model.Campeonato.LogoUrl" alt="@Model.Campeonato.Nome" />
-                    }
-                    else
-                    {
-                        <span>FP</span>
-                    }
-                </div>
+<div class="container fp-score-home">
 
-                <div>
-                    <div class="futplay-portal-kicker">Portal do campeonato</div>
-                    <h1 class="futplay-portal-title">@Model.Campeonato.Nome @Model.Campeonato.Ano</h1>
-                    <p class="futplay-portal-lead mb-0">
-                        @Model.Campeonato.Tipo
-                        @if (!string.IsNullOrWhiteSpace(Model.Campeonato.Pais))
-                        {
-                            <span> | @Model.Campeonato.Pais</span>
-                        }
-                    </p>
-                </div>
-            </div>
+    <section class="fp-champ-header mb-3">
+        <div class="fp-champ-logo">
+            @if (!string.IsNullOrWhiteSpace(Model.Campeonato.LogoUrl))
+            {
+                <img src="@Model.Campeonato.LogoUrl" alt="@Model.Campeonato.Nome" />
+            }
+            else
+            {
+                <span>FP</span>
+            }
+        </div>
 
-            <div class="futplay-portal-actions">
-                <a asp-action="Classificacao" asp-route-id="@Model.Campeonato.Id">Classificação completa</a>
-                <a asp-action="Index">Competições</a>
-            </div>
+        <div class="fp-champ-info">
+            <span>Portal do campeonato</span>
+            <h1>@Model.Campeonato.Nome @Model.Campeonato.Ano</h1>
+            <p>
+                @Model.Campeonato.Tipo
+                @if (!string.IsNullOrWhiteSpace(Model.Campeonato.Pais))
+                {
+                    <span> · @Model.Campeonato.Pais</span>
+                }
+            </p>
+        </div>
+
+        <div class="fp-champ-actions">
+            <a asp-action="Classificacao" asp-route-id="@Model.Campeonato.Id">Tabela</a>
+            <a asp-action="Index">Competições</a>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <a asp-action="RecalcularClassificacao"
+                   asp-route-id="@Model.Campeonato.Id">
+                    Recalcular
+                </a>
+            }
         </div>
     </section>
 
-    <div class="row g-4 align-items-start">
-        <div class="col-xl-8">
-            <section class="futplay-standings-card">
-                <div class="futplay-standings-head">
-                    <h2>TABELA</h2>
+    <div class="row g-3">
 
-                    @if (User.IsInRole(AppRoles.Administrador))
-                    {
-                        <div class="futplay-section-admin">
-                            <a asp-action="RecalcularClassificacao"
-                               asp-route-id="@Model.Campeonato.Id"
-                               class="btn btn-sm btn-outline-success">
-                                Recalcular
-                            </a>
+        <aside class="col-xl-3 col-lg-4">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>Resumo</h2>
+                </div>
 
-                            @if (Model.Campeonato.ApiLeagueId.HasValue)
-                            {
-                                <form asp-controller="Importacoes"
-                                      asp-action="SincronizarCampeonato"
-                                      method="post">
-                                    <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
-                                    <button type="submit" class="btn btn-sm btn-success">Sincronizar</button>
-                                </form>
-                            }
-                        </div>
-                    }
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Times</span>
+                        <strong>@totalTimes</strong>
+                    </div>
+
+                    <div>
+                        <span>Próximos jogos</span>
+                        <strong>@totalJogosFuturos</strong>
+                    </div>
+
+                    <div>
+                        <span>Resultados</span>
+                        <strong>@totalResultados</strong>
+                    </div>
+
+                    <div>
+                        <span>Ano</span>
+                        <strong>@Model.Campeonato.Ano</strong>
+                    </div>
+                </div>
+            </section>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Admin</h2>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-action="RecalcularClassificacao"
+                           asp-route-id="@Model.Campeonato.Id"
+                           class="btn btn-outline-primary">
+                            Recalcular tabela
+                        </a>
+
+                        @if (Model.Campeonato.ApiLeagueId.HasValue)
+                        {
+                            <form asp-controller="Importacoes"
+                                  asp-action="SincronizarCampeonato"
+                                  method="post">
+                                <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
+                                <button type="submit" class="btn btn-success w-100">
+                                    Sincronizar
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </section>
+            }
+        </aside>
+
+        <main class="col-xl-6 col-lg-8">
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Tabela</a>
+                    <a asp-controller="Jogos" asp-action="Index">Jogos</a>
+                    <a asp-action="Classificacao" asp-route-id="@Model.Campeonato.Id">Classificação</a>
+                </div>
+
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Classificação</span>
+                    <span class="fp-score-filter">@totalTimes times</span>
+                    <span class="fp-score-filter">@totalJogosFuturos próximos</span>
                 </div>
 
                 @if (!Model.Classificacoes.Any())
                 {
-                    <div class="futplay-section-empty">Nenhuma classificação disponível para este campeonato.</div>
+                    <div class="fp-empty-mini m-3">
+                        Nenhuma classificação disponível para este campeonato.
+                    </div>
                 }
                 else
                 {
-                    var grupos = Model.Classificacoes
-                        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Classificação" : $"Grupo {c.Grupo}")
-                        .ToList();
-
-                    foreach (var grupo in grupos)
+                    @foreach (var grupo in gruposClassificacao)
                     {
-                        <div class="futplay-standings-group">
-                            <div class="futplay-standings-group-title">@grupo.Key.ToUpperInvariant()</div>
+                        <div class="fp-standing-group">
+                            <div class="fp-match-list-title">
+                                <span>🏆 @grupo.Key</span>
+                                <small>@grupo.Count() time(s)</small>
+                            </div>
 
                             <div class="table-responsive">
-                                <table class="table futplay-standings-table align-middle">
+                                <table class="table fp-standing-table align-middle">
                                     <thead>
                                         <tr>
-                                            <th class="futplay-standings-club-head">Classificação</th>
-                                            <th>P</th>
+                                            <th>Time</th>
+                                            <th>PTS</th>
                                             <th>J</th>
                                             <th>V</th>
                                             <th>E</th>
                                             <th>D</th>
-                                            <th>GP</th>
-                                            <th>GC</th>
                                             <th>SG</th>
                                             <th>%</th>
-                                            <th>Últ. jogos</th>
+                                            <th>Forma</th>
                                         </tr>
                                     </thead>
+
                                     <tbody>
-                                        @foreach (var item in grupo)
+                                        @foreach (var item in grupo.OrderBy(c => c.Posicao))
                                         {
                                             var aproveitamento = item.Jogos > 0
-                                                ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
-                                                : 0;
+                                            ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
+                                            : 0;
+
                                             var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
-                                                ? resultados
-                                                : new List<string>();
+                                            ? resultados
+                                            : new List<string>();
 
                                             <tr>
-                                                <td class="futplay-standings-club">
-                                                    <span class="futplay-standings-position">@item.Posicao</span>
-                                                    <span class="futplay-table-crest">
-                                                        @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
-                                                        {
-                                                            <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <span>@(item.Time?.Sigla ?? "FC")</span>
-                                                        }
-                                                    </span>
-                                                    <strong>@item.Time?.Nome</strong>
+                                                <td>
+                                                    <div class="fp-standing-team">
+                                                        <span class="fp-standing-position">@item.Posicao</span>
+
+                                                        <span class="fp-mini-crest">
+                                                            @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
+                                                            {
+                                                                <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>@(item.Time?.Sigla ?? "FC")</span>
+                                                            }
+                                                        </span>
+
+                                                        <strong>@item.Time?.Nome</strong>
+                                                    </div>
                                                 </td>
-                                                <td class="futplay-standings-points">@item.Pontos</td>
+
+                                                <td class="fp-standing-points">@item.Pontos</td>
                                                 <td>@item.Jogos</td>
                                                 <td>@item.Vitorias</td>
                                                 <td>@item.Empates</td>
                                                 <td>@item.Derrotas</td>
-                                                <td>@item.GolsPro</td>
-                                                <td>@item.GolsContra</td>
                                                 <td>@item.SaldoGols</td>
                                                 <td>@aproveitamento.ToString("0")</td>
+
                                                 <td>
-                                                    <div class="futplay-form-dots">
+                                                    <div class="fp-form-dots">
                                                         @foreach (var resultado in forma)
                                                         {
                                                             var dotClass = resultado == "V"
-                                                                ? "futplay-form-win"
-                                                                : resultado == "E" ? "futplay-form-draw" : "futplay-form-loss";
+                                                            ? "win"
+                                                            : resultado == "E" ? "draw" : "loss";
 
-                                                            <span class="futplay-form-dot @dotClass" title="@resultado"></span>
+                                                            <span class="fp-form-dot @dotClass" title="@resultado"></span>
                                                         }
+
                                                         @for (int i = forma.Count; i < 5; i++)
                                                         {
-                                                            <span class="futplay-form-dot futplay-form-empty"></span>
+                                                            <span class="fp-form-dot empty"></span>
                                                         }
                                                     </div>
                                                 </td>
@@ -159,96 +226,83 @@
                     }
                 }
             </section>
-        </div>
+        </main>
 
-        <aside class="col-xl-4">
-            <section class="futplay-fixture-panel">
-                <div class="futplay-fixture-head">
-                    <span>‹</span>
-                    <h2>@(rodada.HasValue ? $"{rodada}ª RODADA" : "JOGOS")</h2>
-                    <span>›</span>
+        <aside class="col-xl-3 d-none d-xl-block">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>@(rodada.HasValue ? $"{rodada}ª rodada" : "Próximos jogos")</h2>
+                    <a asp-controller="Jogos" asp-action="Index">Ver</a>
                 </div>
 
                 @if (!Model.ProximosJogos.Any())
                 {
-                    <div class="futplay-section-empty">Nenhum jogo futuro cadastrado.</div>
+                    <div class="fp-empty-mini">
+                        Nenhum jogo futuro cadastrado.
+                    </div>
                 }
                 else
                 {
-                    <div class="futplay-fixture-list">
+                    <div class="fp-side-fixtures">
                         @foreach (var jogo in Model.ProximosJogos.Take(8))
                         {
-                            <article class="futplay-fixture-item">
-                                <div class="futplay-fixture-meta">
-                                    <span>@(string.IsNullOrWhiteSpace(jogo.Fase) ? Model.Campeonato.Nome : jogo.Fase)</span>
-                                    <strong>@jogo.DataJogo.ToString("dd/MM") · @jogo.DataJogo.ToString("HH:mm")</strong>
+                            <article class="fp-side-fixture">
+                                <div>
+                                    <span>@jogo.DataJogo.ToString("dd/MM HH:mm")</span>
+                                    <small>@(string.IsNullOrWhiteSpace(jogo.Fase) ? Model.Campeonato.Nome : jogo.Fase)</small>
                                 </div>
 
-                                <div class="futplay-fixture-board">
-                                    <div class="futplay-fixture-team">
-                                        <span>@jogo.TimeCasa?.Nome</span>
-                                        <span class="futplay-match-crest">
-                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
-                                            {
-                                                <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
-                                            }
-                                            else
-                                            {
-                                                <span>@(jogo.TimeCasa?.Sigla ?? "CAS")</span>
-                                            }
-                                        </span>
-                                    </div>
+                                <strong>@jogo.TimeCasa?.Nome</strong>
+                                <b>x</b>
+                                <strong>@jogo.TimeVisitante?.Nome</strong>
 
-                                    <strong class="futplay-fixture-versus">x</strong>
-
-                                    <div class="futplay-fixture-team">
-                                        <span class="futplay-match-crest">
-                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
-                                            {
-                                                <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
-                                            }
-                                            else
-                                            {
-                                                <span>@(jogo.TimeVisitante?.Sigla ?? "VIS")</span>
-                                            }
-                                        </span>
-                                        <span>@jogo.TimeVisitante?.Nome</span>
-                                    </div>
-                                </div>
-
-                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.Id">
-                                    Fique por dentro
+                                <a asp-controller="Jogos"
+                                   asp-action="Details"
+                                   asp-route-id="@jogo.Id">
+                                    Detalhes
                                 </a>
                             </article>
                         }
                     </div>
                 }
             </section>
+
+            <section class="fp-side-ad mt-3">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
         </aside>
     </div>
 
-    <section class="futplay-section-block mt-4">
-        <div class="futplay-section-header">
-            <h2 class="futplay-section-title">RESULTADOS</h2>
+    <section class="fp-home-card mt-3">
+        <div class="fp-card-header-link">
+            <h2>Resultados recentes</h2>
+            <a asp-controller="Jogos" asp-action="Index">Ver jogos</a>
         </div>
 
         @if (!Model.JogosFinalizados.Any())
         {
-            <div class="futplay-section-empty">Nenhum resultado recente cadastrado.</div>
+            <div class="fp-empty-mini">
+                Nenhum resultado recente cadastrado.
+            </div>
         }
         else
         {
-            <div class="futplay-fixture-results">
+            <div class="fp-result-list">
                 @foreach (var jogo in Model.JogosFinalizados.Take(10))
                 {
-                    <article class="futplay-fixture-result">
+                    <article class="fp-result-row">
                         <span>@jogo.DataJogo.ToString("dd/MM")</span>
                         <strong>@jogo.TimeCasa?.Nome</strong>
-                        <b>@(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}" : "x")</b>
-                        <strong>@jogo.TimeVisitante?.Nome</strong>
-                        <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.Id">Detalhes</a>
-                    </article>
-                }
+                        <b>
+                            @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
+                                                ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
+                                                : "x")
+                </b>
+                <strong>@jogo.TimeVisitante?.Nome</strong>
+            </article>
+                        }
             </div>
         }
     </section>
