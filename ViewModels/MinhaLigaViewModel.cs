@@ -13,5 +13,7 @@ namespace FutPlay.ViewModels
         public string? CampeonatoLogoUrl { get; set; }
 
         public int Pontuacao { get; set; }
+
+        public bool PodeGerenciar { get; set; }
     }
 }

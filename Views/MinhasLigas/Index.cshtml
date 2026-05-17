@@ -92,6 +92,22 @@
                                        class="futplay-league-action-secondary">
                                         Ranking
                                     </a>
+                                    @if (liga.PodeGerenciar)
+                                    {
+                                        <a asp-controller="Ligas"
+                                           asp-action="Convites"
+                                           asp-route-id="@liga.LigaId"
+                                           class="btn btn-outline-success">
+                                            Convites
+                                        </a>
+
+                                        <a asp-controller="Ligas"
+                                           asp-action="Edit"
+                                           asp-route-id="@liga.LigaId"
+                                           class="btn btn-outline-secondary">
+                                            Editar
+                                        </a>
+                                    }
                                 </div>
                             </article>
                         }

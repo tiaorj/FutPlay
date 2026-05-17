@@ -1,4 +1,5 @@
 using FutPlay.Data;
+using FutPlay.Services;
 using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -49,7 +50,8 @@ namespace FutPlay.Controllers
                     NomeLiga = p.Liga!.Nome,
                     NomeCampeonato = p.Liga.Campeonato != null ? p.Liga.Campeonato.Nome : "",
                     CampeonatoLogoUrl = p.Liga.Campeonato != null ? p.Liga.Campeonato.LogoUrl : null,
-                    Pontuacao = p.PontuacaoTotal
+                    Pontuacao = p.PontuacaoTotal,
+                    PodeGerenciar = User.IsInRole(AppRoles.Administrador) || p.Liga!.CriadorUserId == usuario.Id
                 })
                 .ToListAsync();
 
