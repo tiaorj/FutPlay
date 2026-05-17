@@ -5546,3 +5546,119 @@ body {
     z-index: 1;
     padding-top: 16px;
 }
+
+/* =========================================================
+   Jogos - estilo placar esportivo
+   ========================================================= */
+
+.fp-score-admin-link {
+    color: var(--fp-blue);
+    text-decoration: none;
+    font-weight: 900;
+    font-size: .85rem;
+}
+
+    .fp-score-admin-link:hover {
+        text-decoration: underline;
+    }
+
+.fp-score-stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+    .fp-score-stats-list div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid #f0f2f5;
+        padding: 10px 0;
+    }
+
+        .fp-score-stats-list div:first-child {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+    .fp-score-stats-list span {
+        color: var(--fp-muted-score);
+        font-size: .78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    .fp-score-stats-list strong {
+        color: var(--fp-text-score);
+        font-size: 1.2rem;
+        font-weight: 900;
+    }
+
+.fp-score-filter-column {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fp-score-match-row-full {
+    grid-template-columns: 48px 1fr 34px minmax(120px, auto);
+}
+
+.fp-score-match-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+    font-size: .76rem;
+}
+
+    .fp-score-match-extra a {
+        color: var(--fp-blue);
+        text-decoration: none;
+        font-weight: 800;
+    }
+
+        .fp-score-match-extra a:hover {
+            text-decoration: underline;
+        }
+
+.fp-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: .68rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+    .fp-status.scheduled {
+        background: #e8f7ef;
+        color: #087a4f;
+    }
+
+    .fp-status.finished {
+        background: #eef1f2;
+        color: #4c5962;
+    }
+
+    .fp-status.live {
+        background: #ffe9e9;
+        color: #b91c1c;
+    }
+
+@media (max-width: 768px) {
+    .fp-score-match-row-full {
+        grid-template-columns: 42px 1fr 28px;
+    }
+
+    .fp-score-match-extra {
+        grid-column: 2 / -1;
+        align-items: flex-start;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding-top: 4px;
+    }
+}
