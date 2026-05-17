@@ -51,6 +51,8 @@ namespace FutPlay.Controllers
                     NomeCampeonato = p.Liga.Campeonato != null ? p.Liga.Campeonato.Nome : "",
                     CampeonatoLogoUrl = p.Liga.Campeonato != null ? p.Liga.Campeonato.LogoUrl : null,
                     Pontuacao = p.PontuacaoTotal,
+                    Publica = p.Liga!.Publica,
+                    CriadorDaLiga = p.Liga!.CriadorUserId == usuario.Id,
                     PodeGerenciar = User.IsInRole(AppRoles.Administrador) || p.Liga!.CriadorUserId == usuario.Id
                 })
                 .ToListAsync();

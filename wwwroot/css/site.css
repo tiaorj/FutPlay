@@ -4135,3 +4135,85 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Minhas Ligas - fluxo do criador */
+
+.futplay-my-league-toolbar {
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+}
+
+    .futplay-my-league-toolbar strong {
+        display: block;
+        color: #111820;
+        font-weight: 900;
+        margin-bottom: 3px;
+    }
+
+    .futplay-my-league-toolbar span {
+        display: block;
+        color: #66727b;
+        font-size: .9rem;
+    }
+
+.futplay-my-league-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.futplay-my-league-row {
+    align-items: center;
+}
+
+.futplay-my-league-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.futplay-my-league-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 3px 9px;
+    background: #eef3f1;
+    color: #34443d;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+    .futplay-my-league-badge.owner {
+        background: #dff8ea;
+        color: #087a4f;
+    }
+
+    .futplay-my-league-badge.participant {
+        background: #edf2ff;
+        color: #3653a4;
+    }
+
+@media (max-width: 768px) {
+    .futplay-my-league-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .futplay-my-league-toolbar-actions {
+        width: 100%;
+    }
+
+        .futplay-my-league-toolbar-actions .btn {
+            width: 100%;
+        }
+}

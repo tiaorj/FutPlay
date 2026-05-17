@@ -2,31 +2,68 @@
 
 @{
     ViewData["Title"] = "Minhas Ligas";
+
     var totalPontos = Model.Sum(l => l.Pontuacao);
     var melhorLiga = Model.OrderByDescending(l => l.Pontuacao).FirstOrDefault();
+    var ligasCriadas = Model.Count(l => l.CriadorDaLiga);
+    var ligasPublicas = Model.Count(l => l.Publica);
+    var ligasPrivadas = Model.Count(l => !l.Publica);
 }
 
 <div class="container futplay-portal-shell">
     <div class="row g-4">
         <div class="col-xl-9">
+
             <section class="futplay-league-hero futplay-league-hero-banner mb-4">
                 <div class="futplay-league-hero-content">
-                    <div class="futplay-league-kicker">Meu bolão</div>
-                    <h1 class="futplay-league-title">Desafio FutPlay da Rodada</h1>
+                    <div class="futplay-league-kicker">Meus bolões</div>
+
+                    <h1 class="futplay-league-title">
+                        Minhas Ligas
+                    </h1>
+
                     <p class="futplay-league-lead">
-                        Entre nas suas ligas, envie palpites e acompanhe a disputa rodada a rodada.
+                        Acompanhe suas ligas, envie palpites, veja rankings e gerencie os convites dos bolões que você criou.
                     </p>
 
                     <div class="futplay-league-hero-meta">
                         <span>@Model.Count ligas</span>
                         <span>@totalPontos pontos</span>
+                        <span>@ligasCriadas criadas por você</span>
                     </div>
                 </div>
 
                 <div class="futplay-league-hero-scoreboard">
                     <span>FutPlay</span>
                     <strong>Bolão</strong>
-                    <small>ranking ao vivo</small>
+                    <small>ranking e palpites</small>
+                </div>
+            </section>
+
+            <section class="futplay-my-league-toolbar mb-4">
+                <div>
+                    <strong>O que deseja fazer?</strong>
+                    <span>Crie uma liga, entre com um código ou continue seus palpites.</span>
+                </div>
+
+                <div class="futplay-my-league-toolbar-actions">
+                    <a asp-controller="Ligas"
+                       asp-action="Create"
+                       class="btn btn-success">
+                        Criar Liga
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Entrar"
+                       class="btn btn-outline-success">
+                        Entrar com Código
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Ver Ligas Públicas
+                    </a>
                 </div>
             </section>
 
@@ -34,12 +71,26 @@
             {
                 <section class="futplay-league-empty">
                     <div class="futplay-league-empty-mark">FP</div>
-                    <h2>Nenhuma liga vinculada ainda</h2>
+
+                    <h2>Você ainda não participa de nenhuma liga</h2>
+
                     <p>
-                        Quando você entrar em uma liga ou for vinculado pelo mesmo e-mail da sua conta,
-                        seu bolão aparecerá aqui com os atalhos para palpitar e acompanhar o ranking.
+                        Crie seu próprio bolão ou entre em uma liga usando o código de convite enviado por um amigo.
                     </p>
-                    <a asp-controller="Ligas" asp-action="Index">Ver ligas disponíveis</a>
+
+                    <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mt-3">
+                        <a asp-controller="Ligas"
+                           asp-action="Create"
+                           class="btn btn-success">
+                            Criar minha primeira liga
+                        </a>
+
+                        <a asp-controller="Ligas"
+                           asp-action="Entrar"
+                           class="btn btn-outline-success">
+                            Tenho um código
+                        </a>
+                    </div>
                 </section>
             }
             else
@@ -47,13 +98,13 @@
                 <section class="futplay-league-panel">
                     <div class="futplay-league-panel-head">
                         <h2>Minhas competições</h2>
-                        <span>Palpites e ranking</span>
+                        <span>Palpites, rankings e convites</span>
                     </div>
 
                     <div class="futplay-league-rows">
                         @foreach (var liga in Model)
                         {
-                            <article class="futplay-league-row">
+                            <article class="futplay-league-row futplay-my-league-row">
                                 <div class="futplay-league-logo">
                                     @if (!string.IsNullOrWhiteSpace(liga.CampeonatoLogoUrl))
                                     {
@@ -66,7 +117,25 @@
                                 </div>
 
                                 <div class="futplay-league-row-info">
-                                    <span>Minha competição</span>
+                                    <div class="futplay-my-league-badges">
+                                        <span class="futplay-my-league-badge">
+                                            @(liga.Publica ? "Pública" : "Privada")
+                                        </span>
+
+                                        @if (liga.CriadorDaLiga)
+                                        {
+                                            <span class="futplay-my-league-badge owner">
+                                                Criador
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="futplay-my-league-badge participant">
+                                                Participante
+                                            </span>
+                                        }
+                                    </div>
+
                                     <h3>@liga.NomeLiga</h3>
                                     <p>@liga.NomeCampeonato</p>
                                 </div>
@@ -92,19 +161,20 @@
                                        class="futplay-league-action-secondary">
                                         Ranking
                                     </a>
+
                                     @if (liga.PodeGerenciar)
                                     {
                                         <a asp-controller="Ligas"
                                            asp-action="Convites"
                                            asp-route-id="@liga.LigaId"
-                                           class="btn btn-outline-success">
+                                           class="futplay-league-action-secondary">
                                             Convites
                                         </a>
 
                                         <a asp-controller="Ligas"
                                            asp-action="Edit"
                                            asp-route-id="@liga.LigaId"
-                                           class="btn btn-outline-secondary">
+                                           class="futplay-league-action-secondary">
                                             Editar
                                         </a>
                                     }
@@ -121,16 +191,50 @@
                 <div class="futplay-league-side-head">
                     <h2>Resumo</h2>
                 </div>
+
                 <div class="futplay-league-side-stats">
                     <div>
                         <span>Ligas</span>
                         <strong>@Model.Count</strong>
                     </div>
+
                     <div>
                         <span>Pontos</span>
                         <strong>@totalPontos</strong>
                     </div>
+
+                    <div>
+                        <span>Públicas</span>
+                        <strong>@ligasPublicas</strong>
+                    </div>
+
+                    <div>
+                        <span>Privadas</span>
+                        <strong>@ligasPrivadas</strong>
+                    </div>
                 </div>
+            </section>
+
+            <section class="futplay-league-side-card mb-4">
+                <div class="futplay-league-side-head">
+                    <h2>Minhas criações</h2>
+                </div>
+
+                <div class="futplay-league-side-stats">
+                    <div>
+                        <span>Criadas</span>
+                        <strong>@ligasCriadas</strong>
+                    </div>
+
+                    <div>
+                        <span>Participando</span>
+                        <strong>@(Model.Count - ligasCriadas)</strong>
+                    </div>
+                </div>
+
+                <p class="futplay-league-side-empty mt-3">
+                    Quem cria uma liga pode gerenciar convites e editar informações do bolão.
+                </p>
             </section>
 
             <section class="futplay-league-side-card">
@@ -140,7 +244,9 @@
 
                 @if (melhorLiga == null)
                 {
-                    <p class="futplay-league-side-empty">Participe de uma liga para aparecer aqui.</p>
+                    <p class="futplay-league-side-empty">
+                        Participe de uma liga para aparecer aqui.
+                    </p>
                 }
                 else
                 {
@@ -155,6 +261,7 @@
                                 <span>FP</span>
                             }
                         </div>
+
                         <h3>@melhorLiga.NomeLiga</h3>
                         <span>@melhorLiga.Pontuacao pontos</span>
                     </div>

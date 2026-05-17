@@ -15,5 +15,9 @@ namespace FutPlay.ViewModels
         public int Pontuacao { get; set; }
 
         public bool PodeGerenciar { get; set; }
+
+        public bool Publica { get; set; }
+
+        public bool CriadorDaLiga { get; set; }
     }
 }
