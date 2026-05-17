@@ -2,73 +2,196 @@
 
 @{
     ViewData["Title"] = "Times e Seleções";
-    var grupos = Model.GroupBy(t => t.Tipo).OrderBy(g => g.Key).ToList();
+
+    var totalTimes = Model.Count;
+    var totalAtivos = Model.Count(t => t.Ativo);
+    var totalClubes = Model.Count(t => string.Equals(t.Tipo, "Clube", StringComparison.OrdinalIgnoreCase));
+    var totalSelecoes = Model.Count(t => string.Equals(t.Tipo, "Seleção", StringComparison.OrdinalIgnoreCase) || string.Equals(t.Tipo, "Selecao", StringComparison.OrdinalIgnoreCase));
+
+    var grupos = Model
+        .GroupBy(t => string.IsNullOrWhiteSpace(t.Tipo) ? "Times" : t.Tipo)
+        .OrderBy(g => g.Key)
+        .ToList();
 }
 
-<div class="container futplay-portal-shell">
-    <section class="futplay-portal-header mb-4">
-        <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3">
-            <div>
-                <div class="futplay-portal-kicker">Elencos e escudos</div>
-                <h1 class="futplay-portal-title">Times e Seleções</h1>
-                <p class="futplay-portal-lead mb-0">
-                    Clubes e seleções usados nos campeonatos, jogos e classificações.
-                </p>
-            </div>
+<div class="container fp-score-home">
 
-            @if (User.IsInRole(AppRoles.Administrador))
-            {
-                <div class="futplay-portal-actions">
-                    <a asp-action="Create">Novo time/seleção</a>
+    <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
+        <span>Clubes e seleções usados nos campeonatos, jogos e classificações</span>
+
+        @if (User.IsInRole(AppRoles.Administrador))
+        {
+            <a asp-action="Create" class="fp-score-admin-link">
+                + Novo time/seleção
+            </a>
+        }
+    </div>
+
+    <div class="row g-3">
+
+        <aside class="col-xl-3 col-lg-4">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>Resumo</h2>
                 </div>
-            }
-        </div>
-    </section>
 
-    @foreach (var grupo in grupos)
-    {
-        <section class="futplay-team-section mb-4">
-            <div class="futplay-team-section-head">
-                <h2>@grupo.Key</h2>
-                <span>@grupo.Count() times</span>
-            </div>
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Total</span>
+                        <strong>@totalTimes</strong>
+                    </div>
 
-            <div class="futplay-team-grid">
-                @foreach (var time in grupo)
+                    <div>
+                        <span>Ativos</span>
+                        <strong>@totalAtivos</strong>
+                    </div>
+
+                    <div>
+                        <span>Clubes</span>
+                        <strong>@totalClubes</strong>
+                    </div>
+
+                    <div>
+                        <span>Seleções</span>
+                        <strong>@totalSelecoes</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Filtros</h2>
+                </div>
+
+                <div class="fp-score-filter-column">
+                    <span class="fp-score-filter active">Todos</span>
+                    <span class="fp-score-filter">Clubes</span>
+                    <span class="fp-score-filter">Seleções</span>
+                    <span class="fp-score-filter">Ativos</span>
+                </div>
+
+                <p class="fp-side-text mt-3 mb-0">
+                    Os filtros visuais serão ligados em uma próxima etapa.
+                </p>
+            </section>
+        </aside>
+
+        <main class="col-xl-6 col-lg-8">
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Todos</a>
+                    <a href="#">Favoritos</a>
+                    <a asp-controller="Campeonatos" asp-action="Index">Competições</a>
+                </div>
+
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Todos (@totalTimes)</span>
+                    <span class="fp-score-filter">Clubes (@totalClubes)</span>
+                    <span class="fp-score-filter">Seleções (@totalSelecoes)</span>
+                </div>
+
+                @if (!Model.Any())
                 {
-                    <article class="futplay-team-card">
-                        <div class="futplay-detail-crest">
-                            @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
-                            {
-                                <img src="@time.EscudoUrl" alt="@time.Nome" />
-                            }
-                            else
-                            {
-                                <span>@(time.Sigla ?? "FC")</span>
-                            }
-                        </div>
-
-                        <div>
-                            <h3>@time.Nome</h3>
-                            <p>
-                                @(string.IsNullOrWhiteSpace(time.Pais) ? "País não informado" : time.Pais)
-                                @if (!string.IsNullOrWhiteSpace(time.Sigla))
-                                {
-                                    <span> · @time.Sigla</span>
-                                }
-                            </p>
-                        </div>
-
-                        <div class="futplay-team-actions">
-                            <a asp-action="Details" asp-route-id="@time.Id">Detalhes</a>
-                            @if (User.IsInRole(AppRoles.Administrador))
-                            {
-                                <a asp-action="Edit" asp-route-id="@time.Id">Editar</a>
-                            }
-                        </div>
-                    </article>
+                    <div class="fp-empty-mini m-3">
+                        Nenhum time cadastrado ainda.
+                    </div>
                 }
-            </div>
-        </section>
-    }
+                else
+                {
+                    <div class="fp-team-app-list">
+                        @foreach (var grupo in grupos)
+                        {
+                            <div class="fp-match-list-title">
+                                <span>🛡️ @grupo.Key</span>
+                                <small>@grupo.Count() time(s)</small>
+                            </div>
+
+                            @foreach (var time in grupo.OrderBy(t => t.Nome))
+                            {
+                                <article class="fp-team-app-row">
+                                    <div class="fp-team-app-logo">
+                                        @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
+                                        {
+                                            <img src="@time.EscudoUrl" alt="@time.Nome" />
+                                        }
+                                        else
+                                        {
+                                            <span>@(time.Sigla ?? "FC")</span>
+                                        }
+                                    </div>
+
+                                    <div class="fp-team-app-info">
+                                        <strong>@time.Nome</strong>
+                                        <span>
+                                            @(string.IsNullOrWhiteSpace(time.Pais) ? "País não informado" : time.Pais)
+
+                                            @if (!string.IsNullOrWhiteSpace(time.Sigla))
+                                            {
+                                                <span> · @time.Sigla</span>
+                                            }
+
+                                            @if (!time.Ativo)
+                                            {
+                                                <span> · Inativo</span>
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <div class="fp-team-app-actions">
+                                        <a asp-action="Details"
+                                           asp-route-id="@time.Id">
+                                            Detalhes
+                                        </a>
+
+                                        @if (User.IsInRole(AppRoles.Administrador))
+                                        {
+                                            <a asp-action="Edit"
+                                               asp-route-id="@time.Id">
+                                                Editar
+                                            </a>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                        }
+                    </div>
+                }
+            </section>
+        </main>
+
+        <aside class="col-xl-3 d-none d-xl-block">
+            <section class="fp-side-ad">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Ações rápidas</h2>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Jogos"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ver jogos
+                    </a>
+
+                    <a asp-controller="Campeonatos"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Competições
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Index"
+                       class="btn btn-success">
+                        Ligas públicas
+                    </a>
+                </div>
+            </section>
+        </aside>
+
+    </div>
 </div>
