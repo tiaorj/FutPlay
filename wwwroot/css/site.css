@@ -4685,3 +4685,785 @@ body {
         width: 100%;
     }
 }
+
+/* =========================================================
+   FutPlay - Home estilo placar esportivo
+   Inspirado em apps de placar, sem copiar identidade visual
+   ========================================================= */
+
+:root {
+    --fp-blue: #2737b8;
+    --fp-blue-dark: #1d2c98;
+    --fp-bg-score: #eef2f6;
+    --fp-card-score: #ffffff;
+    --fp-border-score: #e0e5ec;
+    --fp-text-score: #1e2630;
+    --fp-muted-score: #8a95a3;
+    --fp-green-score: #087a4f;
+}
+
+body {
+    background: var(--fp-bg-score);
+}
+
+/* Navbar mais próxima de app de placar */
+
+.fp-sport-navbar {
+    background: var(--fp-blue) !important;
+    box-shadow: none;
+    border-bottom: none;
+}
+
+.fp-sport-header {
+    background: var(--fp-blue);
+}
+
+.fp-sport-brand-ball {
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+}
+
+.fp-sport-brand-text {
+    font-size: 1.35rem;
+    font-weight: 900;
+}
+
+.fp-sport-brand small {
+    display: none;
+}
+
+.futplay-nav-pill {
+    border-radius: 6px;
+    color: rgba(255,255,255,.86) !important;
+    font-size: .9rem;
+}
+
+    .futplay-nav-pill.active,
+    .futplay-nav-pill:hover {
+        background: rgba(255,255,255,.14);
+        color: #fff !important;
+    }
+
+/* Faixa de esportes abaixo da navbar */
+
+.fp-sports-strip {
+    background: var(--fp-blue);
+    color: #fff;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+    .fp-sports-strip-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+.fp-sport-tab {
+    color: rgba(255,255,255,.82);
+    text-decoration: none;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 74px;
+    font-size: .76rem;
+    line-height: 1.1;
+    border-bottom: 3px solid transparent;
+    padding-bottom: 4px;
+}
+
+    .fp-sport-tab span {
+        font-size: 1rem;
+    }
+
+    .fp-sport-tab strong {
+        font-weight: 800;
+    }
+
+    .fp-sport-tab.active,
+    .fp-sport-tab:hover {
+        color: #fff;
+        border-bottom-color: #fff;
+    }
+
+/* Página inicial em três colunas */
+
+.fp-score-home {
+    padding-top: 12px;
+}
+
+.fp-score-page-title {
+    color: #7f8995;
+    font-size: .82rem;
+    margin-bottom: 12px;
+}
+
+    .fp-score-page-title span {
+        font-weight: 600;
+    }
+
+/* Coluna esquerda: placares */
+
+.fp-score-board,
+.fp-home-card,
+.fp-feature-match {
+    background: var(--fp-card-score);
+    border-radius: 10px;
+    border: 1px solid var(--fp-border-score);
+}
+
+.fp-score-board {
+    overflow: hidden;
+}
+
+.fp-score-board-tabs {
+    display: flex;
+    gap: 18px;
+    padding: 14px 16px 0;
+    border-bottom: 1px solid var(--fp-border-score);
+}
+
+    .fp-score-board-tabs a {
+        color: #8b95c9;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: .86rem;
+        padding-bottom: 12px;
+        border-bottom: 3px solid transparent;
+    }
+
+        .fp-score-board-tabs a.active {
+            color: var(--fp-blue);
+            border-bottom-color: var(--fp-blue);
+        }
+
+.fp-score-filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px 10px 8px;
+}
+
+.fp-score-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 7px 15px;
+    background: #f0f2f6;
+    color: #1e2630;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+    .fp-score-filter.active {
+        background: #ffe7e7;
+        color: #c62828;
+    }
+
+.fp-match-list-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    font-size: .82rem;
+    font-weight: 900;
+}
+
+    .fp-match-list-title small {
+        color: var(--fp-muted-score);
+    }
+
+.fp-score-match-list {
+    padding-bottom: 8px;
+}
+
+.fp-score-match-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 30px 24px;
+    gap: 8px;
+    align-items: center;
+    padding: 7px 12px;
+    border-top: 1px solid #f0f2f5;
+    font-size: .86rem;
+}
+
+.fp-score-match-time {
+    text-align: center;
+    color: var(--fp-muted-score);
+    font-size: .74rem;
+}
+
+    .fp-score-match-time strong,
+    .fp-score-match-time span {
+        display: block;
+        font-weight: 600;
+    }
+
+.fp-score-match-clubs {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.fp-score-club {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+
+    .fp-score-club span:last-child {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+.fp-mini-crest {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #f0f3f5;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .55rem;
+    font-weight: 900;
+    color: var(--fp-green-score);
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+
+    .fp-mini-crest img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+.fp-score-match-score {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: center;
+}
+
+    .fp-score-match-score strong {
+        font-size: .86rem;
+        line-height: 1;
+    }
+
+.fp-score-match-star {
+    color: #b4bdc8;
+    font-size: 1.1rem;
+}
+
+/* Centro: jogo em destaque */
+
+.fp-feature-match {
+    overflow: hidden;
+}
+
+.fp-feature-league {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    font-size: .86rem;
+}
+
+    .fp-feature-league span {
+        display: block;
+        color: var(--fp-muted-score);
+        font-size: .76rem;
+        margin-bottom: 2px;
+    }
+
+    .fp-feature-league strong {
+        color: var(--fp-text-score);
+    }
+
+    .fp-feature-league small {
+        color: var(--fp-muted-score);
+    }
+
+.fp-feature-match-body {
+    display: grid;
+    grid-template-columns: 1fr 120px 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 30px;
+}
+
+.fp-feature-team {
+    text-align: center;
+}
+
+.fp-feature-crest {
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #f0f3f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--fp-green-score);
+    font-weight: 900;
+}
+
+    .fp-feature-crest img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 4px;
+    }
+
+.fp-feature-team strong {
+    display: block;
+    font-size: .9rem;
+}
+
+.fp-feature-center {
+    text-align: center;
+}
+
+    .fp-feature-center strong {
+        display: block;
+        font-size: 1.3rem;
+        color: #111;
+    }
+
+    .fp-feature-center span {
+        display: block;
+        color: var(--fp-muted-score);
+        font-size: .8rem;
+    }
+
+.fp-feature-score {
+    margin-top: 8px;
+    font-size: 1.25rem;
+    font-weight: 900;
+}
+
+.fp-feature-poll {
+    background: #f2f4f8;
+    padding: 16px;
+}
+
+    .fp-feature-poll h3 {
+        font-size: 1rem;
+        font-weight: 900;
+        margin: 0;
+    }
+
+    .fp-feature-poll p {
+        color: var(--fp-muted-score);
+        margin: 2px 0 12px;
+        font-size: .82rem;
+    }
+
+.fp-feature-poll-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+}
+
+    .fp-feature-poll-buttons button {
+        border: 1px solid var(--fp-blue);
+        background: #fff;
+        color: var(--fp-blue);
+        border-radius: 999px;
+        height: 34px;
+        font-weight: 900;
+    }
+
+/* Cards do centro e direita */
+
+.fp-home-card {
+    padding: 16px;
+}
+
+    .fp-home-card h2 {
+        font-size: 1rem;
+        font-weight: 900;
+        margin: 0;
+    }
+
+.fp-card-header-link {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+    .fp-card-header-link a {
+        color: var(--fp-blue);
+        font-size: .82rem;
+        text-decoration: none;
+        font-weight: 800;
+    }
+
+.fp-competition-mini-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.fp-competition-mini {
+    display: grid;
+    grid-template-columns: 38px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.fp-competition-mini-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #eef2f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: var(--fp-green-score);
+    font-size: .7rem;
+    font-weight: 900;
+}
+
+    .fp-competition-mini-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+.fp-competition-mini strong {
+    display: block;
+    font-size: .84rem;
+}
+
+.fp-competition-mini span {
+    display: block;
+    color: var(--fp-muted-score);
+    font-size: .74rem;
+}
+
+.fp-competition-mini a {
+    color: var(--fp-blue);
+    text-decoration: none;
+    font-weight: 800;
+    font-size: .78rem;
+}
+
+.fp-result-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.fp-result-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 60px 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-top: 1px solid #f0f2f5;
+    font-size: .84rem;
+}
+
+    .fp-result-row span {
+        color: var(--fp-muted-score);
+    }
+
+    .fp-result-row b {
+        text-align: center;
+    }
+
+/* Direita */
+
+.fp-side-ad {
+    background: #07351f;
+    color: #fff;
+    min-height: 250px;
+    border-radius: 2px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+    .fp-side-ad span {
+        color: rgba(255,255,255,.65);
+        font-size: .78rem;
+        margin-bottom: 20px;
+    }
+
+    .fp-side-ad strong {
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+    }
+
+    .fp-side-ad p {
+        color: rgba(255,255,255,.75);
+        font-size: .85rem;
+    }
+
+.fp-public-league-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fp-public-league-mini {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border-top: 1px solid #f0f2f5;
+    padding-top: 10px;
+}
+
+    .fp-public-league-mini strong {
+        display: block;
+        font-size: .85rem;
+    }
+
+    .fp-public-league-mini span {
+        display: block;
+        color: var(--fp-muted-score);
+        font-size: .75rem;
+    }
+
+    .fp-public-league-mini a {
+        color: var(--fp-blue);
+        text-decoration: none;
+        font-weight: 800;
+        font-size: .8rem;
+    }
+
+.fp-side-text {
+    color: var(--fp-muted-score);
+    font-size: .86rem;
+}
+
+.fp-empty-mini {
+    background: #f8fafc;
+    color: var(--fp-muted-score);
+    border: 1px dashed #d8dee7;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: .86rem;
+}
+
+/* Responsivo */
+
+@media (max-width: 1199px) {
+    .fp-score-home {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 991px) {
+    .fp-score-board {
+        margin-bottom: 12px;
+    }
+
+    .fp-feature-match-body {
+        grid-template-columns: 1fr;
+    }
+
+    .fp-competition-mini-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .fp-score-match-row {
+        grid-template-columns: 42px 1fr 26px;
+    }
+
+    .fp-score-match-star {
+        display: none;
+    }
+
+    .fp-result-row {
+        grid-template-columns: 42px 1fr;
+    }
+
+        .fp-result-row b,
+        .fp-result-row strong:last-child {
+            grid-column: 2;
+        }
+}
+
+/* Topo estilo app de placar */
+
+.fp-top-search {
+    width: min(100%, 520px);
+    position: relative;
+}
+
+    .fp-top-search span {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6f7782;
+        z-index: 2;
+        font-size: .95rem;
+    }
+
+    .fp-top-search .form-control {
+        height: 38px;
+        border-radius: 6px;
+        border: none;
+        padding-left: 42px;
+        background: #fff;
+        color: #333;
+        font-size: .9rem;
+    }
+
+        .fp-top-search .form-control:disabled {
+            background: #fff;
+            opacity: 1;
+        }
+
+.fp-top-login {
+    display: flex;
+    align-items: center;
+}
+
+    .fp-top-login .nav-link,
+    .fp-top-login a {
+        color: #fff !important;
+        font-weight: 800;
+        text-decoration: none;
+    }
+
+    .fp-top-login .btn {
+        font-weight: 800;
+    }
+
+/* Evita que o antigo estilo de pills interfira no topo */
+.fp-sport-navbar .futplay-nav-pill {
+    display: none;
+}
+
+/* Faixa inferior como navegação principal */
+
+.fp-sports-strip {
+    background: var(--fp-blue);
+    color: #fff;
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.fp-sports-strip-scroll {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    padding: 8px 0 7px;
+    scrollbar-width: none;
+}
+
+    .fp-sports-strip-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+.fp-sport-tab {
+    color: rgba(255,255,255,.82);
+    text-decoration: none;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 82px;
+    font-size: .76rem;
+    line-height: 1.1;
+    border-bottom: 3px solid transparent;
+    padding-bottom: 5px;
+    white-space: nowrap;
+}
+
+    .fp-sport-tab span {
+        font-size: 1rem;
+    }
+
+    .fp-sport-tab strong {
+        font-weight: 800;
+    }
+
+    .fp-sport-tab.active,
+    .fp-sport-tab:hover {
+        color: #fff;
+        border-bottom-color: #fff;
+    }
+
+@media (max-width: 991px) {
+    .fp-top-search {
+        width: 100%;
+    }
+
+    .fp-top-login {
+        margin-top: 10px;
+    }
+}
+
+.fp-sport-admin-dropdown {
+    display: inline-flex;
+    align-items: stretch;
+}
+
+    .fp-sport-admin-dropdown .dropdown-menu {
+        border: 1px solid #e0e5ec;
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, .14);
+        font-size: .9rem;
+    }
+
+    .fp-sport-admin-dropdown .dropdown-item {
+        font-weight: 700;
+    }
+
+        .fp-sport-admin-dropdown .dropdown-item:active {
+            background: var(--fp-blue);
+        }
+
+/* Correção do topo esportivo fixo */
+
+.fp-sport-header {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+}
+
+.fp-sport-navbar {
+    position: relative;
+    z-index: 1042;
+}
+
+.fp-sports-strip {
+    position: relative;
+    z-index: 1041;
+}
+
+.futplay-main {
+    position: relative;
+    z-index: 1;
+    padding-top: 16px;
+}
+
+/* Evita o conteúdo encostar no menu */
+.fp-score-home {
+    padding-top: 10px;
+}
+
+/* Dropdown do Admin acima do conteúdo */
+.fp-sport-admin-dropdown .dropdown-menu {
+    z-index: 1050;
+}

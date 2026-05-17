@@ -18,136 +18,160 @@
         var canUseParticipantArea = isAdmin || isParticipante;
     }
 
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark futplay-navbar sticky-top">
+    <header class="fp-sport-header">
+        <nav class="navbar navbar-expand-lg navbar-dark futplay-navbar fp-sport-navbar">
             <div class="container">
-                <a class="navbar-brand fw-bold d-flex align-items-center" asp-controller="Home" asp-action="Index">
-                    <span class="futplay-brand-mark">⚽</span>
-                    <span>FutPlay</span>
+                <a class="navbar-brand fp-sport-brand d-flex align-items-center" asp-controller="Home" asp-action="Index">
+                    <span class="fp-sport-brand-ball">⚽</span>
+
+                    <span>
+                        <span class="fp-sport-brand-text">FutPlay</span>
+                        <small>futebol & bolão</small>
+                    </span>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
-                        aria-controls="menuPrincipal" aria-expanded="false" aria-label="Alternar navegação">
+                <button class="navbar-toggler"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#menuPrincipal"
+                        aria-controls="menuPrincipal"
+                        aria-expanded="false"
+                        aria-label="Alternar navegação">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
                 <div class="collapse navbar-collapse" id="menuPrincipal">
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0 gap-lg-1">
 
-                        <li class="nav-item">
-                            <a class="nav-link futplay-nav-pill @(currentController == "Home" ? "active" : "")"
-                               asp-controller="Home"
-                               asp-action="Index">
-                                Início
-                            </a>
-                        </li>
+                    <div class="fp-top-search mx-lg-auto my-3 my-lg-0">
+                        <span>🔎</span>
+                        <input type="text"
+                               class="form-control"
+                               placeholder="Pesquise por partidas, competições, times e ligas"
+                               disabled />
+                    </div>
 
-                        <li class="nav-item">
-                            <a class="nav-link futplay-nav-pill @(currentController == "Campeonatos" ? "active" : "")"
-                               asp-controller="Campeonatos"
-                               asp-action="Index">
-                                Campeonatos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link futplay-nav-pill @(currentController == "Jogos" ? "active" : "")"
-                               asp-controller="Jogos"
-                               asp-action="Index">
-                                Jogos
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link futplay-nav-pill @(currentController == "Times" ? "active" : "")"
-                               asp-controller="Times"
-                               asp-action="Index">
-                                Times
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a class="nav-link futplay-nav-pill @(currentController == "Ligas" ? "active" : "")"
-                               asp-controller="Ligas"
-                               asp-action="Index">
-                                Ligas
-                            </a>
-                        </li>
-
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link futplay-nav-pill @(currentController == "MinhasLigas" ? "active" : "")"
-                                   asp-controller="MinhasLigas"
-                                   asp-action="Index">
-                                    Minhas Ligas
-                                </a>
-                            </li>
-
-                            <li class="nav-item">
-                                <a class="nav-link futplay-nav-pill"
-                                   asp-controller="Ligas"
-                                   asp-action="Create">
-                                    Criar Liga
-                                </a>
-                            </li>
-                            
-                        }
-
-                        @if (isAdmin)
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle futplay-nav-pill futplay-admin-link @(currentController == "Importacoes" || currentController == "MockData" || currentController == "LigaParticipantes" || currentController == "Palpites" ? "active" : "")"
-                                   href="#"
-                                   role="button"
-                                   data-bs-toggle="dropdown"
-                                   aria-expanded="false">
-                                    Admin
-                                </a>
-
-                                <ul class="dropdown-menu dropdown-menu-lg-end">
-                                    <li>
-                                        <h6 class="dropdown-header">Administração</h6>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Importacoes" asp-action="Index">
-                                            Importações
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="MockData" asp-action="Index">
-                                            Dados de Teste
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <hr class="dropdown-divider" />
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="LigaParticipantes" asp-action="Index">
-                                            Participantes
-                                        </a>
-                                    </li>
-
-                                    <li>
-                                        <a class="dropdown-item" asp-controller="Palpites" asp-action="Index">
-                                            Palpites
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        }
-
-                    </ul>
-
-                    <partial name="_LoginPartial" />
+                    <div class="fp-top-login ms-lg-3">
+                        <partial name="_LoginPartial" />
+                    </div>
 
                 </div>
             </div>
         </nav>
+        <div class="fp-sports-strip">
+            <div class="container">
+                <div class="fp-sports-strip-scroll">
+
+                    <a asp-controller="Home"
+                       asp-action="Index"
+                       class="fp-sport-tab @(currentController == "Home" ? "active" : "")">
+                        <span>🔥</span>
+                        <strong>Em alta</strong>
+                    </a>
+
+                    <a asp-controller="Jogos"
+                       asp-action="Index"
+                       class="fp-sport-tab @(currentController == "Jogos" ? "active" : "")">
+                        <span>⚽</span>
+                        <strong>Jogos</strong>
+                    </a>
+
+                    <a asp-controller="Campeonatos"
+                       asp-action="Index"
+                       class="fp-sport-tab @(currentController == "Campeonatos" ? "active" : "")">
+                        <span>🏆</span>
+                        <strong>Competições</strong>
+                    </a>
+
+                    <a asp-controller="Times"
+                       asp-action="Index"
+                       class="fp-sport-tab @(currentController == "Times" ? "active" : "")">
+                        <span>🛡️</span>
+                        <strong>Times</strong>
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Index"
+                       class="fp-sport-tab @(currentController == "Ligas" ? "active" : "")">
+                        <span>🎯</span>
+                        <strong>Ligas</strong>
+                    </a>
+
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="MinhasLigas"
+                           asp-action="Index"
+                           class="fp-sport-tab @(currentController == "MinhasLigas" ? "active" : "")">
+                            <span>📊</span>
+                            <strong>Meu bolão</strong>
+                        </a>
+
+                        <a asp-controller="Ligas"
+                           asp-action="Create"
+                           class="fp-sport-tab">
+                            <span>➕</span>
+                            <strong>Criar liga</strong>
+                        </a>
+                    }
+
+                    @if (isAdmin)
+                    {
+                        <div class="dropdown fp-sport-admin-dropdown">
+                            <a class="fp-sport-tab dropdown-toggle @(currentController == "Importacoes" || currentController == "MockData" || currentController == "LigaParticipantes" || currentController == "Palpites" ? "active" : "")"
+                               href="#"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <span>⚙️</span>
+                                <strong>Admin</strong>
+                            </a>
+
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <h6 class="dropdown-header">Administração</h6>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Importacoes"
+                                       asp-action="Index">
+                                        Importações
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="MockData"
+                                       asp-action="Index">
+                                        Dados de Teste
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <hr class="dropdown-divider" />
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="LigaParticipantes"
+                                       asp-action="Index">
+                                        Participantes
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Palpites"
+                                       asp-action="Index">
+                                        Palpites
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
     </header>
 
     <main class="futplay-main">
@@ -179,7 +203,7 @@
             </span>
 
             <span class="text-muted small">
-                Sistema de campeonatos, ligas, palpites e rankings de futebol.
+                Portal de futebol, campeonatos, ligas de palpites e rankings.
             </span>
         </div>
     </footer>
