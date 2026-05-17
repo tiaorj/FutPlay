@@ -10,7 +10,7 @@
             <div class="futplay-league-kicker">Catálogo público</div>
             <h1 class="futplay-league-title">Ligas FutPlay</h1>
             <p class="futplay-league-lead">
-                Confira ligas públicas disponíveis. Use o código de convite para entrar em uma liga.
+                Encontre ligas públicas para participar ou entre em uma liga privada usando um código de convite.
             </p>
         </div>
 
@@ -19,6 +19,32 @@
             <div class="futplay-league-hero-scoreboard">
                 <a asp-action="Create">Nova liga</a>
             </div>
+        }
+    </section>
+
+    <section class="futplay-league-invite-card mb-4">
+        <div>
+            <span>Recebeu um convite?</span>
+            <h2>Entre em uma liga privada com código</h2>
+            <p>
+                Use o código enviado pelo criador da liga para participar do bolão.
+            </p>
+        </div>
+
+        @if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            <a asp-action="Entrar" class="btn btn-success">
+                Inserir código
+            </a>
+        }
+        else
+        {
+            <a asp-area="Identity"
+               asp-page="/Account/Login"
+               asp-route-returnUrl="/Ligas/Entrar"
+               class="btn btn-success">
+                Entrar para usar código
+            </a>
         }
     </section>
 
@@ -61,8 +87,8 @@
                         </div>
 
                         <div class="futplay-league-row-points">
-                            <span>Convite</span>
-                            <strong>@liga.CodigoConvite</strong>
+                            <span>Tipo</span>
+                            <strong>Pública</strong>
                         </div>
 
                         <div class="futplay-league-actions">
@@ -92,7 +118,7 @@
                             else
                             {
                                 <a asp-action="Entrar"
-                                   asp-route-codigo="@liga.CodigoConvite"
+                                   asp-route-codigoConvite="@liga.CodigoConvite"
                                    class="futplay-league-action-primary">
                                     Entrar na Liga
                                 </a>

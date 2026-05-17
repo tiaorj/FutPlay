@@ -4,26 +4,68 @@
     ViewData["Title"] = "Entrar na Liga";
 }
 
-<div class="container mt-4">
-    <h1>Entrar na Liga</h1>
+<div class="container futplay-portal-shell">
 
-    <div class="card mt-3">
-        <div class="card-body">
-            <form asp-action="Entrar" method="post">
-                @Html.AntiForgeryToken()
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <section class="futplay-league-join-hero mb-4">
+        <div>
+            <div class="futplay-league-kicker">Convite FutPlay</div>
+            <h1>Entrar em uma liga</h1>
+            <p>
+                Informe o código recebido para participar de uma liga privada ou pública.
+                Depois de entrar, ela aparecerá em Minhas Ligas.
+            </p>
+        </div>
+    </section>
 
-                <div class="mb-3">
-                    <label asp-for="CodigoConvite" class="form-label"></label>
-                    <input asp-for="CodigoConvite" class="form-control" />
-                    <span asp-validation-for="CodigoConvite" class="text-danger"></span>
-                </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Entrar</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-                </div>
-            </form>
+            <section class="futplay-league-join-card">
+                <form asp-action="Entrar" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="CodigoConvite" class="form-label fw-semibold"></label>
+                        <input asp-for="CodigoConvite"
+                               class="form-control form-control-lg text-uppercase"
+                               placeholder="Ex: COPA26" />
+                        <span asp-validation-for="CodigoConvite" class="text-danger"></span>
+                    </div>
+
+                    <div class="futplay-league-join-help">
+                        <strong>Como funciona?</strong>
+                        <p>
+                            O criador da liga compartilha um código de convite. Você informa o código,
+                            entra na liga e já pode acompanhar ranking e palpitar nos jogos disponíveis.
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row gap-2 mt-4">
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            <button type="submit" class="btn btn-success btn-lg">
+                                Entrar na Liga
+                            </button>
+                        }
+                        else
+                        {
+                            <a asp-area="Identity"
+                               asp-page="/Account/Login"
+                               asp-route-returnUrl="/Ligas/Entrar"
+                               class="btn btn-success btn-lg">
+                                Fazer login para entrar
+                            </a>
+                        }
+
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+                            Voltar para Ligas
+                        </a>
+                    </div>
+                </form>
+            </section>
+
         </div>
     </div>
 </div>

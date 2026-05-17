@@ -506,9 +506,12 @@ namespace FutPlay.Controllers
 
         // Entrada em liga por código de convite
         [AllowAnonymous]
-        public IActionResult Entrar()
+        public IActionResult Entrar(string? codigoConvite)
         {
-            return View(new LigaEntrarViewModel());
+            return View(new LigaEntrarViewModel
+            {
+                CodigoConvite = codigoConvite
+            });
         }
 
         [Authorize]
