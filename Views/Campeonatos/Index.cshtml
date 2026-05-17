@@ -2,108 +2,149 @@
 
 @{
     ViewData["Title"] = "Campeonatos";
-    var principais = Model.Where(c => c.Ativo).Take(12).ToList();
+
+    var totalCampeonatos = Model.Count;
+    var totalAtivos = Model.Count(c => c.Ativo);
+    var totalInativos = Model.Count(c => !c.Ativo);
+    var totalPaises = Model
+        .Select(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
+        .Distinct()
+        .Count();
+
+    var principais = Model
+        .Where(c => c.Ativo)
+        .OrderByDescending(c => c.Ano)
+        .ThenBy(c => c.Nome)
+        .Take(12)
+        .ToList();
+
     var grupos = Model
         .GroupBy(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
         .OrderBy(g => g.Key)
         .ToList();
 }
 
-<div class="container futplay-portal-shell">
-    <section class="futplay-competition-shell">
-        <div class="futplay-competition-tabs">
-            <span>Todos</span>
-            <span>Favoritos</span>
-            <strong>Competições</strong>
-        </div>
+<div class="container fp-score-home">
 
-        <div class="futplay-competition-head">
-            <div>
-                <h1>Competições</h1>
-                <p>Escolha um campeonato para ver portal, tabela, jogos e resultados.</p>
-            </div>
+    <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
+        <span>Competições, tabelas, jogos e portais de campeonatos</span>
 
-            @if (User.IsInRole(AppRoles.Administrador))
-            {
-                <a asp-action="Create" class="futplay-competition-admin-link">Novo campeonato</a>
-            }
-        </div>
-
-        @if (TempData["Sucesso"] != null)
+        @if (User.IsInRole(AppRoles.Administrador))
         {
-            <div class="alert alert-success border-0">
-                @TempData["Sucesso"]
-            </div>
+            <a asp-action="Create" class="fp-score-admin-link">
+                + Novo campeonato
+            </a>
         }
+    </div>
 
-        @if (TempData["Erro"] != null)
-        {
-            <div class="alert alert-warning border-0">
-                @TempData["Erro"]
-            </div>
-        }
+    <div class="row g-3">
 
-        @if (!Model.Any())
-        {
-            <div class="futplay-section-empty">Nenhum campeonato cadastrado ainda.</div>
-        }
-        else
-        {
-            <section class="futplay-competition-featured">
-                <h2>Principais competições</h2>
+        <aside class="col-xl-3 col-lg-4">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>Resumo</h2>
+                </div>
 
-                <div class="futplay-competition-grid">
-                    @foreach (var campeonato in principais)
-                    {
-                        <article class="futplay-competition-card">
-                            <a asp-action="Portal"
-                               asp-route-id="@campeonato.Id"
-                               class="futplay-competition-card-link">
-                                <span class="futplay-competition-logo">
-                                    @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
-                                    {
-                                        <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <span>FP</span>
-                                    }
-                                </span>
-                                <strong>@campeonato.Nome</strong>
-                            </a>
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Total</span>
+                        <strong>@totalCampeonatos</strong>
+                    </div>
 
-                            <span class="futplay-competition-favorite" aria-label="Favorito">☆</span>
-                        </article>
-                    }
+                    <div>
+                        <span>Ativos</span>
+                        <strong>@totalAtivos</strong>
+                    </div>
+
+                    <div>
+                        <span>Inativos</span>
+                        <strong>@totalInativos</strong>
+                    </div>
+
+                    <div>
+                        <span>Países</span>
+                        <strong>@totalPaises</strong>
+                    </div>
                 </div>
             </section>
 
-            <section class="futplay-competition-groups">
-                <h2>Ligas</h2>
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Navegação</h2>
+                </div>
 
-                @for (int grupoIndex = 0; grupoIndex < grupos.Count; grupoIndex++)
+                <div class="fp-score-filter-column">
+                    <span class="fp-score-filter active">Todos</span>
+                    <span class="fp-score-filter">Ativos</span>
+                    <span class="fp-score-filter">Favoritos</span>
+                    <span class="fp-score-filter">Por país</span>
+                </div>
+
+                <p class="fp-side-text mt-3 mb-0">
+                    Esta tela lista todos os campeonatos cadastrados. Na próxima etapa podemos ligar filtros reais.
+                </p>
+            </section>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Admin</h2>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-action="Create" class="btn btn-success">
+                            Novo campeonato
+                        </a>
+
+                        <a asp-controller="Importacoes"
+                           asp-action="Index"
+                           class="btn btn-outline-primary">
+                            Importações
+                        </a>
+                    </div>
+                </section>
+            }
+        </aside>
+
+        <main class="col-xl-6 col-lg-8">
+
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Todos</a>
+                    <a href="#">Favoritos</a>
+                    <a asp-controller="Jogos" asp-action="Index">Jogos</a>
+                </div>
+
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Todos (@totalCampeonatos)</span>
+                    <span class="fp-score-filter">Ativos (@totalAtivos)</span>
+                    <span class="fp-score-filter">Países (@totalPaises)</span>
+                </div>
+
+                @if (!Model.Any())
                 {
-                    var grupo = grupos[grupoIndex];
+                    <div class="fp-empty-mini m-3">
+                        Nenhum campeonato cadastrado ainda.
+                    </div>
+                }
+                else
+                {
+                    <section class="fp-competition-feature-panel">
+                        <div class="fp-match-list-title">
+                            <span>🏆 Principais competições</span>
+                            <small>@principais.Count destaque(s)</small>
+                        </div>
 
-                    <div class="futplay-competition-group">
-                        <button type="button"
-                                class="futplay-competition-group-button"
-                                data-bs-toggle="collapse"
-                                data-bs-target="#competicao-@grupoIndex"
-                                aria-expanded="false">
-                            <span class="futplay-competition-country">
-                                <span class="futplay-competition-country-mark">@grupo.Key.Substring(0, 1).ToUpperInvariant()</span>
-                                @grupo.Key
-                            </span>
-                            <span>@grupo.Count(c => c.Ativo)/@grupo.Count()</span>
-                        </button>
+                        <div class="fp-competition-app-grid">
+                            @foreach (var campeonato in principais)
+                            {
+                                <article class="fp-competition-app-card">
+                                    <a asp-action="Portal"
+                                       asp-route-id="@campeonato.Id"
+                                       class="fp-competition-app-link">
 
-                        <div class="collapse" id="competicao-@grupoIndex">
-                            <div class="futplay-competition-group-list">
-                                @foreach (var campeonato in grupo.OrderByDescending(c => c.Ativo).ThenByDescending(c => c.Ano).ThenBy(c => c.Nome))
-                                {
-                                    <article class="futplay-competition-row">
-                                        <div class="futplay-competition-logo futplay-competition-logo-small">
+                                        <span class="fp-competition-app-logo">
                                             @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
                                             {
                                                 <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
@@ -112,59 +153,138 @@
                                             {
                                                 <span>FP</span>
                                             }
-                                        </div>
+                                        </span>
 
-                                        <div class="futplay-competition-row-body">
-                                            <strong>@campeonato.Nome @campeonato.Ano</strong>
-                                            <span>@campeonato.Tipo</span>
-                                        </div>
+                                        <strong>@campeonato.Nome</strong>
 
-                                        <div class="futplay-competition-row-actions">
-                                            <a asp-action="Portal" asp-route-id="@campeonato.Id">Portal</a>
-                                            <a asp-action="Classificacao" asp-route-id="@campeonato.Id">Tabela</a>
-                                            <a asp-action="Details" asp-route-id="@campeonato.Id">Detalhes</a>
-
-                                            @if (User.IsInRole(AppRoles.Administrador))
+                                        <small>
+                                            @campeonato.Ano
+                                            @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
                                             {
-                                                <a asp-action="Edit" asp-route-id="@campeonato.Id">Editar</a>
+                                                <span> · @campeonato.Pais</span>
+                                            }
+                                        </small>
+                                    </a>
 
-                                                @if (campeonato.Ativo)
-                                                {
-                                                    <a asp-action="Delete" asp-route-id="@campeonato.Id">Inativar</a>
-                                                }
+                                    <span class="fp-competition-star">☆</span>
+                                </article>
+                            }
+                        </div>
+                    </section>
 
-                                                @if (campeonato.ApiLeagueId.HasValue)
-                                                {
-                                                    <form asp-controller="Importacoes"
-                                                          asp-action="ImportarJogos"
-                                                          method="post">
-                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-                                                        <button type="submit">Importar jogos</button>
-                                                    </form>
+                    <section class="fp-competition-country-panel">
+                        <div class="fp-match-list-title">
+                            <span>🌎 Competições por país</span>
+                            <small>@grupos.Count grupo(s)</small>
+                        </div>
 
-                                                    <form asp-controller="Importacoes"
-                                                          asp-action="AtualizarResultados"
-                                                          method="post">
-                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-                                                        <button type="submit">Atualizar</button>
-                                                    </form>
+                        <div class="fp-competition-country-list">
+                            @for (int grupoIndex = 0; grupoIndex < grupos.Count; grupoIndex++)
+                            {
+                                var grupo = grupos[grupoIndex];
+                                var collapseId = $"competicao-pais-{grupoIndex}";
 
-                                                    <form asp-controller="Importacoes"
-                                                          asp-action="SincronizarCampeonato"
-                                                          method="post">
-                                                        <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
-                                                        <button type="submit">Sincronizar</button>
-                                                    </form>
-                                                }
+                                <div class="fp-competition-country-group">
+                                    <button type="button"
+                                            class="fp-competition-country-button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#@collapseId"
+                                            aria-expanded="@(grupoIndex == 0 ? "true" : "false")">
+                                        <span>
+                                            <b>@grupo.Key.Substring(0, 1).ToUpperInvariant()</b>
+                                            @grupo.Key
+                                        </span>
+
+                                        <small>@grupo.Count(c => c.Ativo)/@grupo.Count()</small>
+                                    </button>
+
+                                    <div class="collapse @(grupoIndex == 0 ? "show" : "")" id="@collapseId">
+                                        <div class="fp-competition-country-items">
+                                            @foreach (var campeonato in grupo.OrderByDescending(c => c.Ativo).ThenByDescending(c => c.Ano).ThenBy(c => c.Nome))
+                                            {
+                                                <article class="fp-competition-row-app">
+                                                    <div class="fp-competition-row-logo">
+                                                        @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
+                                                        {
+                                                            <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>FP</span>
+                                                        }
+                                                    </div>
+
+                                                    <div class="fp-competition-row-info">
+                                                        <strong>@campeonato.Nome @campeonato.Ano</strong>
+                                                        <span>
+                                                            @campeonato.Tipo
+                                                            @if (!campeonato.Ativo)
+                                                            {
+                                                                <span> · Inativo</span>
+                                                            }
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="fp-competition-row-actions-app">
+                                                        <a asp-action="Portal" asp-route-id="@campeonato.Id">Portal</a>
+                                                        <a asp-action="Classificacao" asp-route-id="@campeonato.Id">Tabela</a>
+                                                        <a asp-action="Details" asp-route-id="@campeonato.Id">Detalhes</a>
+
+                                                        @if (User.IsInRole(AppRoles.Administrador))
+                                                        {
+                                                            <a asp-action="Edit" asp-route-id="@campeonato.Id">Editar</a>
+
+                                                            @if (campeonato.Ativo)
+                                                            {
+                                                                <a asp-action="Delete" asp-route-id="@campeonato.Id">Inativar</a>
+                                                            }
+                                                        }
+                                                    </div>
+                                                </article>
                                             }
                                         </div>
-                                    </article>
-                                }
-                            </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
-                    </div>
+                    </section>
                 }
             </section>
-        }
-    </section>
+        </main>
+
+        <aside class="col-xl-3 d-none d-xl-block">
+            <section class="fp-side-ad">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Ações rápidas</h2>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Jogos"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ver jogos
+                    </a>
+
+                    <a asp-controller="Times"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ver times
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Index"
+                       class="btn btn-success">
+                        Ligas públicas
+                    </a>
+                </div>
+            </section>
+        </aside>
+
+    </div>
 </div>
