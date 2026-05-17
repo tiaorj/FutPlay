@@ -4475,3 +4475,76 @@ body {
             width: 100%;
         }
 }
+
+/* Palpitar - progresso e melhorias */
+
+.futplay-pick-progress {
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.futplay-pick-progress-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+    .futplay-pick-progress-head strong {
+        display: block;
+        color: #111820;
+        font-weight: 900;
+    }
+
+    .futplay-pick-progress-head span {
+        display: block;
+        color: #66727b;
+        font-size: .9rem;
+    }
+
+.futplay-pick-progress-bar {
+    height: 10px;
+    border-radius: 999px;
+    background: #edf2f0;
+    overflow: hidden;
+}
+
+    .futplay-pick-progress-bar .progress-bar {
+        background: #087a4f;
+    }
+
+.futplay-pick-progress p {
+    margin: 12px 0 0;
+    color: #66727b;
+    font-size: .9rem;
+}
+
+.futplay-pick-input {
+    text-align: center;
+    font-weight: 900;
+}
+
+    .futplay-pick-input:read-only {
+        background: #f1f3f4;
+        color: #8a969e;
+    }
+
+.futplay-pick-lock {
+    background: #fff4d6;
+    border: 1px solid #ffe4a3;
+    color: #7a5200;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: .85rem;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .futplay-pick-progress-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

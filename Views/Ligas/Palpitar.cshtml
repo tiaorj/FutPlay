@@ -2,21 +2,17 @@
 
 @{
     ViewData["Title"] = "Palpitar na Liga";
+    var totalJogos = Model.Jogos.Count;
     var pendentes = Model.Jogos.Count(j => !j.Bloqueado && !j.JaPalpitado);
     var palpitados = Model.Jogos.Count(j => j.JaPalpitado);
     var bloqueados = Model.Jogos.Count(j => j.Bloqueado);
     var jogoDestaque = Model.Jogos.FirstOrDefault(j => !j.Bloqueado) ?? Model.Jogos.FirstOrDefault();
+    var percentualConcluido = totalJogos == 0 ? 0 : Convert.ToInt32((palpitados * 100.0) / totalJogos);
 }
 
 <div class="container futplay-portal-shell">
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success border-0">
-            @TempData["Sucesso"]
-        </div>
-    }
-
-    <form asp-action="Palpitar" method="post">
+   
+    <form asp-action="Palpitar" method="post" onsubmit="normalizarPlacaresAntesSalvar()">
         <input type="hidden" asp-for="LigaId" />
         <input type="hidden" asp-for="ParticipanteBloqueado" />
         <input type="hidden" asp-for="Origem" />
@@ -81,6 +77,31 @@
                     }
                 </section>
 
+                <section class="futplay-pick-progress mb-4">
+                    <div class="futplay-pick-progress-head">
+                        <div>
+                            <strong>Progresso dos palpites</strong>
+                            <span>@palpitados de @totalJogos jogos preenchidos</span>
+                        </div>
+
+                        <strong>@percentualConcluido%</strong>
+                    </div>
+
+                    <div class="progress futplay-pick-progress-bar">
+                        <div class="progress-bar"
+                             role="progressbar"
+                             style="width: @percentualConcluido%;"
+                             aria-valuenow="@percentualConcluido"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+
+                    <p>
+                        Preencha os placares dos jogos disponíveis. Palpites são bloqueados 30 minutos antes da partida.
+                    </p>
+                </section>
+
                 @if (!Model.Jogos.Any())
                 {
                     <section class="futplay-pick-empty">
@@ -127,6 +148,13 @@
 
                                 <article class="@cardClass">
                                     <input type="hidden" asp-for="Jogos[i].JogoId" />
+                                    <input type="hidden" asp-for="Jogos[i].TimeCasa" />
+                                    <input type="hidden" asp-for="Jogos[i].TimeVisitante" />
+                                    <input type="hidden" asp-for="Jogos[i].DataJogo" />
+                                    <input type="hidden" asp-for="Jogos[i].Fase" />
+                                    <input type="hidden" asp-for="Jogos[i].Grupo" />
+                                    <input type="hidden" asp-for="Jogos[i].JaPalpitado" />
+                                    <input type="hidden" asp-for="Jogos[i].Bloqueado" />
 
                                     <div class="futplay-pick-card-head">
                                         <div class="futplay-pick-meta">
@@ -147,7 +175,7 @@
                                     @if (jogo.Bloqueado)
                                     {
                                         <div class="futplay-pick-lock">
-                                            Palpites encerrados 30 minutos antes do jogo.
+                                            Palpite bloqueado. O prazo encerra 30 minutos antes do início da partida.
                                         </div>
                                     }
 
@@ -168,14 +196,20 @@
 
                                         <div class="futplay-pick-score">
                                             <input asp-for="Jogos[i].GolsCasaPalpite"
-                                                   class="form-control futplay-pick-input"
+                                                   class="form-control futplay-pick-input js-gols-casa"
+                                                   type="number"
+                                                   min="0"
+                                                   max="99"
+                                                   inputmode="numeric"
                                                    placeholder="0"
                                                    readonly="@jogo.Bloqueado" />
 
-                                            <span>x</span>
-
                                             <input asp-for="Jogos[i].GolsVisitantePalpite"
-                                                   class="form-control futplay-pick-input"
+                                                   class="form-control futplay-pick-input js-gols-visitante"
+                                                   type="number"
+                                                   min="0"
+                                                   max="99"
+                                                   inputmode="numeric"
                                                    placeholder="0"
                                                    readonly="@jogo.Bloqueado" />
                                         </div>
@@ -206,13 +240,22 @@
 
                     <section class="futplay-pick-save mt-4">
                         <div>
-                            <strong>Pronto para salvar?</strong>
-                            <p>Jogos bloqueados ficam somente para consulta.</p>
+                            <strong>Salvar seus palpites</strong>
+                            <p>
+                                Você pode alterar seus palpites enquanto o jogo não estiver bloqueado.
+                                Jogos bloqueados ficam apenas para consulta.
+                            </p>
                         </div>
 
                         <div class="futplay-pick-actions">
-                            <button type="submit" class="futplay-pick-action-primary">Salvar palpites</button>
-                            <a asp-action="Details" asp-route-id="@Model.LigaId">Detalhes da liga</a>
+                            <button type="submit" class="futplay-pick-action-primary">
+                                Salvar palpites
+                            </button>
+
+                            <a asp-action="Ranking"
+                               asp-route-id="@Model.LigaId">
+                                Ver ranking
+                            </a>
                         </div>
                     </section>
                 }
@@ -273,6 +316,41 @@
             if (participanteId) {
                 window.location.href = '@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })' + '?participanteId=' + participanteId;
             }
+        }
+
+        function normalizarPlacaresAntesSalvar() {
+            const cards = document.querySelectorAll(".futplay-pick-card");
+
+            cards.forEach(card => {
+                const casa = card.querySelector(".js-gols-casa");
+                const visitante = card.querySelector(".js-gols-visitante");
+
+                if (!casa || !visitante) {
+                    return;
+                }
+
+                if (casa.readOnly || visitante.readOnly) {
+                    return;
+                }
+
+                const casaVazio = casa.value.trim() === "";
+                const visitanteVazio = visitante.value.trim() === "";
+
+                // Se os dois estiverem vazios, não mexe.
+                // Assim o jogo continua sem palpite.
+                if (casaVazio && visitanteVazio) {
+                    return;
+                }
+
+                // Se o usuário preencheu só um lado, completa o outro com zero.
+                if (!casaVazio && visitanteVazio) {
+                    visitante.value = "0";
+                }
+
+                if (casaVazio && !visitanteVazio) {
+                    casa.value = "0";
+                }
+            });
         }
     </script>
 }

@@ -212,10 +212,23 @@ namespace FutPlay.Controllers
             }
 
 
+            var totalSalvos = 0;
+            var totalIgnorados = 0;
+
             foreach (var item in model.Jogos)
             {
-                if (!item.GolsCasaPalpite.HasValue || !item.GolsVisitantePalpite.HasValue)
+                var temCasa = item.GolsCasaPalpite.HasValue;
+                var temVisitante = item.GolsVisitantePalpite.HasValue;
+
+                if (!temCasa && !temVisitante)
                 {
+                    continue;
+                }
+
+                if (temCasa != temVisitante)
+                {
+                    totalIgnorados++;
+                    ModelState.AddModelError("", "Preencha os dois placares do jogo ou deixe os dois vazios.");
                     continue;
                 }
 
@@ -223,11 +236,13 @@ namespace FutPlay.Controllers
 
                 if (jogo == null)
                 {
+                    totalIgnorados++;
                     continue;
                 }
 
                 if (jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite))
                 {
+                    totalIgnorados++;
                     continue;
                 }
 
@@ -244,8 +259,8 @@ namespace FutPlay.Controllers
                         LigaId = model.LigaId,
                         LigaParticipanteId = model.LigaParticipanteId,
                         JogoId = item.JogoId,
-                        GolsCasaPalpite = item.GolsCasaPalpite.Value,
-                        GolsVisitantePalpite = item.GolsVisitantePalpite.Value,
+                        GolsCasaPalpite = item.GolsCasaPalpite!.Value,
+                        GolsVisitantePalpite = item.GolsVisitantePalpite!.Value,
                         DataPalpite = DateTime.Now,
                         PontosGanhos = 0,
                         Ativo = true
@@ -255,13 +270,36 @@ namespace FutPlay.Controllers
                 }
                 else
                 {
-                    palpiteExistente.GolsCasaPalpite = item.GolsCasaPalpite.Value;
-                    palpiteExistente.GolsVisitantePalpite = item.GolsVisitantePalpite.Value;
+                    palpiteExistente.GolsCasaPalpite = item.GolsCasaPalpite!.Value;
+                    palpiteExistente.GolsVisitantePalpite = item.GolsVisitantePalpite!.Value;
                     palpiteExistente.DataPalpite = DateTime.Now;
                     palpiteExistente.Ativo = true;
 
                     _context.Palpites.Update(palpiteExistente);
                 }
+
+                totalSalvos++;
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var viewModelErro = await MontarViewModelPalpitar(model.LigaId, model);
+                return View(viewModelErro);
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = $"{totalSalvos} palpite(s) salvo(s) com sucesso.";
+
+            if (totalIgnorados > 0)
+            {
+                TempData["Erro"] = $"{totalIgnorados} jogo(s) não foram salvos por estarem incompletos, bloqueados ou inválidos.";
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var viewModelErro = await MontarViewModelPalpitar(model.LigaId, model);
+                return View(viewModelErro);
             }
 
             await _context.SaveChangesAsync();
@@ -271,7 +309,12 @@ namespace FutPlay.Controllers
                 model.LigaId,
                 model.LigaParticipanteId);
 
-            TempData["Sucesso"] = "Palpites salvos com sucesso.";
+            TempData["Sucesso"] = $"{totalSalvos} palpite(s) salvo(s) com sucesso.";
+
+            if (totalIgnorados > 0)
+            {
+                TempData["Erro"] = $"{totalIgnorados} jogo(s) não foram salvos por estarem incompletos, bloqueados ou inválidos.";
+            }
 
             return RedirectToAction(nameof(Palpitar), new
             {
