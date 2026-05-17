@@ -1,8 +1,8 @@
-@page
-@model FutPlay.Areas.Identity.Pages.Account.LoginModel
+﻿@page
+@model FutPlay.Areas.Identity.Pages.Account.RegisterModel
 
 @{
-    ViewData["Title"] = "Entrar";
+    ViewData["Title"] = "Criar conta";
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
@@ -10,62 +10,64 @@
 
     <section class="fp-auth-page">
 
-        <div class="fp-auth-hero">
+        <div class="fp-auth-hero fp-auth-hero-register">
             <div class="fp-auth-brand">
                 <span>⚽</span>
                 <strong>FutPlay</strong>
             </div>
 
             <div class="fp-auth-hero-content">
-                <span class="fp-auth-kicker">Portal de futebol e bolões</span>
+                <span class="fp-auth-kicker">Crie sua conta</span>
 
-                <h1>Entre no seu bolão</h1>
+                <h1>Entre para o jogo</h1>
 
                 <p>
-                    Acesse suas ligas, envie palpites, acompanhe rankings e fique por dentro dos jogos.
+                    Crie sua conta para participar de ligas, enviar palpites,
+                    acompanhar rankings e disputar bolões com amigos.
                 </p>
             </div>
 
             <div class="fp-auth-match-card">
                 <div class="fp-auth-match-header">
-                    <span>Próximo palpite</span>
+                    <span>Seu primeiro bolão</span>
                     <small>FutPlay</small>
                 </div>
 
                 <div class="fp-auth-match-board">
                     <div>
-                        <span class="fp-auth-crest">CAS</span>
-                        <strong>Casa</strong>
+                        <span class="fp-auth-crest">VOCÊ</span>
+                        <strong>Você</strong>
                     </div>
 
                     <b>x</b>
 
                     <div>
-                        <span class="fp-auth-crest">VIS</span>
-                        <strong>Visitante</strong>
+                        <span class="fp-auth-crest">AMG</span>
+                        <strong>Amigos</strong>
                     </div>
                 </div>
 
                 <div class="fp-auth-match-footer">
-                    Palpite antes do jogo começar
+                    Crie sua conta e comece a palpitar
                 </div>
             </div>
         </div>
 
         <div class="fp-auth-card">
             <div class="fp-auth-card-head">
-                <span>Login</span>
-                <h2>Entrar no FutPlay</h2>
-                <p>Use seu e-mail e senha para continuar.</p>
+                <span>Cadastro</span>
+                <h2>Criar conta grátis</h2>
+                <p>Informe seus dados para acessar o FutPlay.</p>
             </div>
 
-            <form id="account" method="post">
+            <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
                 <div class="form-floating mb-3">
                     <input asp-for="Input.Email"
                            class="form-control fp-auth-input"
                            autocomplete="username"
+                           aria-required="true"
                            placeholder="nome@exemplo.com" />
 
                     <label asp-for="Input.Email"></label>
@@ -75,33 +77,34 @@
                 <div class="form-floating mb-3">
                     <input asp-for="Input.Password"
                            class="form-control fp-auth-input"
-                           autocomplete="current-password"
+                           autocomplete="new-password"
+                           aria-required="true"
                            placeholder="senha" />
 
                     <label asp-for="Input.Password"></label>
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                 </div>
 
-                <div class="fp-auth-options mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        <label class="form-check-label" asp-for="Input.RememberMe"></label>
-                    </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.ConfirmPassword"
+                           class="form-control fp-auth-input"
+                           autocomplete="new-password"
+                           aria-required="true"
+                           placeholder="confirmar senha" />
 
-                    <a asp-page="./ForgotPassword">
-                        Esqueci minha senha
-                    </a>
+                    <label asp-for="Input.ConfirmPassword"></label>
+                    <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                 </div>
 
-                <button id="login-submit" type="submit" class="fp-auth-submit">
-                    Entrar
+                <button id="registerSubmit" type="submit" class="fp-auth-submit">
+                    Criar conta
                 </button>
 
                 <div class="fp-auth-register-box">
-                    <span>Ainda não tem conta?</span>
+                    <span>Já tem uma conta?</span>
 
-                    <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">
-                        Criar conta grátis
+                    <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">
+                        Entrar no FutPlay
                     </a>
                 </div>
             </form>
