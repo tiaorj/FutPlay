@@ -10,189 +10,27 @@
     var ligasPrivadas = Model.Count(l => !l.Publica);
 }
 
-<div class="container futplay-portal-shell">
-    <div class="row g-4">
-        <div class="col-xl-9">
+<div class="container fp-score-home">
 
-            <section class="futplay-league-hero futplay-league-hero-banner mb-4">
-                <div class="futplay-league-hero-content">
-                    <div class="futplay-league-kicker">Meus bolões</div>
+    <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
+        <span>Seus bolões, palpites, rankings e convites</span>
 
-                    <h1 class="futplay-league-title">
-                        Minhas Ligas
-                    </h1>
+        <a asp-controller="Ligas"
+           asp-action="Create"
+           class="fp-score-admin-link">
+            + Criar liga
+        </a>
+    </div>
 
-                    <p class="futplay-league-lead">
-                        Acompanhe suas ligas, envie palpites, veja rankings e gerencie os convites dos bolões que você criou.
-                    </p>
+    <div class="row g-3">
 
-                    <div class="futplay-league-hero-meta">
-                        <span>@Model.Count ligas</span>
-                        <span>@totalPontos pontos</span>
-                        <span>@ligasCriadas criadas por você</span>
-                    </div>
-                </div>
-
-                <div class="futplay-league-hero-scoreboard">
-                    <span>FutPlay</span>
-                    <strong>Bolão</strong>
-                    <small>ranking e palpites</small>
-                </div>
-            </section>
-
-            <section class="futplay-my-league-toolbar mb-4">
-                <div>
-                    <strong>O que deseja fazer?</strong>
-                    <span>Crie uma liga, entre com um código ou continue seus palpites.</span>
-                </div>
-
-                <div class="futplay-my-league-toolbar-actions">
-                    <a asp-controller="Ligas"
-                       asp-action="Create"
-                       class="btn btn-success">
-                        Criar Liga
-                    </a>
-
-                    <a asp-controller="Ligas"
-                       asp-action="Entrar"
-                       class="btn btn-outline-success">
-                        Entrar com Código
-                    </a>
-
-                    <a asp-controller="Ligas"
-                       asp-action="Index"
-                       class="btn btn-outline-secondary">
-                        Ver Ligas Públicas
-                    </a>
-                </div>
-            </section>
-
-            @if (!Model.Any())
-            {
-                <section class="futplay-league-empty">
-                    <div class="futplay-league-empty-mark">FP</div>
-
-                    <h2>Você ainda não participa de nenhuma liga</h2>
-
-                    <p>
-                        Crie seu próprio bolão ou entre em uma liga usando o código de convite enviado por um amigo.
-                    </p>
-
-                    <div class="d-flex flex-column flex-md-row justify-content-center gap-2 mt-3">
-                        <a asp-controller="Ligas"
-                           asp-action="Create"
-                           class="btn btn-success">
-                            Criar minha primeira liga
-                        </a>
-
-                        <a asp-controller="Ligas"
-                           asp-action="Entrar"
-                           class="btn btn-outline-success">
-                            Tenho um código
-                        </a>
-                    </div>
-                </section>
-            }
-            else
-            {
-                <section class="futplay-league-panel">
-                    <div class="futplay-league-panel-head">
-                        <h2>Minhas competições</h2>
-                        <span>Palpites, rankings e convites</span>
-                    </div>
-
-                    <div class="futplay-league-rows">
-                        @foreach (var liga in Model)
-                        {
-                            <article class="futplay-league-row futplay-my-league-row">
-                                <div class="futplay-league-logo">
-                                    @if (!string.IsNullOrWhiteSpace(liga.CampeonatoLogoUrl))
-                                    {
-                                        <img src="@liga.CampeonatoLogoUrl" alt="@liga.NomeCampeonato" />
-                                    }
-                                    else
-                                    {
-                                        <span>FP</span>
-                                    }
-                                </div>
-
-                                <div class="futplay-league-row-info">
-                                    <div class="futplay-my-league-badges">
-                                        <span class="futplay-my-league-badge">
-                                            @(liga.Publica ? "Pública" : "Privada")
-                                        </span>
-
-                                        @if (liga.CriadorDaLiga)
-                                        {
-                                            <span class="futplay-my-league-badge owner">
-                                                Criador
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="futplay-my-league-badge participant">
-                                                Participante
-                                            </span>
-                                        }
-                                    </div>
-
-                                    <h3>@liga.NomeLiga</h3>
-                                    <p>@liga.NomeCampeonato</p>
-                                </div>
-
-                                <div class="futplay-league-row-points">
-                                    <span>Pontos</span>
-                                    <strong>@liga.Pontuacao</strong>
-                                </div>
-
-                                <div class="futplay-league-actions">
-                                    <a asp-controller="Ligas"
-                                       asp-action="Palpitar"
-                                       asp-route-id="@liga.LigaId"
-                                       asp-route-participanteId="@liga.LigaParticipanteId"
-                                       asp-route-origem="minhasligas"
-                                       class="futplay-league-action-primary">
-                                        Palpitar
-                                    </a>
-
-                                    <a asp-controller="Ligas"
-                                       asp-action="Ranking"
-                                       asp-route-id="@liga.LigaId"
-                                       class="futplay-league-action-secondary">
-                                        Ranking
-                                    </a>
-
-                                    @if (liga.PodeGerenciar)
-                                    {
-                                        <a asp-controller="Ligas"
-                                           asp-action="Convites"
-                                           asp-route-id="@liga.LigaId"
-                                           class="futplay-league-action-secondary">
-                                            Convites
-                                        </a>
-
-                                        <a asp-controller="Ligas"
-                                           asp-action="Edit"
-                                           asp-route-id="@liga.LigaId"
-                                           class="futplay-league-action-secondary">
-                                            Editar
-                                        </a>
-                                    }
-                                </div>
-                            </article>
-                        }
-                    </div>
-                </section>
-            }
-        </div>
-
-        <aside class="col-xl-3">
-            <section class="futplay-league-side-card mb-4">
-                <div class="futplay-league-side-head">
+        <aside class="col-xl-3 col-lg-4">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
                     <h2>Resumo</h2>
                 </div>
 
-                <div class="futplay-league-side-stats">
+                <div class="fp-score-stats-list">
                     <div>
                         <span>Ligas</span>
                         <strong>@Model.Count</strong>
@@ -204,8 +42,8 @@
                     </div>
 
                     <div>
-                        <span>Públicas</span>
-                        <strong>@ligasPublicas</strong>
+                        <span>Criadas</span>
+                        <strong>@ligasCriadas</strong>
                     </div>
 
                     <div>
@@ -215,12 +53,195 @@
                 </div>
             </section>
 
-            <section class="futplay-league-side-card mb-4">
-                <div class="futplay-league-side-head">
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Ações</h2>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Ligas"
+                       asp-action="Create"
+                       class="btn btn-success">
+                        Criar Liga
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Entrar"
+                       class="btn btn-outline-primary">
+                        Entrar com Código
+                    </a>
+
+                    <a asp-controller="Ligas"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ligas Públicas
+                    </a>
+                </div>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Melhor campanha</h2>
+                </div>
+
+                @if (melhorLiga == null)
+                {
+                    <div class="fp-empty-mini">
+                        Participe de uma liga para aparecer aqui.
+                    </div>
+                }
+                else
+                {
+                    <div class="fp-bet-best-card">
+                        <div class="fp-bet-league-logo">
+                            @if (!string.IsNullOrWhiteSpace(melhorLiga.CampeonatoLogoUrl))
+                            {
+                                <img src="@melhorLiga.CampeonatoLogoUrl" alt="@melhorLiga.NomeCampeonato" />
+                            }
+                            else
+                            {
+                                <span>FP</span>
+                            }
+                        </div>
+
+                        <strong>@melhorLiga.NomeLiga</strong>
+                        <span>@melhorLiga.Pontuacao pontos</span>
+                    </div>
+                }
+            </section>
+        </aside>
+
+        <main class="col-xl-6 col-lg-8">
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Minhas Ligas</a>
+                    <a asp-controller="Ligas" asp-action="Index">Ligas públicas</a>
+                    <a asp-controller="Ligas" asp-action="Create">Criar liga</a>
+                </div>
+
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Todas (@Model.Count)</span>
+                    <span class="fp-score-filter">Criadas (@ligasCriadas)</span>
+                    <span class="fp-score-filter">Públicas (@ligasPublicas)</span>
+                    <span class="fp-score-filter">Privadas (@ligasPrivadas)</span>
+                </div>
+
+                @if (!Model.Any())
+                {
+                    <div class="fp-empty-mini m-3">
+                        Você ainda não participa de nenhuma liga. Crie seu próprio bolão ou entre usando um código de convite.
+                    </div>
+
+                    <div class="d-flex flex-column flex-md-row gap-2 m-3">
+                        <a asp-controller="Ligas"
+                           asp-action="Create"
+                           class="btn btn-success">
+                            Criar minha primeira liga
+                        </a>
+
+                        <a asp-controller="Ligas"
+                           asp-action="Entrar"
+                           class="btn btn-outline-primary">
+                            Tenho um código
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="fp-bet-league-list">
+                        <div class="fp-match-list-title">
+                            <span>📊 Meus bolões</span>
+                            <small>@Model.Count liga(s)</small>
+                        </div>
+
+                        @foreach (var liga in Model)
+                        {
+                            <article class="fp-bet-league-row">
+                                <div class="fp-bet-league-logo">
+                                    @if (!string.IsNullOrWhiteSpace(liga.CampeonatoLogoUrl))
+                                    {
+                                        <img src="@liga.CampeonatoLogoUrl" alt="@liga.NomeCampeonato" />
+                                    }
+                                    else
+                                    {
+                                        <span>FP</span>
+                                    }
+                                </div>
+
+                                <div class="fp-bet-league-info">
+                                    <div class="fp-bet-league-badges">
+                                        <span>@(liga.Publica ? "Pública" : "Privada")</span>
+
+                                        @if (liga.CriadorDaLiga)
+                                        {
+                                            <span class="owner">Criador</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="participant">Participante</span>
+                                        }
+                                    </div>
+
+                                    <strong>@liga.NomeLiga</strong>
+                                    <small>@liga.NomeCampeonato</small>
+                                </div>
+
+                                <div class="fp-bet-league-score">
+                                    <span>Pontos</span>
+                                    <strong>@liga.Pontuacao</strong>
+                                </div>
+
+                                <div class="fp-bet-league-actions">
+                                    <a asp-controller="Ligas"
+                                       asp-action="Palpitar"
+                                       asp-route-id="@liga.LigaId"
+                                       asp-route-participanteId="@liga.LigaParticipanteId"
+                                       asp-route-origem="minhasligas"
+                                       class="primary">
+                                        Palpitar
+                                    </a>
+
+                                    <a asp-controller="Ligas"
+                                       asp-action="Ranking"
+                                       asp-route-id="@liga.LigaId">
+                                        Ranking
+                                    </a>
+
+                                    @if (liga.PodeGerenciar)
+                                    {
+                                        <a asp-controller="Ligas"
+                                           asp-action="Convites"
+                                           asp-route-id="@liga.LigaId">
+                                            Convites
+                                        </a>
+
+                                        <a asp-controller="Ligas"
+                                           asp-action="Edit"
+                                           asp-route-id="@liga.LigaId">
+                                            Editar
+                                        </a>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+        </main>
+
+        <aside class="col-xl-3 d-none d-xl-block">
+            <section class="fp-side-ad">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
                     <h2>Minhas criações</h2>
                 </div>
 
-                <div class="futplay-league-side-stats">
+                <div class="fp-score-stats-list">
                     <div>
                         <span>Criadas</span>
                         <strong>@ligasCriadas</strong>
@@ -232,41 +253,11 @@
                     </div>
                 </div>
 
-                <p class="futplay-league-side-empty mt-3">
+                <p class="fp-side-text mt-3 mb-0">
                     Quem cria uma liga pode gerenciar convites e editar informações do bolão.
                 </p>
             </section>
-
-            <section class="futplay-league-side-card">
-                <div class="futplay-league-side-head">
-                    <h2>Melhor campanha</h2>
-                </div>
-
-                @if (melhorLiga == null)
-                {
-                    <p class="futplay-league-side-empty">
-                        Participe de uma liga para aparecer aqui.
-                    </p>
-                }
-                else
-                {
-                    <div class="futplay-league-best">
-                        <div class="futplay-league-logo">
-                            @if (!string.IsNullOrWhiteSpace(melhorLiga.CampeonatoLogoUrl))
-                            {
-                                <img src="@melhorLiga.CampeonatoLogoUrl" alt="@melhorLiga.NomeCampeonato" />
-                            }
-                            else
-                            {
-                                <span>FP</span>
-                            }
-                        </div>
-
-                        <h3>@melhorLiga.NomeLiga</h3>
-                        <span>@melhorLiga.Pontuacao pontos</span>
-                    </div>
-                }
-            </section>
         </aside>
+
     </div>
 </div>
