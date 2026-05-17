@@ -151,6 +151,24 @@
     </header>
 
     <main class="futplay-main">
+        <div class="container mt-3">
+            @if (TempData["Sucesso"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Sucesso"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            }
+
+            @if (TempData["Erro"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Erro"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                </div>
+            }
+        </div>
+
         @RenderBody()
     </main>
 

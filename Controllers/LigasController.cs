@@ -808,6 +808,7 @@ namespace FutPlay.Controllers
         {
             if (string.IsNullOrWhiteSpace(token))
             {
+                TempData["Erro"] = "Convite inválido.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -815,22 +816,33 @@ namespace FutPlay.Controllers
                 .Include(c => c.Liga)
                 .FirstOrDefaultAsync(c =>
                     c.TokenConvite == token &&
-                    c.Ativo &&
-                    c.Status == "Pendente");
+                    c.Ativo);
 
             if (convite == null)
             {
-                TempData["Erro"] = "Convite inválido, expirado ou já utilizado.";
+                TempData["Erro"] = "Convite inválido, cancelado ou inexistente.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.Equals(convite.Status, "Pendente", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Erro"] = $"Este convite não está mais disponível. Status atual: {convite.Status}.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (convite.Liga == null || !convite.Liga.Ativo)
+            {
+                TempData["Erro"] = "A liga deste convite não está mais disponível.";
                 return RedirectToAction(nameof(Index));
             }
 
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 var returnUrl = Url.Action(
-                action: nameof(AceitarConvite),
-                controller: "Ligas",
-                values: new { token }
-);
+                    action: nameof(AceitarConvite),
+                    controller: "Ligas",
+                    values: new { token }
+                );
 
                 returnUrl ??= $"/Ligas/AceitarConvite?token={Uri.EscapeDataString(token)}";
 
@@ -848,7 +860,7 @@ namespace FutPlay.Controllers
 
             if (!string.Equals(email, convite.Email, StringComparison.OrdinalIgnoreCase))
             {
-                TempData["Erro"] = "Este convite foi enviado para outro e-mail.";
+                TempData["Erro"] = "Este convite foi enviado para outro e-mail. Entre com o e-mail correto para aceitar o convite.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -912,6 +924,12 @@ namespace FutPlay.Controllers
             if (!UsuarioPodeGerenciarLiga(convite.Liga))
             {
                 return Forbid();
+            }
+
+            if (!string.Equals(convite.Status, "Pendente", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Erro"] = "Somente convites pendentes podem ser cancelados.";
+                return RedirectToAction(nameof(Convites), new { id = convite.LigaId });
             }
 
             convite.Status = "Cancelado";
