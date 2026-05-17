@@ -4,7 +4,6 @@
     ViewData["Title"] = "Ranking da Liga";
 
     var top3 = Model.Participantes.Take(3).ToList();
-    var demais = Model.Participantes.Skip(3).ToList();
     var lider = Model.Participantes.FirstOrDefault();
 
     var totalParticipantes = Model.Participantes.Count;
@@ -17,39 +16,23 @@
         : Convert.ToInt32((totalExatos * 100.0) / totalPalpites);
 }
 
-<div class="container futplay-portal-shell">
+<div class="container fp-score-home">
 
-    <section class="futplay-ranking-hero futplay-ranking-hero-banner mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <div class="futplay-ranking-logo">
-                @if (!string.IsNullOrWhiteSpace(Model.Liga.Campeonato?.LogoUrl))
-                {
-                    <img src="@Model.Liga.Campeonato.LogoUrl" alt="@Model.Liga.Campeonato.Nome" />
-                }
-                else
-                {
-                    <span>FP</span>
-                }
-            </div>
-
-            <div>
-                <div class="futplay-ranking-kicker">Ranking do bolão</div>
-
-                <h1 class="futplay-ranking-title">
-                    @Model.Liga.Nome
-                </h1>
-
-                <p class="futplay-ranking-lead mb-0">
-                    @(Model.Liga.Campeonato?.Nome ?? "Campeonato não informado")
-                </p>
-            </div>
+    <section class="fp-bet-header mb-3">
+        <div class="fp-bet-header-ball">
+            🏆
         </div>
 
-        <div class="futplay-ranking-actions">
+        <div class="fp-bet-header-info">
+            <span>Ranking do bolão</span>
+            <h1>@Model.Liga.Nome</h1>
+            <p>@(Model.Liga.Campeonato?.Nome ?? "Campeonato não informado")</p>
+        </div>
+
+        <div class="fp-bet-header-actions">
             <a asp-action="Palpitar"
                asp-route-id="@Model.Liga.Id"
-               asp-route-origem="minhasligas"
-               class="futplay-ranking-action-primary">
+               asp-route-origem="minhasligas">
                 Palpitar
             </a>
 
@@ -60,259 +43,233 @@
         </div>
     </section>
 
-    <section class="futplay-ranking-summary mb-4">
-        <article>
-            <span>Participantes</span>
-            <strong>@totalParticipantes</strong>
-        </article>
+    <div class="row g-3">
 
-        <article>
-            <span>Palpites</span>
-            <strong>@totalPalpites</strong>
-        </article>
+        <aside class="col-xl-3 col-lg-4">
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>Resumo</h2>
+                </div>
 
-        <article>
-            <span>Placares exatos</span>
-            <strong>@totalExatos</strong>
-        </article>
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Participantes</span>
+                        <strong>@totalParticipantes</strong>
+                    </div>
 
-        <article>
-            <span>Aproveitamento</span>
-            <strong>@aproveitamentoGeral%</strong>
-        </article>
-    </section>
+                    <div>
+                        <span>Palpites</span>
+                        <strong>@totalPalpites</strong>
+                    </div>
 
-    @if (!Model.Participantes.Any())
-    {
-        <section class="futplay-ranking-empty">
-            <h2>Ranking ainda sem participantes</h2>
+                    <div>
+                        <span>Exatos</span>
+                        <strong>@totalExatos</strong>
+                    </div>
 
-            <p>
-                Assim que os participantes entrarem na liga e enviarem palpites,
-                a classificação do bolão aparecerá aqui.
-            </p>
+                    <div>
+                        <span>Acerto geral</span>
+                        <strong>@aproveitamentoGeral%</strong>
+                    </div>
+                </div>
+            </section>
 
-            <a asp-controller="MinhasLigas"
-               asp-action="Index"
-               class="btn btn-success">
-                Voltar para Minhas Ligas
-            </a>
-        </section>
-    }
-    else
-    {
-        <div class="row g-4">
-            <div class="col-xl-9">
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Líder</h2>
+                </div>
 
-                @if (lider != null)
+                @if (lider == null)
                 {
-                    <section class="futplay-ranking-leader-banner mb-4">
-                        <div class="futplay-ranking-leader-medal">
-                            1º
+                    <div class="fp-empty-mini">
+                        Ranking aguardando participantes.
+                    </div>
+                }
+                else
+                {
+                    <div class="fp-bet-leader-card">
+                        <span>1º</span>
+                        <strong>@lider.Nome</strong>
+                        <small>@lider.PontuacaoTotal pontos</small>
+                    </div>
+                }
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Ações</h2>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-action="Palpitar"
+                       asp-route-id="@Model.Liga.Id"
+                       asp-route-origem="minhasligas"
+                       class="btn btn-success">
+                        Palpitar
+                    </a>
+
+                    <a asp-controller="MinhasLigas"
+                       asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Minhas Ligas
+                    </a>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ligas Públicas
+                    </a>
+                </div>
+            </section>
+        </aside>
+
+        <main class="col-xl-6 col-lg-8">
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Ranking</a>
+
+                    <a asp-action="Palpitar"
+                       asp-route-id="@Model.Liga.Id"
+                       asp-route-origem="minhasligas">
+                        Palpites
+                    </a>
+
+                    <a asp-controller="MinhasLigas" asp-action="Index">
+                        Meu bolão
+                    </a>
+                </div>
+
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Geral</span>
+                    <span class="fp-score-filter">@totalParticipantes participantes</span>
+                    <span class="fp-score-filter">@totalPontos pontos</span>
+                </div>
+
+                @if (!Model.Participantes.Any())
+                {
+                    <div class="fp-empty-mini m-3">
+                        Assim que os participantes entrarem na liga e enviarem palpites, o ranking aparecerá aqui.
+                    </div>
+                }
+                else
+                {
+                    <section class="fp-bet-podium">
+                        <div class="fp-match-list-title">
+                            <span>🏆 Top 3</span>
+                            <small>@top3.Count destaque(s)</small>
                         </div>
 
-                        <div>
-                            <span>Líder atual</span>
-                            <h2>@lider.Nome</h2>
-                            <p>@lider.Email</p>
+                        <div class="fp-bet-podium-grid">
+                            @foreach (var item in top3)
+                            {
+                                var aproveitamento = item.TotalPalpites == 0
+                                ? 0
+                                : Convert.ToInt32((item.PlacaresExatos * 100.0) / item.TotalPalpites);
+
+                                <article class="fp-bet-podium-card @(item.Posicao == 1 ? "first" : "")">
+                                    <span>@(item.Posicao)º</span>
+                                    <strong>@item.Nome</strong>
+                                    <small>@item.Email</small>
+
+                                    <div>
+                                        <b>@item.PontuacaoTotal</b>
+                                        <em>pontos</em>
+                                    </div>
+
+                                    <footer>
+                                        <span>@item.TotalPalpites palpites</span>
+                                        <span>@item.PlacaresExatos exatos</span>
+                                        <span>@aproveitamento% acerto</span>
+                                    </footer>
+                                </article>
+                            }
+                        </div>
+                    </section>
+
+                    <section class="fp-bet-ranking-list">
+                        <div class="fp-match-list-title">
+                            <span>📊 Classificação geral</span>
+                            <small>@Model.Participantes.Count participante(s)</small>
                         </div>
 
-                        <div class="futplay-ranking-leader-points">
-                            <span>Pontos</span>
-                            <strong>@lider.PontuacaoTotal</strong>
+                        <div class="table-responsive">
+                            <table class="table fp-bet-ranking-table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Participante</th>
+                                        <th>Palpites</th>
+                                        <th>Exatos</th>
+                                        <th>Acerto</th>
+                                        <th>PTS</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var item in Model.Participantes)
+                                    {
+                                        var aproveitamento = item.TotalPalpites == 0
+                                        ? 0
+                                        : Convert.ToInt32((item.PlacaresExatos * 100.0) / item.TotalPalpites);
+
+                                        <tr class="@(item.Posicao <= 3 ? "top" : "")">
+                                            <td>
+                                                <span class="fp-bet-rank-position">
+                                                    @item.Posicao
+                                                </span>
+                                            </td>
+
+                                            <td>
+                                                <strong>@item.Nome</strong>
+                                                <small>@item.Email</small>
+                                            </td>
+
+                                            <td>@item.TotalPalpites</td>
+                                            <td>@item.PlacaresExatos</td>
+
+                                            <td>
+                                                <span class="fp-bet-hit-rate">
+                                                    @aproveitamento%
+                                                </span>
+                                            </td>
+
+                                            <td class="fp-bet-ranking-points">
+                                                @item.PontuacaoTotal
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                     </section>
                 }
+            </section>
+        </main>
 
-                <section class="futplay-ranking-panel mb-4">
-                    <div class="futplay-ranking-panel-head">
-                        <h2>Top 3 da liga</h2>
-                        <span>@Model.Participantes.Count participantes</span>
+        <aside class="col-xl-3 d-none d-xl-block">
+            <section class="fp-side-ad">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Estatísticas</h2>
+                </div>
+
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Pontos</span>
+                        <strong>@totalPontos</strong>
                     </div>
 
-                    <div class="futplay-ranking-podium">
-                        @foreach (var item in top3)
-                        {
-                            var podiumClass = item.Posicao == 1
-                            ? "futplay-ranking-card futplay-ranking-card-first"
-                            : item.Posicao == 2
-                            ? "futplay-ranking-card futplay-ranking-card-second"
-                            : "futplay-ranking-card futplay-ranking-card-third";
-
-                            var aproveitamento = item.TotalPalpites == 0
-                            ? 0
-                            : Convert.ToInt32((item.PlacaresExatos * 100.0) / item.TotalPalpites);
-
-                            <article class="@podiumClass">
-                                <div class="futplay-ranking-card-head">
-                                    <span class="futplay-ranking-position">@(item.Posicao)º</span>
-                                    <span class="futplay-ranking-label">
-                                        @(item.Posicao == 1 ? "Líder" : $"Top {item.Posicao}")
-                                    </span>
-                                </div>
-
-                                <h2>@item.Nome</h2>
-                                <p>@item.Email</p>
-
-                                <div class="futplay-ranking-points">
-                                    <span>Pontos</span>
-                                    <strong>@item.PontuacaoTotal</strong>
-                                </div>
-
-                                <div class="futplay-ranking-stats">
-                                    <div>
-                                        <span>Palpites</span>
-                                        <strong>@item.TotalPalpites</strong>
-                                    </div>
-
-                                    <div>
-                                        <span>Exatos</span>
-                                        <strong>@item.PlacaresExatos</strong>
-                                    </div>
-
-                                    <div>
-                                        <span>Acerto</span>
-                                        <strong>@aproveitamento%</strong>
-                                    </div>
-                                </div>
-                            </article>
-                        }
+                    <div>
+                        <span>Exatos</span>
+                        <strong>@totalExatos</strong>
                     </div>
-                </section>
+                </div>
+            </section>
+        </aside>
 
-                <section class="futplay-ranking-list">
-                    <div class="futplay-ranking-list-head">
-                        <h2>Classificação geral</h2>
-                    </div>
-
-                    <div class="table-responsive">
-                        <table class="table futplay-ranking-table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Posição</th>
-                                    <th>Participante</th>
-                                    <th>Palpites</th>
-                                    <th>Exatos</th>
-                                    <th>Acerto</th>
-                                    <th>Pontos</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                @foreach (var item in Model.Participantes)
-                                {
-                                    var aproveitamento = item.TotalPalpites == 0
-                                    ? 0
-                                    : Convert.ToInt32((item.PlacaresExatos * 100.0) / item.TotalPalpites);
-
-                                    <tr class="@(item.Posicao <= 3 ? "futplay-ranking-table-top" : "")">
-                                        <td>
-                                            <strong>@(item.Posicao)º</strong>
-                                        </td>
-
-                                        <td>
-                                            <strong>@item.Nome</strong>
-                                            <small>@item.Email</small>
-                                        </td>
-
-                                        <td>@item.TotalPalpites</td>
-
-                                        <td>@item.PlacaresExatos</td>
-
-                                        <td>
-                                            <span class="futplay-ranking-hit-rate">
-                                                @aproveitamento%
-                                            </span>
-                                        </td>
-
-                                        <td>
-                                            <span>@item.PontuacaoTotal</span>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
-
-            </div>
-
-            <aside class="col-xl-3">
-                <section class="futplay-ranking-side-card mb-4">
-                    <div class="futplay-ranking-side-head">
-                        <h2>Líder</h2>
-                    </div>
-
-                    @if (lider == null)
-                    {
-                        <p class="futplay-ranking-side-empty">
-                            Ranking aguardando participantes.
-                        </p>
-                    }
-                    else
-                    {
-                        <div class="futplay-ranking-leader">
-                            <span>1º</span>
-                            <h3>@lider.Nome</h3>
-                            <strong>@lider.PontuacaoTotal pontos</strong>
-                        </div>
-                    }
-                </section>
-
-                <section class="futplay-ranking-side-card mb-4">
-                    <div class="futplay-ranking-side-head">
-                        <h2>Estatísticas</h2>
-                    </div>
-
-                    <div class="futplay-ranking-side-stats">
-                        <div>
-                            <span>Participantes</span>
-                            <strong>@totalParticipantes</strong>
-                        </div>
-
-                        <div>
-                            <span>Palpites</span>
-                            <strong>@totalPalpites</strong>
-                        </div>
-
-                        <div>
-                            <span>Exatos</span>
-                            <strong>@totalExatos</strong>
-                        </div>
-
-                        <div>
-                            <span>Pontos</span>
-                            <strong>@totalPontos</strong>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="futplay-ranking-side-card">
-                    <div class="futplay-ranking-side-head">
-                        <h2>Ações</h2>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <a asp-action="Palpitar"
-                           asp-route-id="@Model.Liga.Id"
-                           asp-route-origem="minhasligas"
-                           class="btn btn-success">
-                            Palpitar
-                        </a>
-
-                        <a asp-controller="MinhasLigas"
-                           asp-action="Index"
-                           class="btn btn-outline-secondary">
-                            Minhas Ligas
-                        </a>
-
-                        <a asp-action="Index"
-                           class="btn btn-outline-secondary">
-                            Ligas Públicas
-                        </a>
-                    </div>
-                </section>
-            </aside>
-        </div>
-    }
+    </div>
 </div>

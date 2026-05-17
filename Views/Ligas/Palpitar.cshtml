@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Palpitar na Liga";
+
     var totalJogos = Model.Jogos.Count;
     var pendentes = Model.Jogos.Count(j => !j.Bloqueado && !j.JaPalpitado);
     var palpitados = Model.Jogos.Count(j => j.JaPalpitado);
@@ -10,8 +11,8 @@
     var percentualConcluido = totalJogos == 0 ? 0 : Convert.ToInt32((palpitados * 100.0) / totalJogos);
 }
 
-<div class="container futplay-portal-shell">
-   
+<div class="container fp-score-home">
+
     <form asp-action="Palpitar" method="post" onsubmit="normalizarPlacaresAntesSalvar()">
         <input type="hidden" asp-for="LigaId" />
         <input type="hidden" asp-for="ParticipanteBloqueado" />
@@ -19,52 +20,59 @@
 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        <div class="row g-4">
-            <div class="col-xl-9">
-                <section class="futplay-pick-hero futplay-pick-hero-banner mb-4">
-                    <div class="futplay-pick-hero-content">
-                        <div class="futplay-pick-kicker">Central de palpites</div>
-                        <h1 class="futplay-pick-title">@Model.NomeLiga</h1>
-                        <p class="futplay-pick-lead">@Model.NomeCampeonato</p>
+        <section class="fp-bet-header mb-3">
+            <div class="fp-bet-header-ball">
+                🎯
+            </div>
 
-                        @if (jogoDestaque != null)
-                        {
-                            <div class="futplay-pick-featured-match">
-                                <span>@jogoDestaque.TimeCasa</span>
-                                <strong>x</strong>
-                                <span>@jogoDestaque.TimeVisitante</span>
-                            </div>
-                        }
+            <div class="fp-bet-header-info">
+                <span>Central de palpites</span>
+                <h1>@Model.NomeLiga</h1>
+                <p>@Model.NomeCampeonato</p>
+            </div>
+
+            <div class="fp-bet-header-actions">
+                <a asp-action="Ranking" asp-route-id="@Model.LigaId">
+                    Ranking
+                </a>
+
+                @if (string.Equals(Model.Origem, "minhasligas", StringComparison.OrdinalIgnoreCase))
+                {
+                    <a asp-controller="MinhasLigas" asp-action="Index">
+                        Minhas Ligas
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="Index">
+                        Ligas
+                    </a>
+                }
+            </div>
+        </section>
+
+        <div class="row g-3">
+
+            <aside class="col-xl-3 col-lg-4">
+                <section class="fp-home-card">
+                    <div class="fp-card-header-link">
+                        <h2>Participante</h2>
                     </div>
 
-                    <div class="futplay-pick-actions">
-                        <a asp-action="Ranking" asp-route-id="@Model.LigaId">Ranking</a>
-                        @if (string.Equals(Model.Origem, "minhasligas", StringComparison.OrdinalIgnoreCase))
-                        {
-                            <a asp-controller="MinhasLigas" asp-action="Index">Voltar</a>
-                        }
-                        else
-                        {
-                            <a asp-action="Index">Voltar</a>
-                        }
-                    </div>
-                </section>
-
-                <section class="futplay-pick-participant mb-4">
                     @if (Model.ParticipanteBloqueado)
                     {
-                        <input type="hidden" asp-for="LigaParticipanteId" />
-
-                        <div>
-                            <span>Participante vinculado</span>
+                        <div class="fp-bet-participant-card">
+                            <span>Vinculado ao usuário</span>
                             <strong>@Model.NomeParticipanteSelecionado</strong>
                             <p>Você está palpitando com o participante vinculado ao seu usuário.</p>
                         </div>
+
+                        <input type="hidden" asp-for="LigaParticipanteId" />
                     }
                     else
                     {
-                        <div class="futplay-pick-select">
-                            <label asp-for="LigaParticipanteId" class="form-label"></label>
+                        <div class="mb-2">
+                            <label asp-for="LigaParticipanteId" class="form-label fw-bold"></label>
                             <select asp-for="LigaParticipanteId"
                                     class="form-select"
                                     asp-items="Model.Participantes"
@@ -73,21 +81,47 @@
                             </select>
                             <span asp-validation-for="LigaParticipanteId" class="text-danger"></span>
                         </div>
-                        <p>Selecione o participante para carregar ou editar palpites já enviados.</p>
+
+                        <p class="fp-side-text mb-0">
+                            Selecione o participante para carregar ou editar palpites já enviados.
+                        </p>
                     }
                 </section>
 
-                <section class="futplay-pick-progress mb-4">
-                    <div class="futplay-pick-progress-head">
-                        <div>
-                            <strong>Progresso dos palpites</strong>
-                            <span>@palpitados de @totalJogos jogos preenchidos</span>
-                        </div>
-
-                        <strong>@percentualConcluido%</strong>
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Resumo</h2>
                     </div>
 
-                    <div class="progress futplay-pick-progress-bar">
+                    <div class="fp-score-stats-list">
+                        <div>
+                            <span>Pendentes</span>
+                            <strong>@pendentes</strong>
+                        </div>
+
+                        <div>
+                            <span>Palpitados</span>
+                            <strong>@palpitados</strong>
+                        </div>
+
+                        <div>
+                            <span>Bloqueados</span>
+                            <strong>@bloqueados</strong>
+                        </div>
+
+                        <div>
+                            <span>Conclusão</span>
+                            <strong>@percentualConcluido%</strong>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Progresso</h2>
+                    </div>
+
+                    <div class="progress fp-bet-progress">
                         <div class="progress-bar"
                              role="progressbar"
                              style="width: @percentualConcluido%;"
@@ -97,56 +131,82 @@
                         </div>
                     </div>
 
-                    <p>
-                        Preencha os placares dos jogos disponíveis. Palpites são bloqueados 30 minutos antes da partida.
+                    <p class="fp-side-text mt-3 mb-0">
+                        Palpites são bloqueados 30 minutos antes do início da partida.
                     </p>
                 </section>
 
-                @if (!Model.Jogos.Any())
+                @if (jogoDestaque != null)
                 {
-                    <section class="futplay-pick-empty">
-                        <h2>Nenhum jogo disponível</h2>
-                        <p>
-                            Ainda não há jogos cadastrados para o campeonato desta liga.
-                            Assim que a tabela estiver pronta, os palpites aparecerão aqui.
-                        </p>
-                    </section>
-                }
-                else
-                {
-                    <section class="futplay-pick-panel">
-                        <div class="futplay-pick-panel-head">
-                            <h2>Jogos da rodada</h2>
-                            <span>@pendentes pendentes</span>
+                    <section class="fp-home-card mt-3">
+                        <div class="fp-card-header-link">
+                            <h2>Próximo jogo</h2>
                         </div>
 
-                        <div class="futplay-pick-list">
+                        <div class="fp-bet-next-match">
+                            <strong>@jogoDestaque.TimeCasa</strong>
+                            <b>x</b>
+                            <strong>@jogoDestaque.TimeVisitante</strong>
+                            <span>@jogoDestaque.DataJogo.ToString("dd/MM HH:mm")</span>
+                        </div>
+                    </section>
+                }
+            </aside>
+
+            <main class="col-xl-6 col-lg-8">
+                <section class="fp-score-board">
+                    <div class="fp-score-board-tabs">
+                        <a class="active" href="#">Palpites</a>
+                        <a asp-action="Ranking" asp-route-id="@Model.LigaId">Ranking</a>
+                        <a asp-controller="MinhasLigas" asp-action="Index">Meu bolão</a>
+                    </div>
+
+                    <div class="fp-score-filter-row">
+                        <span class="fp-score-filter active">Todos (@totalJogos)</span>
+                        <span class="fp-score-filter">Pendentes (@pendentes)</span>
+                        <span class="fp-score-filter">Palpitados (@palpitados)</span>
+                        <span class="fp-score-filter">Bloqueados (@bloqueados)</span>
+                    </div>
+
+                    @if (!Model.Jogos.Any())
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Nenhum jogo disponível para esta liga.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-bet-pick-list">
+                            <div class="fp-match-list-title">
+                                <span>⚽ Jogos da rodada</span>
+                                <small>@pendentes pendente(s)</small>
+                            </div>
+
                             @for (int i = 0; i < Model.Jogos.Count; i++)
                             {
                                 var jogo = Model.Jogos[i];
-                                var casaMarca = string.IsNullOrWhiteSpace(jogo.TimeCasa)
-                                    ? "CAS"
-                                    : jogo.TimeCasa.Substring(0, Math.Min(3, jogo.TimeCasa.Length)).ToUpperInvariant();
-                                var visitanteMarca = string.IsNullOrWhiteSpace(jogo.TimeVisitante)
-                                    ? "VIS"
-                                    : jogo.TimeVisitante.Substring(0, Math.Min(3, jogo.TimeVisitante.Length)).ToUpperInvariant();
-                                var cardClass = jogo.Bloqueado
-                                    ? "futplay-pick-card futplay-pick-card-locked"
-                                    : jogo.JaPalpitado
-                                        ? "futplay-pick-card futplay-pick-card-done"
-                                        : "futplay-pick-card futplay-pick-card-pending";
-                                var statusClass = jogo.Bloqueado
-                                    ? "futplay-pick-status futplay-pick-status-locked"
-                                    : jogo.JaPalpitado
-                                        ? "futplay-pick-status futplay-pick-status-done"
-                                        : "futplay-pick-status futplay-pick-status-pending";
-                                var statusText = jogo.Bloqueado
-                                    ? "Bloqueado"
-                                    : jogo.JaPalpitado
-                                        ? "Já palpitado"
-                                        : "Pendente";
 
-                                <article class="@cardClass">
+                                var casaMarca = string.IsNullOrWhiteSpace(jogo.TimeCasa)
+                                ? "CAS"
+                                : jogo.TimeCasa.Substring(0, Math.Min(3, jogo.TimeCasa.Length)).ToUpperInvariant();
+
+                                var visitanteMarca = string.IsNullOrWhiteSpace(jogo.TimeVisitante)
+                                ? "VIS"
+                                : jogo.TimeVisitante.Substring(0, Math.Min(3, jogo.TimeVisitante.Length)).ToUpperInvariant();
+
+                                var statusClass = jogo.Bloqueado
+                                ? "locked"
+                                : jogo.JaPalpitado
+                                ? "done"
+                                : "pending";
+
+                                var statusText = jogo.Bloqueado
+                                ? "Bloqueado"
+                                : jogo.JaPalpitado
+                                ? "Palpitado"
+                                : "Pendente";
+
+                                <article class="fp-bet-pick-row @statusClass">
                                     <input type="hidden" asp-for="Jogos[i].JogoId" />
                                     <input type="hidden" asp-for="Jogos[i].TimeCasa" />
                                     <input type="hidden" asp-for="Jogos[i].TimeVisitante" />
@@ -156,152 +216,148 @@
                                     <input type="hidden" asp-for="Jogos[i].JaPalpitado" />
                                     <input type="hidden" asp-for="Jogos[i].Bloqueado" />
 
-                                    <div class="futplay-pick-card-head">
-                                        <div class="futplay-pick-meta">
-                                            <strong>@jogo.DataJogo.ToString("dd/MM/yyyy")</strong>
-                                            <span>@jogo.DataJogo.ToString("HH:mm")</span>
-                                            <span>
-                                                @(string.IsNullOrWhiteSpace(jogo.Fase) ? "Fase não informada" : jogo.Fase)
-                                                @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
-                                                {
-                                                    <span> | Grupo @jogo.Grupo</span>
-                                                }
-                                            </span>
-                                        </div>
-
-                                        <span class="@statusClass">@statusText</span>
+                                    <div class="fp-bet-pick-time">
+                                        <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
+                                        <span>@jogo.DataJogo.ToString("dd/MM")</span>
                                     </div>
 
-                                    @if (jogo.Bloqueado)
-                                    {
-                                        <div class="futplay-pick-lock">
-                                            Palpite bloqueado. O prazo encerra 30 minutos antes do início da partida.
-                                        </div>
-                                    }
-
-                                    <div class="futplay-pick-board">
-                                        <div class="futplay-match-team futplay-pick-team">
-                                            <span class="futplay-match-crest">
+                                    <div class="fp-bet-pick-match">
+                                        <div class="fp-score-club">
+                                            <span class="fp-mini-crest">
                                                 @if (!string.IsNullOrWhiteSpace(jogo.TimeCasaEscudoUrl))
                                                 {
                                                     <img src="@jogo.TimeCasaEscudoUrl" alt="@jogo.TimeCasa" />
                                                 }
                                                 else
                                                 {
-                                                    <span>@casaMarca</span>
+                                                    @casaMarca
                                                 }
                                             </span>
-                                            <strong>@jogo.TimeCasa</strong>
+
+                                            <span>@jogo.TimeCasa</span>
                                         </div>
 
-                                        <div class="futplay-pick-score">
-                                            <input asp-for="Jogos[i].GolsCasaPalpite"
-                                                   class="form-control futplay-pick-input js-gols-casa"
-                                                   type="number"
-                                                   min="0"
-                                                   max="99"
-                                                   inputmode="numeric"
-                                                   placeholder="0"
-                                                   readonly="@jogo.Bloqueado" />
-
-                                            <input asp-for="Jogos[i].GolsVisitantePalpite"
-                                                   class="form-control futplay-pick-input js-gols-visitante"
-                                                   type="number"
-                                                   min="0"
-                                                   max="99"
-                                                   inputmode="numeric"
-                                                   placeholder="0"
-                                                   readonly="@jogo.Bloqueado" />
-                                        </div>
-
-                                        <div class="futplay-match-team futplay-match-team-away futplay-pick-team">
-                                            <strong>@jogo.TimeVisitante</strong>
-                                            <span class="futplay-match-crest">
+                                        <div class="fp-score-club">
+                                            <span class="fp-mini-crest">
                                                 @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitanteEscudoUrl))
                                                 {
                                                     <img src="@jogo.TimeVisitanteEscudoUrl" alt="@jogo.TimeVisitante" />
                                                 }
                                                 else
                                                 {
-                                                    <span>@visitanteMarca</span>
+                                                    @visitanteMarca
                                                 }
                                             </span>
+
+                                            <span>@jogo.TimeVisitante</span>
                                         </div>
+
+                                        <small>
+                                            @(string.IsNullOrWhiteSpace(jogo.Fase) ? "Fase não informada" : jogo.Fase)
+                                            @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                                            {
+                                                <span> · Grupo @jogo.Grupo</span>
+                                            }
+                                        </small>
                                     </div>
 
-                                    <div class="futplay-pick-validation">
+                                    <div class="fp-bet-pick-score">
+                                        <input asp-for="Jogos[i].GolsCasaPalpite"
+                                               class="form-control js-gols-casa"
+                                               type="number"
+                                               min="0"
+                                               max="99"
+                                               inputmode="numeric"
+                                               placeholder="0"
+                                               readonly="@jogo.Bloqueado" />
+
+                                        <span>x</span>
+
+                                        <input asp-for="Jogos[i].GolsVisitantePalpite"
+                                               class="form-control js-gols-visitante"
+                                               type="number"
+                                               min="0"
+                                               max="99"
+                                               inputmode="numeric"
+                                               placeholder="0"
+                                               readonly="@jogo.Bloqueado" />
+                                    </div>
+
+                                    <div class="fp-bet-pick-status">
+                                        <span class="@statusClass">@statusText</span>
+
+                                        @if (jogo.Bloqueado)
+                                        {
+                                            <small>Prazo encerrado</small>
+                                        }
+                                    </div>
+
+                                    <div class="fp-bet-pick-validation">
                                         <span asp-validation-for="Jogos[i].GolsCasaPalpite"></span>
                                         <span asp-validation-for="Jogos[i].GolsVisitantePalpite"></span>
                                     </div>
                                 </article>
                             }
                         </div>
-                    </section>
 
-                    <section class="futplay-pick-save mt-4">
-                        <div>
-                            <strong>Salvar seus palpites</strong>
-                            <p>
-                                Você pode alterar seus palpites enquanto o jogo não estiver bloqueado.
-                                Jogos bloqueados ficam apenas para consulta.
-                            </p>
-                        </div>
+                        <section class="fp-bet-save-card">
+                            <div>
+                                <strong>Salvar seus palpites</strong>
+                                <p>
+                                    Você pode alterar seus palpites enquanto o jogo não estiver bloqueado.
+                                </p>
+                            </div>
 
-                        <div class="futplay-pick-actions">
-                            <button type="submit" class="futplay-pick-action-primary">
-                                Salvar palpites
-                            </button>
+                            <div>
+                                <button type="submit" class="btn btn-success">
+                                    Salvar palpites
+                                </button>
 
-                            <a asp-action="Ranking"
-                               asp-route-id="@Model.LigaId">
-                                Ver ranking
-                            </a>
-                        </div>
-                    </section>
-                }
-            </div>
+                                <a asp-action="Ranking"
+                                   asp-route-id="@Model.LigaId"
+                                   class="btn btn-outline-primary">
+                                    Ver ranking
+                                </a>
+                            </div>
+                        </section>
+                    }
+                </section>
+            </main>
 
-            <aside class="col-xl-3">
-                <section class="futplay-pick-side-card mb-4">
-                    <div class="futplay-pick-side-head">
-                        <h2>Resumo</h2>
-                    </div>
-                    <div class="futplay-pick-side-stats">
-                        <div>
-                            <span>Pendentes</span>
-                            <strong>@pendentes</strong>
-                        </div>
-                        <div>
-                            <span>Palpitados</span>
-                            <strong>@palpitados</strong>
-                        </div>
-                        <div>
-                            <span>Bloqueados</span>
-                            <strong>@bloqueados</strong>
-                        </div>
-                    </div>
+            <aside class="col-xl-3 d-none d-xl-block">
+                <section class="fp-side-ad">
+                    <span>Publicidade</span>
+                    <strong>FutPlay</strong>
+                    <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
                 </section>
 
-                <section class="futplay-pick-side-card">
-                    <div class="futplay-pick-side-head">
-                        <h2>Próximo jogo</h2>
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Ações rápidas</h2>
                     </div>
 
-                    @if (jogoDestaque == null)
-                    {
-                        <p class="futplay-pick-side-empty">Nenhum jogo disponível.</p>
-                    }
-                    else
-                    {
-                        <div class="futplay-pick-side-match">
-                            <strong>@jogoDestaque.TimeCasa</strong>
-                            <span>x</span>
-                            <strong>@jogoDestaque.TimeVisitante</strong>
-                            <small>@jogoDestaque.DataJogo.ToString("dd/MM HH:mm")</small>
-                        </div>
-                    }
+                    <div class="d-grid gap-2">
+                        <a asp-action="Ranking"
+                           asp-route-id="@Model.LigaId"
+                           class="btn btn-success">
+                            Ranking
+                        </a>
+
+                        <a asp-controller="MinhasLigas"
+                           asp-action="Index"
+                           class="btn btn-outline-primary">
+                            Minhas Ligas
+                        </a>
+
+                        <a asp-controller="Ligas"
+                           asp-action="Index"
+                           class="btn btn-outline-primary">
+                            Ligas públicas
+                        </a>
+                    </div>
                 </section>
             </aside>
+
         </div>
     </form>
 </div>
@@ -319,7 +375,7 @@
         }
 
         function normalizarPlacaresAntesSalvar() {
-            const cards = document.querySelectorAll(".futplay-pick-card");
+            const cards = document.querySelectorAll(".fp-bet-pick-row");
 
             cards.forEach(card => {
                 const casa = card.querySelector(".js-gols-casa");
@@ -336,13 +392,10 @@
                 const casaVazio = casa.value.trim() === "";
                 const visitanteVazio = visitante.value.trim() === "";
 
-                // Se os dois estiverem vazios, não mexe.
-                // Assim o jogo continua sem palpite.
                 if (casaVazio && visitanteVazio) {
                     return;
                 }
 
-                // Se o usuário preencheu só um lado, completa o outro com zero.
                 if (!casaVazio && visitanteVazio) {
                     visitante.value = "0";
                 }
