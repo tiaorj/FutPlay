@@ -4,6 +4,7 @@ using FutPlay.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FutPlay.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260517150724_CriaTabelaLigaConvites")]
+    partial class CriaTabelaLigaConvites
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -231,73 +234,6 @@ namespace FutPlay.Migrations
                     b.HasIndex("CriadorUserId");
 
                     b.ToTable("FutPlay_Ligas", (string)null);
-                });
-
-            modelBuilder.Entity("FutPlay.Models.LigaConvite", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<bool>("Ativo")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("CodigoConvite")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("DataAceite")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataCriacao")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DataEnvio")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("LigaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("NomeConvidado")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("TokenConvite")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UserIdAceite")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Email");
-
-                    b.HasIndex("LigaId");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("TokenConvite")
-                        .IsUnique();
-
-                    b.HasIndex("UserIdAceite");
-
-                    b.ToTable("FutPlay_LigaConvites", (string)null);
                 });
 
             modelBuilder.Entity("FutPlay.Models.LigaParticipante", b =>
@@ -694,23 +630,6 @@ namespace FutPlay.Migrations
                     b.Navigation("Campeonato");
 
                     b.Navigation("Criador");
-                });
-
-            modelBuilder.Entity("FutPlay.Models.LigaConvite", b =>
-                {
-                    b.HasOne("FutPlay.Models.Liga", "Liga")
-                        .WithMany()
-                        .HasForeignKey("LigaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "UsuarioAceite")
-                        .WithMany()
-                        .HasForeignKey("UserIdAceite");
-
-                    b.Navigation("Liga");
-
-                    b.Navigation("UsuarioAceite");
                 });
 
             modelBuilder.Entity("FutPlay.Models.LigaParticipante", b =>

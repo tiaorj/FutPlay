@@ -18,6 +18,7 @@ namespace FutPlay.Data
         public DbSet<LigaParticipante> LigaParticipantes { get; set; }
         public DbSet<Palpite> Palpites { get; set; }
         public DbSet<Classificacao> Classificacoes { get; set; }
+        public DbSet<LigaConvite> LigaConvites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -30,6 +31,20 @@ namespace FutPlay.Data
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
             modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
+            modelBuilder.Entity<LigaConvite>().ToTable("FutPlay_LigaConvites");
+
+            modelBuilder.Entity<LigaConvite>()
+                .HasIndex(c => c.LigaId);
+
+            modelBuilder.Entity<LigaConvite>()
+                .HasIndex(c => c.Email);
+
+            modelBuilder.Entity<LigaConvite>()
+                .HasIndex(c => c.TokenConvite)
+                .IsUnique();
+
+            modelBuilder.Entity<LigaConvite>()
+                .HasIndex(c => c.Status);
 
             modelBuilder.Entity<LigaParticipante>()
                 .HasIndex(lp => lp.LigaId);

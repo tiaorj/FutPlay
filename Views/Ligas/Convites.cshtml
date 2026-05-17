@@ -8,135 +8,170 @@
 
     <section class="futplay-league-join-hero mb-4">
         <div>
-            <div class="futplay-league-kicker">Convite da Liga</div>
+            <div class="futplay-league-kicker">Convites da Liga</div>
 
             <h1>@Model.Liga.Nome</h1>
 
             <p>
-                Compartilhe o código ou o link de convite para que outras pessoas entrem nesta liga.
+                Crie convites individuais para seus participantes. Por enquanto, copie o link e envie manualmente.
             </p>
         </div>
     </section>
 
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Sucesso"]
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Erro"]
+        </div>
+    }
+
     <div class="row g-4">
-        <div class="col-lg-7">
+        <div class="col-lg-5">
             <section class="futplay-league-join-card">
+                <h2 class="h5 fw-bold mb-3">Novo convite</h2>
 
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Código de convite</label>
+                <form asp-action="Convidar" method="post">
+                    @Html.AntiForgeryToken()
 
-                    <div class="input-group input-group-lg">
-                        <input id="codigoConvite"
-                               type="text"
-                               class="form-control text-uppercase"
-                               value="@Model.Liga.CodigoConvite"
-                               readonly />
+                    <input type="hidden" asp-for="LigaId" />
 
-                        <button type="button"
-                                class="btn btn-success"
-                                onclick="copiarTexto('codigoConvite')">
-                            Copiar
-                        </button>
-                    </div>
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-                    <div class="form-text">
-                        O convidado também pode informar este código em “Ligas > Entrar com código”.
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Link de convite</label>
-
-                    <div class="input-group">
-                        <input id="linkConvite"
-                               type="text"
+                    <div class="mb-3">
+                        <label asp-for="NomeConvidado" class="form-label"></label>
+                        <input asp-for="NomeConvidado"
                                class="form-control"
-                               value="@Model.LinkConvite"
-                               readonly />
-
-                        <button type="button"
-                                class="btn btn-outline-success"
-                                onclick="copiarTexto('linkConvite')">
-                            Copiar link
-                        </button>
+                               placeholder="Ex: João Silva" />
+                        <span asp-validation-for="NomeConvidado" class="text-danger"></span>
                     </div>
 
-                    <div class="form-text">
-                        Envie este link pelo WhatsApp, e-mail ou mensagem para seus convidados.
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email"
+                               class="form-control"
+                               placeholder="email@dominio.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
-                </div>
+
+                    <button type="submit" class="btn btn-success w-100">
+                        Criar convite
+                    </button>
+                </form>
+
+                <hr />
 
                 <div class="futplay-league-join-help">
-                    <strong>Como o convidado entra?</strong>
+                    <strong>Código geral da liga</strong>
                     <p>
-                        Ao acessar o link, o convidado faz login ou cria uma conta. Depois informa o código
-                        e passa a visualizar a liga em “Minhas Ligas”.
+                        Código: <strong>@Model.Liga.CodigoConvite</strong>
+                    </p>
+                    <p>
+                        Este código também pode ser usado na tela “Entrar na Liga”.
                     </p>
                 </div>
-
-                <div class="d-flex flex-column flex-md-row gap-2 mt-4">
-                    <a asp-controller="MinhasLigas"
-                       asp-action="Index"
-                       class="btn btn-success">
-                        Minhas Ligas
-                    </a>
-
-                    <a asp-action="Edit"
-                       asp-route-id="@Model.Liga.Id"
-                       class="btn btn-outline-secondary">
-                        Editar Liga
-                    </a>
-
-                    <a asp-action="Index"
-                       class="btn btn-outline-secondary">
-                        Ver Ligas Públicas
-                    </a>
-                </div>
-
             </section>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-7">
             <section class="futplay-home-side-card">
                 <div class="futplay-home-section-title compact">
                     <div>
-                        <span>Resumo</span>
-                        <h2>Informações da liga</h2>
+                        <span>Participantes</span>
+                        <h2>Convites criados</h2>
                     </div>
                 </div>
 
-                <dl class="futplay-team-info-list">
-                    <dt>Liga</dt>
-                    <dd>@Model.Liga.Nome</dd>
-
-                    <dt>Campeonato</dt>
-                    <dd>@(Model.Liga.Campeonato?.Nome ?? "-")</dd>
-
-                    <dt>Tipo</dt>
-                    <dd>@(Model.Liga.Publica ? "Pública" : "Privada")</dd>
-
-                    <dt>Status</dt>
-                    <dd>@(Model.Liga.Ativo ? "Ativa" : "Inativa")</dd>
-
-                    <dt>Data de criação</dt>
-                    <dd>@Model.Liga.DataCriacao.ToString("dd/MM/yyyy")</dd>
-                </dl>
-            </section>
-
-            <section class="futplay-home-side-card mt-4">
-                <div class="futplay-home-section-title compact">
-                    <div>
-                        <span>Próximo passo</span>
-                        <h2>Enviar convites</h2>
+                @if (!Model.Convites.Any())
+                {
+                    <div class="futplay-empty-state">
+                        Nenhum convite criado para esta liga.
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="futplay-invite-list">
+                        @foreach (var convite in Model.Convites)
+                        {
+                            var linkToken = Url.Action(
+                            action: "AceitarConvite",
+                            controller: "Ligas",
+                            values: new { token = convite.TokenConvite },
+                            protocol: Context.Request.Scheme
+                            );
 
-                <p class="futplay-home-join-text">
-                    Por enquanto, copie o link e envie manualmente. Na próxima etapa vamos preparar
-                    a estrutura para convidar por e-mail.
-                </p>
+                            <article class="futplay-invite-item">
+                                <div>
+                                    <h3>
+                                        @(string.IsNullOrWhiteSpace(convite.NomeConvidado)
+                                                                        ? convite.Email
+                                                                        : convite.NomeConvidado)
+                            </h3>
+
+                                    <p>@convite.Email</p>
+
+                                    <div class="small text-muted">
+                                        Criado em @convite.DataCriacao.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </div>
+
+                                <div class="futplay-invite-actions">
+                                    <span class="badge @(convite.Status == "Aceito" ? "bg-success" : convite.Status == "Cancelado" ? "bg-secondary" : "bg-warning text-dark")">
+                                        @convite.Status
+                                    </span>
+
+                            @if (convite.Status == "Pendente")
+                                    {
+                                        <input id="convite-@convite.Id"
+                                               type="text"
+                                               value="@linkToken"
+                                               class="form-control form-control-sm"
+                                               readonly />
+
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-success"
+                                                onclick="copiarTexto('convite-@convite.Id')">
+                                            Copiar link
+                                        </button>
+
+                                        <form asp-action="CancelarConvite"
+                                              method="post"
+                                              onsubmit="return confirm('Cancelar este convite?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@convite.Id" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Cancelar
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
             </section>
         </div>
+    </div>
+
+    <div class="mt-4 d-flex gap-2">
+        <a asp-controller="MinhasLigas" asp-action="Index" class="btn btn-success">
+            Minhas Ligas
+        </a>
+
+        <a asp-action="Edit" asp-route-id="@Model.Liga.Id" class="btn btn-outline-secondary">
+            Editar Liga
+        </a>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Ver Ligas Públicas
+        </a>
     </div>
 </div>
 
@@ -154,12 +189,16 @@
 
             navigator.clipboard.writeText(campo.value)
                 .then(() => {
-                    alert("Copiado com sucesso!");
+                    alert("Link copiado com sucesso!");
                 })
                 .catch(() => {
                     document.execCommand("copy");
-                    alert("Copiado com sucesso!");
+                    alert("Link copiado com sucesso!");
                 });
         }
     </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

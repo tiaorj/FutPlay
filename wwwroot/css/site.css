@@ -4091,3 +4091,47 @@ body {
         border-radius: 18px;
     }
 }
+
+/* Convites da liga */
+
+.futplay-invite-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.futplay-invite-item {
+    border: 1px solid #e7e9ed;
+    border-radius: 16px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 14px;
+    align-items: start;
+    background: #fff;
+}
+
+    .futplay-invite-item h3 {
+        font-size: 1rem;
+        font-weight: 800;
+        margin: 0;
+        color: #111820;
+    }
+
+    .futplay-invite-item p {
+        margin: 4px 0;
+        color: #66727b;
+    }
+
+.futplay-invite-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+}
+
+@media (max-width: 768px) {
+    .futplay-invite-item {
+        grid-template-columns: 1fr;
+    }
+}

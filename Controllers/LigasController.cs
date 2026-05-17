@@ -696,14 +696,235 @@ namespace FutPlay.Controllers
                 protocol: Request.Scheme
             ) ?? string.Empty;
 
+            var convites = await _context.LigaConvites
+                .Where(c => c.LigaId == liga.Id && c.Ativo)
+                .OrderByDescending(c => c.DataCriacao)
+                .ToListAsync();
+
             var viewModel = new LigaConviteViewModel
             {
+                LigaId = liga.Id,
                 Liga = liga,
-                LinkConvite = linkConvite
+                LinkConvite = linkConvite,
+                Convites = convites
             };
 
             return View(viewModel);
         }
+
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Convidar(LigaConviteViewModel model)
+        {
+            ModelState.Remove("Liga");
+            ModelState.Remove("Liga.Nome");
+            ModelState.Remove("Liga.CodigoConvite");
+            ModelState.Remove("Liga.CampeonatoId");
+            ModelState.Remove("Liga.Campeonato");
+
+            var liga = await _context.Ligas
+                .Include(l => l.Campeonato)
+                .FirstOrDefaultAsync(l => l.Id == model.LigaId);
+
+            if (liga == null)
+            {
+                return NotFound();
+            }
+
+            if (!UsuarioPodeGerenciarLiga(liga))
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                model.LigaId = liga.Id;
+                model.Liga = liga;
+                model.LinkConvite = Url.Action(
+                    action: "Entrar",
+                    controller: "Ligas",
+                    values: new { codigoConvite = liga.CodigoConvite },
+                    protocol: Request.Scheme
+                ) ?? string.Empty;
+
+                model.Convites = await _context.LigaConvites
+                    .Where(c => c.LigaId == liga.Id && c.Ativo)
+                    .OrderByDescending(c => c.DataCriacao)
+                    .ToListAsync();
+
+                return View("Convites", model);
+            }
+
+            var emailNormalizado = model.Email.Trim().ToUpper();
+
+            var jaExisteConvitePendente = await _context.LigaConvites
+                .AnyAsync(c =>
+                    c.LigaId == liga.Id &&
+                    c.Ativo &&
+                    c.Status == "Pendente" &&
+                    c.Email.ToUpper() == emailNormalizado);
+
+            if (jaExisteConvitePendente)
+            {
+                TempData["Erro"] = "Já existe um convite pendente para este e-mail.";
+                return RedirectToAction(nameof(Convites), new { id = liga.Id });
+            }
+
+            var jaParticipa = await _context.LigaParticipantes
+                .AnyAsync(p =>
+                    p.LigaId == liga.Id &&
+                    p.Ativo &&
+                    p.Email.ToUpper() == emailNormalizado);
+
+            if (jaParticipa)
+            {
+                TempData["Erro"] = "Este e-mail já participa da liga.";
+                return RedirectToAction(nameof(Convites), new { id = liga.Id });
+            }
+
+            var convite = new LigaConvite
+            {
+                LigaId = liga.Id,
+                Email = model.Email.Trim(),
+                NomeConvidado = model.NomeConvidado?.Trim(),
+                CodigoConvite = liga.CodigoConvite,
+                TokenConvite = Guid.NewGuid().ToString("N"),
+                Status = "Pendente",
+                DataCriacao = DateTime.Now,
+                Ativo = true
+            };
+
+            _context.LigaConvites.Add(convite);
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Convite criado com sucesso. Copie o link e envie para o convidado.";
+
+            return RedirectToAction(nameof(Convites), new { id = liga.Id });
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> AceitarConvite(string? token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return RedirectToAction(nameof(Index));
+            }
+
+            var convite = await _context.LigaConvites
+                .Include(c => c.Liga)
+                .FirstOrDefaultAsync(c =>
+                    c.TokenConvite == token &&
+                    c.Ativo &&
+                    c.Status == "Pendente");
+
+            if (convite == null)
+            {
+                TempData["Erro"] = "Convite inválido, expirado ou já utilizado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                var returnUrl = Url.Action(
+                action: nameof(AceitarConvite),
+                controller: "Ligas",
+                values: new { token }
+);
+
+                returnUrl ??= $"/Ligas/AceitarConvite?token={Uri.EscapeDataString(token)}";
+
+                return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity.Name;
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                TempData["Erro"] = "Não foi possível identificar o e-mail do usuário logado.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (!string.Equals(email, convite.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["Erro"] = "Este convite foi enviado para outro e-mail.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var jaParticipa = await _context.LigaParticipantes
+                .AnyAsync(p =>
+                    p.LigaId == convite.LigaId &&
+                    p.Ativo &&
+                    ((userId != null && p.UserId == userId) ||
+                     p.Email.ToUpper() == email.ToUpper()));
+
+            if (!jaParticipa)
+            {
+                var nome = User.Identity?.Name;
+
+                if (string.IsNullOrWhiteSpace(nome))
+                {
+                    var atIdx = email.IndexOf('@');
+                    nome = atIdx > 0 ? email.Substring(0, atIdx) : email;
+                }
+
+                var participante = new LigaParticipante
+                {
+                    LigaId = convite.LigaId,
+                    UserId = userId,
+                    Nome = string.IsNullOrWhiteSpace(convite.NomeConvidado) ? nome! : convite.NomeConvidado,
+                    Email = email,
+                    DataEntrada = DateTime.Now,
+                    PontuacaoTotal = 0,
+                    Ativo = true
+                };
+
+                _context.LigaParticipantes.Add(participante);
+            }
+
+            convite.Status = "Aceito";
+            convite.DataAceite = DateTime.Now;
+            convite.UserIdAceite = userId;
+
+            _context.LigaConvites.Update(convite);
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Você entrou na liga com sucesso.";
+
+            return RedirectToAction("Index", "MinhasLigas");
+        }
+
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelarConvite(int id)
+        {
+            var convite = await _context.LigaConvites
+                .Include(c => c.Liga)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (convite == null || convite.Liga == null)
+            {
+                return NotFound();
+            }
+
+            if (!UsuarioPodeGerenciarLiga(convite.Liga))
+            {
+                return Forbid();
+            }
+
+            convite.Status = "Cancelado";
+            convite.Ativo = false;
+
+            _context.LigaConvites.Update(convite);
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] = "Convite cancelado com sucesso.";
+
+            return RedirectToAction(nameof(Convites), new { id = convite.LigaId });
+        }
+
 
         public async Task<IActionResult> Ranking(int? id)
         {
