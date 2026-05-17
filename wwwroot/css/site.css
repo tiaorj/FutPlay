@@ -4217,3 +4217,105 @@ body {
             width: 100%;
         }
 }
+
+/* Criar Liga */
+
+.futplay-league-create-hero {
+    background: linear-gradient(135deg, #063f2d, #0b8c57);
+    color: #fff;
+    border-radius: 24px;
+    padding: 32px;
+}
+
+    .futplay-league-create-hero h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 900;
+        margin: 0 0 10px;
+    }
+
+    .futplay-league-create-hero p {
+        color: rgba(255,255,255,.85);
+        max-width: 760px;
+        margin: 0;
+    }
+
+.futplay-league-create-card {
+    background: #fff;
+    border: 1px solid #e7e9ed;
+    border-radius: 20px;
+    padding: 24px;
+}
+
+.futplay-league-type-box {
+    background: #f6faf8;
+    border: 1px solid #dbeee5;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.futplay-league-type-help {
+    margin-top: 12px;
+    color: #44515a;
+}
+
+    .futplay-league-type-help strong {
+        display: block;
+        color: #087a4f;
+        margin-bottom: 8px;
+    }
+
+    .futplay-league-type-help ul {
+        margin: 0;
+        padding-left: 18px;
+    }
+
+    .futplay-league-type-help li {
+        margin-bottom: 6px;
+    }
+
+.futplay-league-create-choice {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+    .futplay-league-create-choice div {
+        border: 1px solid #eef1f2;
+        border-radius: 14px;
+        padding: 14px;
+        background: #fff;
+    }
+
+    .futplay-league-create-choice strong {
+        display: block;
+        color: #111820;
+        font-weight: 900;
+        margin-bottom: 4px;
+    }
+
+    .futplay-league-create-choice p {
+        margin: 0;
+        color: #66727b;
+        font-size: .9rem;
+    }
+
+.futplay-league-name-examples {
+    margin: 0;
+    padding-left: 18px;
+    color: #44515a;
+}
+
+    .futplay-league-name-examples li {
+        margin-bottom: 6px;
+    }
+
+@media (max-width: 768px) {
+    .futplay-league-create-hero {
+        padding: 24px;
+        border-radius: 18px;
+    }
+
+    .futplay-league-create-card {
+        padding: 18px;
+    }
+}
