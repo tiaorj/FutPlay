@@ -469,9 +469,9 @@ namespace FutPlay.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                TempData["Sucesso"] = "Liga criada com sucesso. Você já foi adicionado como participante.";
+                TempData["Sucesso"] = "Liga criada com sucesso. Compartilhe o convite com seus participantes.";
 
-                return RedirectToAction("Index", "MinhasLigas");
+                return RedirectToAction(nameof(Convites), new { id = liga.Id });
             }
 
             await CarregarCampeonatos();
@@ -665,6 +665,44 @@ namespace FutPlay.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index", "MinhasLigas");
+        }
+
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
+        public async Task<IActionResult> Convites(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var liga = await _context.Ligas
+                .Include(l => l.Campeonato)
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (liga == null)
+            {
+                return NotFound();
+            }
+
+            if (!UsuarioPodeGerenciarLiga(liga))
+            {
+                return Forbid();
+            }
+
+            var linkConvite = Url.Action(
+                action: "Entrar",
+                controller: "Ligas",
+                values: new { codigoConvite = liga.CodigoConvite },
+                protocol: Request.Scheme
+            ) ?? string.Empty;
+
+            var viewModel = new LigaConviteViewModel
+            {
+                Liga = liga,
+                LinkConvite = linkConvite
+            };
+
+            return View(viewModel);
         }
 
         public async Task<IActionResult> Ranking(int? id)

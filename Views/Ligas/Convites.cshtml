@@ -1,0 +1,165 @@
+﻿@model FutPlay.ViewModels.LigaConviteViewModel
+
+@{
+    ViewData["Title"] = "Convites da Liga";
+}
+
+<div class="container futplay-portal-shell">
+
+    <section class="futplay-league-join-hero mb-4">
+        <div>
+            <div class="futplay-league-kicker">Convite da Liga</div>
+
+            <h1>@Model.Liga.Nome</h1>
+
+            <p>
+                Compartilhe o código ou o link de convite para que outras pessoas entrem nesta liga.
+            </p>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <section class="futplay-league-join-card">
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Código de convite</label>
+
+                    <div class="input-group input-group-lg">
+                        <input id="codigoConvite"
+                               type="text"
+                               class="form-control text-uppercase"
+                               value="@Model.Liga.CodigoConvite"
+                               readonly />
+
+                        <button type="button"
+                                class="btn btn-success"
+                                onclick="copiarTexto('codigoConvite')">
+                            Copiar
+                        </button>
+                    </div>
+
+                    <div class="form-text">
+                        O convidado também pode informar este código em “Ligas > Entrar com código”.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Link de convite</label>
+
+                    <div class="input-group">
+                        <input id="linkConvite"
+                               type="text"
+                               class="form-control"
+                               value="@Model.LinkConvite"
+                               readonly />
+
+                        <button type="button"
+                                class="btn btn-outline-success"
+                                onclick="copiarTexto('linkConvite')">
+                            Copiar link
+                        </button>
+                    </div>
+
+                    <div class="form-text">
+                        Envie este link pelo WhatsApp, e-mail ou mensagem para seus convidados.
+                    </div>
+                </div>
+
+                <div class="futplay-league-join-help">
+                    <strong>Como o convidado entra?</strong>
+                    <p>
+                        Ao acessar o link, o convidado faz login ou cria uma conta. Depois informa o código
+                        e passa a visualizar a liga em “Minhas Ligas”.
+                    </p>
+                </div>
+
+                <div class="d-flex flex-column flex-md-row gap-2 mt-4">
+                    <a asp-controller="MinhasLigas"
+                       asp-action="Index"
+                       class="btn btn-success">
+                        Minhas Ligas
+                    </a>
+
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.Liga.Id"
+                       class="btn btn-outline-secondary">
+                        Editar Liga
+                    </a>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary">
+                        Ver Ligas Públicas
+                    </a>
+                </div>
+
+            </section>
+        </div>
+
+        <div class="col-lg-5">
+            <section class="futplay-home-side-card">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Resumo</span>
+                        <h2>Informações da liga</h2>
+                    </div>
+                </div>
+
+                <dl class="futplay-team-info-list">
+                    <dt>Liga</dt>
+                    <dd>@Model.Liga.Nome</dd>
+
+                    <dt>Campeonato</dt>
+                    <dd>@(Model.Liga.Campeonato?.Nome ?? "-")</dd>
+
+                    <dt>Tipo</dt>
+                    <dd>@(Model.Liga.Publica ? "Pública" : "Privada")</dd>
+
+                    <dt>Status</dt>
+                    <dd>@(Model.Liga.Ativo ? "Ativa" : "Inativa")</dd>
+
+                    <dt>Data de criação</dt>
+                    <dd>@Model.Liga.DataCriacao.ToString("dd/MM/yyyy")</dd>
+                </dl>
+            </section>
+
+            <section class="futplay-home-side-card mt-4">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Próximo passo</span>
+                        <h2>Enviar convites</h2>
+                    </div>
+                </div>
+
+                <p class="futplay-home-join-text">
+                    Por enquanto, copie o link e envie manualmente. Na próxima etapa vamos preparar
+                    a estrutura para convidar por e-mail.
+                </p>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copiarTexto(elementId) {
+            const campo = document.getElementById(elementId);
+
+            if (!campo) {
+                return;
+            }
+
+            campo.select();
+            campo.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(campo.value)
+                .then(() => {
+                    alert("Copiado com sucesso!");
+                })
+                .catch(() => {
+                    document.execCommand("copy");
+                    alert("Copiado com sucesso!");
+                });
+        }
+    </script>
+}
