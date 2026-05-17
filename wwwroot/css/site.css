@@ -4319,3 +4319,159 @@ body {
         padding: 18px;
     }
 }
+/* Convites - tela aprimorada */
+
+.futplay-invite-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+    .futplay-invite-summary article {
+        background: #fff;
+        border: 1px solid #e7e9ed;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .futplay-invite-summary span {
+        display: block;
+        color: #66727b;
+        font-size: .75rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .futplay-invite-summary strong {
+        display: block;
+        color: #111820;
+        font-size: 1.8rem;
+        font-weight: 900;
+    }
+
+.futplay-invite-help-text {
+    color: #66727b;
+    font-size: .9rem;
+}
+
+.futplay-invite-steps {
+    margin: 0;
+    padding-left: 20px;
+    color: #44515a;
+}
+
+    .futplay-invite-steps li {
+        margin-bottom: 8px;
+    }
+
+.futplay-invite-item-modern {
+    border: 1px solid #e7e9ed;
+    border-radius: 18px;
+    padding: 16px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.futplay-invite-main {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.futplay-invite-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e8f7ef;
+    color: #087a4f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    flex: 0 0 auto;
+}
+
+.futplay-invite-name-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+    .futplay-invite-name-row h3 {
+        font-size: 1rem;
+        font-weight: 900;
+        color: #111820;
+        margin: 0;
+    }
+
+.futplay-invite-main p {
+    margin: 3px 0;
+    color: #66727b;
+}
+
+.futplay-invite-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    color: #8a969e;
+    font-size: .78rem;
+}
+
+.futplay-invite-status {
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: .7rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+    .futplay-invite-status.pending {
+        background: #fff4d6;
+        color: #946200;
+    }
+
+    .futplay-invite-status.accepted {
+        background: #dff8ea;
+        color: #087a4f;
+    }
+
+    .futplay-invite-status.cancelled {
+        background: #eef1f2;
+        color: #66727b;
+    }
+
+.futplay-invite-link-box {
+    background: #f8faf9;
+    border: 1px solid #edf1ef;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.futplay-invite-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+    .futplay-invite-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .futplay-invite-buttons .btn,
+    .futplay-invite-buttons form {
+        width: 100%;
+    }
+
+        .futplay-invite-buttons form button {
+            width: 100%;
+        }
+}

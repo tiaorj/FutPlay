@@ -697,7 +697,7 @@ namespace FutPlay.Controllers
             ) ?? string.Empty;
 
             var convites = await _context.LigaConvites
-                .Where(c => c.LigaId == liga.Id && c.Ativo)
+                .Where(c => c.LigaId == liga.Id)
                 .OrderByDescending(c => c.DataCriacao)
                 .ToListAsync();
 
@@ -749,7 +749,7 @@ namespace FutPlay.Controllers
                 ) ?? string.Empty;
 
                 model.Convites = await _context.LigaConvites
-                    .Where(c => c.LigaId == liga.Id && c.Ativo)
+                    .Where(c => c.LigaId == liga.Id)
                     .OrderByDescending(c => c.DataCriacao)
                     .ToListAsync();
 
