@@ -5414,11 +5414,6 @@ body {
     }
 }
 
-.fp-sport-admin-dropdown {
-    display: inline-flex;
-    align-items: stretch;
-}
-
     .fp-sport-admin-dropdown .dropdown-menu {
         border: 1px solid #e0e5ec;
         border-radius: 10px;
@@ -5466,4 +5461,88 @@ body {
 /* Dropdown do Admin acima do conteúdo */
 .fp-sport-admin-dropdown .dropdown-menu {
     z-index: 1050;
+}
+
+/* =========================================================
+   Correção menu esportivo + dropdown Admin
+   ========================================================= */
+
+.fp-sport-header {
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+}
+
+.fp-sport-navbar {
+    position: relative;
+    z-index: 1042;
+}
+
+.fp-sports-strip {
+    position: relative;
+    z-index: 1041;
+    background: var(--fp-blue);
+    overflow: visible;
+}
+
+    .fp-sports-strip .container {
+        overflow: visible;
+    }
+
+.fp-sports-strip-inner {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 12px;
+    overflow: visible;
+}
+
+.fp-sports-strip-scroll {
+    display: flex;
+    gap: 18px;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 0 7px;
+    scrollbar-width: none;
+    flex: 1 1 auto;
+}
+
+    .fp-sports-strip-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+.fp-sport-admin-dropdown {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
+    position: relative;
+    z-index: 1060;
+}
+
+    .fp-sport-admin-dropdown .fp-sport-tab {
+        min-width: 82px;
+    }
+
+    .fp-sport-admin-dropdown .dropdown-menu {
+        z-index: 2000;
+        border: 1px solid #e0e5ec;
+        border-radius: 10px;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+        font-size: .9rem;
+        margin-top: 0;
+    }
+
+    .fp-sport-admin-dropdown .dropdown-item {
+        font-weight: 700;
+    }
+
+        .fp-sport-admin-dropdown .dropdown-item:active {
+            background: var(--fp-blue);
+        }
+
+.futplay-main {
+    position: relative;
+    z-index: 1;
+    padding-top: 16px;
 }
