@@ -7140,3 +7140,180 @@ body {
         padding-left: 0;
     }
 }
+
+/* =========================================================
+   Bolão - Convites no estilo app esportivo
+   ========================================================= */
+
+.fp-invite-steps {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--fp-muted-score);
+    font-size: .84rem;
+}
+
+    .fp-invite-steps li {
+        margin-bottom: 8px;
+    }
+
+.fp-invite-form-panel {
+    border-top: 1px solid #f0f2f5;
+}
+
+.fp-invite-form {
+    padding: 0 14px 16px;
+    display: grid;
+    gap: 12px;
+}
+
+    .fp-invite-form .form-label {
+        font-size: .78rem;
+        color: var(--fp-text-score);
+    }
+
+.fp-invite-list-panel {
+    border-top: 1px solid #f0f2f5;
+}
+
+.fp-invite-list {
+    padding-bottom: 8px;
+}
+
+.fp-invite-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-top: 1px solid #f0f2f5;
+    background: #fff;
+}
+
+    .fp-invite-row.pending {
+        box-shadow: inset 3px 0 0 var(--fp-blue);
+    }
+
+    .fp-invite-row.accepted {
+        box-shadow: inset 3px 0 0 var(--fp-green-score);
+    }
+
+    .fp-invite-row.cancelled {
+        opacity: .75;
+        background: #fafafa;
+    }
+
+.fp-invite-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #eef2ff;
+    color: var(--fp-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    font-weight: 950;
+}
+
+.fp-invite-info {
+    min-width: 0;
+}
+
+.fp-invite-name-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+    .fp-invite-name-line strong {
+        color: var(--fp-text-score);
+        font-size: .9rem;
+        font-weight: 950;
+    }
+
+    .fp-invite-name-line span {
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: .64rem;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+        .fp-invite-name-line span.pending {
+            background: #e8efff;
+            color: var(--fp-blue);
+        }
+
+        .fp-invite-name-line span.accepted {
+            background: #e8f7ef;
+            color: var(--fp-green-score);
+        }
+
+        .fp-invite-name-line span.cancelled {
+            background: #eef1f2;
+            color: #4c5962;
+        }
+
+.fp-invite-info small {
+    display: block;
+    color: var(--fp-muted-score);
+    font-size: .76rem;
+    margin-top: 2px;
+}
+
+.fp-invite-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 5px;
+}
+
+    .fp-invite-meta span {
+        color: var(--fp-muted-score);
+        font-size: .7rem;
+    }
+
+.fp-invite-actions {
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+    .fp-invite-actions form {
+        margin: 0;
+    }
+
+@media (max-width: 768px) {
+    .fp-invite-actions {
+        grid-template-columns: 1fr;
+    }
+
+        .fp-invite-actions .btn,
+        .fp-invite-actions form,
+        .fp-invite-actions form button {
+            width: 100%;
+        }
+}
+
+@media (max-width: 480px) {
+    .fp-invite-row {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .fp-invite-avatar {
+        margin: 0 auto;
+    }
+
+    .fp-invite-name-line {
+        justify-content: center;
+    }
+
+    .fp-invite-actions {
+        grid-column: 1 / -1;
+    }
+}

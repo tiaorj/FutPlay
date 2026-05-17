@@ -9,91 +9,80 @@
     var totalCancelados = Model.Convites.Count(c => c.Status == "Cancelado");
 }
 
-<div class="container futplay-portal-shell">
+<div class="container fp-score-home">
 
-    <section class="futplay-league-create-hero mb-4">
-        <div>
-            <div class="futplay-league-kicker">Convites do bolão</div>
+    <section class="fp-bet-header mb-3">
+        <div class="fp-bet-header-ball">
+            ✉️
+        </div>
 
+        <div class="fp-bet-header-info">
+            <span>Convites do bolão</span>
             <h1>@Model.Liga?.Nome</h1>
-
             <p>
-                Gerencie os convites da liga, copie links individuais e acompanhe quem já entrou no bolão.
+                Gerencie participantes convidados, copie links individuais e acompanhe quem já entrou na liga.
             </p>
+        </div>
+
+        <div class="fp-bet-header-actions">
+            <a asp-controller="MinhasLigas"
+               asp-action="Index">
+                Minhas Ligas
+            </a>
+
+            <a asp-action="Edit"
+               asp-route-id="@Model.Liga?.Id">
+                Editar Liga
+            </a>
+
+            <a asp-action="Index">
+                Ligas Públicas
+            </a>
         </div>
     </section>
 
-    <section class="futplay-invite-summary mb-4">
-        <article>
-            <span>Total</span>
-            <strong>@totalConvites</strong>
-        </article>
+    <div class="row g-3">
 
-        <article>
-            <span>Pendentes</span>
-            <strong>@totalPendentes</strong>
-        </article>
+        <aside class="col-xl-3 col-lg-4">
 
-        <article>
-            <span>Aceitos</span>
-            <strong>@totalAceitos</strong>
-        </article>
-
-        <article>
-            <span>Cancelados</span>
-            <strong>@totalCancelados</strong>
-        </article>
-    </section>
-
-    <div class="row g-4">
-        <div class="col-lg-5">
-
-            <section class="futplay-league-create-card mb-4">
-                <div class="futplay-home-section-title compact">
-                    <div>
-                        <span>Novo convite</span>
-                        <h2>Adicionar participante</h2>
-                    </div>
+            <section class="fp-home-card">
+                <div class="fp-card-header-link">
+                    <h2>Resumo</h2>
                 </div>
 
-                <form asp-action="Convidar" method="post">
-                    @Html.AntiForgeryToken()
-
-                    <input type="hidden" asp-for="LigaId" />
-
-                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
-
-                    <div class="mb-3">
-                        <label asp-for="NomeConvidado" class="form-label fw-semibold"></label>
-                        <input asp-for="NomeConvidado"
-                               class="form-control form-control-lg"
-                               placeholder="Ex: João Silva" />
-                        <span asp-validation-for="NomeConvidado" class="text-danger"></span>
+                <div class="fp-score-stats-list">
+                    <div>
+                        <span>Total</span>
+                        <strong>@totalConvites</strong>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold"></label>
-                        <input asp-for="Email"
-                               class="form-control form-control-lg"
-                               placeholder="email@dominio.com" />
-                        <span asp-validation-for="Email" class="text-danger"></span>
+                    <div>
+                        <span>Pendentes</span>
+                        <strong>@totalPendentes</strong>
                     </div>
 
-                    <button type="submit" class="btn btn-success btn-lg w-100">
-                        Criar convite
-                    </button>
-                </form>
+                    <div>
+                        <span>Aceitos</span>
+                        <strong>@totalAceitos</strong>
+                    </div>
+
+                    <div>
+                        <span>Cancelados</span>
+                        <strong>@totalCancelados</strong>
+                    </div>
+                </div>
             </section>
 
-            <section class="futplay-home-side-card mb-4">
-                <div class="futplay-home-section-title compact">
-                    <div>
-                        <span>Código geral</span>
-                        <h2>Entrada por código</h2>
-                    </div>
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Código geral</h2>
                 </div>
 
-                <div class="input-group input-group-lg">
+                <p class="fp-side-text">
+                    O participante também pode acessar “Ligas &gt; Entrar com Código” e informar este código.
+                </p>
+
+                <div class="input-group">
                     <input id="codigoGeralLiga"
                            type="text"
                            class="form-control text-uppercase"
@@ -101,96 +90,137 @@
                            readonly />
 
                     <button type="button"
-                            class="btn btn-outline-success"
+                            class="btn btn-outline-primary"
                             onclick="copiarTexto('codigoGeralLiga', 'Código copiado com sucesso!')">
                         Copiar
                     </button>
                 </div>
-
-                <p class="futplay-invite-help-text mt-3 mb-0">
-                    O participante também pode acessar “Ligas &gt; Entrar com Código” e informar este código.
-                </p>
             </section>
 
-            <section class="futplay-home-side-card">
-                <div class="futplay-home-section-title compact">
-                    <div>
-                        <span>Como funciona</span>
-                        <h2>Fluxo do convite</h2>
-                    </div>
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Como funciona</h2>
                 </div>
 
-                <ol class="futplay-invite-steps">
-                    <li>Crie um convite informando nome e e-mail.</li>
+                <ol class="fp-invite-steps">
+                    <li>Crie um convite com nome e e-mail.</li>
                     <li>Copie o link individual gerado.</li>
-                    <li>Envie o link pelo WhatsApp, e-mail ou mensagem.</li>
-                    <li>O convidado faz login com o mesmo e-mail do convite.</li>
-                    <li>A liga aparece automaticamente em “Minhas Ligas”.</li>
+                    <li>Envie o link para o participante.</li>
+                    <li>O convidado faz login com o mesmo e-mail.</li>
+                    <li>A liga aparece em “Minhas Ligas”.</li>
                 </ol>
             </section>
 
-        </div>
+        </aside>
 
-        <div class="col-lg-7">
+        <main class="col-xl-6 col-lg-8">
 
-            <section class="futplay-home-side-card">
-                <div class="futplay-home-section-title compact">
-                    <div>
-                        <span>Lista de convites</span>
-                        <h2>Participantes convidados</h2>
-                    </div>
+            <section class="fp-score-board">
+                <div class="fp-score-board-tabs">
+                    <a class="active" href="#">Convites</a>
+                    <a asp-controller="MinhasLigas" asp-action="Index">Meu bolão</a>
+                    <a asp-action="Edit" asp-route-id="@Model.Liga?.Id">Editar liga</a>
                 </div>
 
-                @if (!Model.Convites.Any())
-                {
-                    <div class="futplay-empty-state">
-                        Nenhum convite criado para esta liga.
-                        <br />
-                        <small>Crie o primeiro convite usando o formulário ao lado.</small>
+                <div class="fp-score-filter-row">
+                    <span class="fp-score-filter active">Todos (@totalConvites)</span>
+                    <span class="fp-score-filter">Pendentes (@totalPendentes)</span>
+                    <span class="fp-score-filter">Aceitos (@totalAceitos)</span>
+                    <span class="fp-score-filter">Cancelados (@totalCancelados)</span>
+                </div>
+
+                <section class="fp-invite-form-panel">
+                    <div class="fp-match-list-title">
+                        <span>➕ Novo convite</span>
+                        <small>Adicionar participante</small>
                     </div>
-                }
-                else
-                {
-                    <div class="futplay-invite-list">
-                        @foreach (var convite in Model.Convites)
-                        {
-                            var linkToken = Url.Action(
-                            action: "AceitarConvite",
-                            controller: "Ligas",
-                            values: new { token = convite.TokenConvite },
-                            protocol: Context.Request.Scheme
-                            );
 
-                            var statusCss = convite.Status == "Aceito"
-                            ? "accepted"
-                            : convite.Status == "Cancelado"
-                            ? "cancelled"
-                            : "pending";
+                    <form asp-action="Convidar" method="post" class="fp-invite-form">
+                        @Html.AntiForgeryToken()
 
-                            <article class="futplay-invite-item-modern">
-                                <div class="futplay-invite-main">
-                                    <div class="futplay-invite-avatar">
-                                        @((string.IsNullOrWhiteSpace(convite.NomeConvidado)
-                                                                        ? convite.Email
-                                                                        : convite.NomeConvidado).Substring(0, 1).ToUpper())
-                                                                                                                       </div>
+                        <input type="hidden" asp-for="LigaId" />
 
-                                    <div>
-                                        <div class="futplay-invite-name-row">
-                                            <h3>
+                        <div asp-validation-summary="All" class="text-danger mb-2"></div>
+
+                        <div>
+                            <label asp-for="NomeConvidado" class="form-label fw-bold"></label>
+                            <input asp-for="NomeConvidado"
+                                   class="form-control"
+                                   placeholder="Ex: João Silva" />
+                            <span asp-validation-for="NomeConvidado" class="text-danger"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="Email" class="form-label fw-bold"></label>
+                            <input asp-for="Email"
+                                   class="form-control"
+                                   placeholder="email@dominio.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            Criar convite
+                        </button>
+                    </form>
+                </section>
+
+                <section class="fp-invite-list-panel">
+                    <div class="fp-match-list-title">
+                        <span>👥 Participantes convidados</span>
+                        <small>@Model.Convites.Count convite(s)</small>
+                    </div>
+
+                    @if (!Model.Convites.Any())
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Nenhum convite criado para esta liga.
+                            <br />
+                            Crie o primeiro convite usando o formulário acima.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-invite-list">
+                            @foreach (var convite in Model.Convites)
+                            {
+                                var linkToken = Url.Action(
+                                action: "AceitarConvite",
+                                controller: "Ligas",
+                                values: new { token = convite.TokenConvite },
+                                protocol: Context.Request.Scheme
+                                );
+
+                                var statusCss = convite.Status == "Aceito"
+                                ? "accepted"
+                                : convite.Status == "Cancelado"
+                                ? "cancelled"
+                                : "pending";
+
+                                var inicial = (string.IsNullOrWhiteSpace(convite.NomeConvidado)
+                                ? convite.Email
+                                : convite.NomeConvidado).Substring(0, 1).ToUpper();
+
+                                <article class="fp-invite-row @statusCss">
+                                    <div class="fp-invite-avatar">
+                                        @inicial
+                                    </div>
+
+                                    <div class="fp-invite-info">
+                                        <div class="fp-invite-name-line">
+                                            <strong>
                                                 @(string.IsNullOrWhiteSpace(convite.NomeConvidado)
                                                                                         ? convite.Email
                                                                                         : convite.NomeConvidado)
-                                    </h3>
+                                    </strong>
 
-                                            <span class="futplay-invite-status @statusCss">
+                                            <span class="@statusCss">
                                                 @convite.Status
                                             </span>
                                         </div>
 
-                                        <p>@convite.Email</p>
+                                        <small>@convite.Email</small>
 
-                                        <div class="futplay-invite-meta">
+                                        <div class="fp-invite-meta">
                                             <span>Criado em @convite.DataCriacao.ToString("dd/MM/yyyy HH:mm")</span>
 
                                     @if (convite.DataAceite.HasValue)
@@ -199,22 +229,20 @@
                                             }
                                         </div>
                                     </div>
-                                </div>
 
-                                @if (convite.Status == "Pendente")
-                                {
-                                    <div class="futplay-invite-link-box">
-                                        <input id="convite-@convite.Id"
-                                               type="text"
-                                               value="@linkToken"
-                                               class="form-control form-control-sm"
-                                               readonly />
+                                    @if (convite.Status == "Pendente")
+                                    {
+                                        <div class="fp-invite-actions">
+                                            <input id="convite-@convite.Id"
+                                                   type="text"
+                                                   value="@linkToken"
+                                                   class="form-control form-control-sm"
+                                                   readonly />
 
-                                        <div class="futplay-invite-buttons">
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-success"
+                                                    class="btn btn-sm btn-outline-primary"
                                                     onclick="copiarTexto('convite-@convite.Id', 'Link copiado com sucesso!')">
-                                                Copiar link
+                                                Copiar
                                             </button>
 
                                             <form asp-action="CancelarConvite"
@@ -229,34 +257,57 @@
                                                 </button>
                                             </form>
                                         </div>
-                                    </div>
-                                }
-                            </article>
-                        }
-                    </div>
-                }
+                                    }
+                                </article>
+                            }
+                        </div>
+                    }
+                </section>
             </section>
 
-        </div>
-    </div>
+        </main>
 
-    <div class="mt-4 d-flex flex-column flex-md-row gap-2">
-        <a asp-controller="MinhasLigas"
-           asp-action="Index"
-           class="btn btn-success">
-            Minhas Ligas
-        </a>
+        <aside class="col-xl-3 d-none d-xl-block">
 
-        <a asp-action="Edit"
-           asp-route-id="@Model.Liga?.Id"
-           class="btn btn-outline-secondary">
-            Editar Liga
-        </a>
+            <section class="fp-side-ad">
+                <span>Publicidade</span>
+                <strong>FutPlay</strong>
+                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
+            </section>
 
-        <a asp-action="Index"
-           class="btn btn-outline-secondary">
-            Ver Ligas Públicas
-        </a>
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Ações rápidas</h2>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="MinhasLigas"
+                       asp-action="Index"
+                       class="btn btn-success">
+                        Minhas Ligas
+                    </a>
+
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.Liga?.Id"
+                       class="btn btn-outline-primary">
+                        Editar Liga
+                    </a>
+
+                    <a asp-action="Ranking"
+                       asp-route-id="@Model.Liga?.Id"
+                       class="btn btn-outline-primary">
+                        Ranking
+                    </a>
+
+                    <a asp-action="Index"
+                       class="btn btn-outline-primary">
+                        Ligas Públicas
+                    </a>
+                </div>
+            </section>
+
+        </aside>
+
     </div>
 </div>
 
