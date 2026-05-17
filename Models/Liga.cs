@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace FutPlay.Models
 {
@@ -17,6 +18,12 @@ namespace FutPlay.Models
 
         [ForeignKey("CampeonatoId")]
         public Campeonato? Campeonato { get; set; }
+
+        [StringLength(450)]
+        public string? CriadorUserId { get; set; }
+
+        [ForeignKey("CriadorUserId")]
+        public IdentityUser? Criador { get; set; }
 
         [Display(Name = "Código de Convite")]
         [StringLength(20)]

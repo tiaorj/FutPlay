@@ -399,19 +399,21 @@ namespace FutPlay.Controllers
         }
 
 
-        [Authorize(Roles = AppRoles.Administrador)]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         public async Task<IActionResult> Create()
         {
             await CarregarCampeonatos();
+
             return View(new Liga
             {
                 CodigoConvite = GerarCodigoConvite(),
                 DataCriacao = DateTime.Now,
-                Ativo = true
+                Ativo = true,
+                Publica = false
             });
         }
 
-        [Authorize(Roles = AppRoles.Administrador)]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Liga liga)
@@ -421,18 +423,73 @@ namespace FutPlay.Controllers
                 liga.CodigoConvite = GerarCodigoConvite();
             }
 
+            liga.CodigoConvite = liga.CodigoConvite.Trim().ToUpper();
             liga.DataCriacao = DateTime.Now;
+            liga.Ativo = true;
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = User.FindFirst(ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+
+            liga.CriadorUserId = userId;
 
             if (ModelState.IsValid)
             {
                 _context.Ligas.Add(liga);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                var jaParticipa = await _context.LigaParticipantes
+                    .AnyAsync(p =>
+                        p.LigaId == liga.Id &&
+                        p.Ativo &&
+                        ((userId != null && p.UserId == userId) ||
+                         (!string.IsNullOrWhiteSpace(email) && p.Email.ToUpper() == email.ToUpper())));
+
+                if (!jaParticipa)
+                {
+                    var nome = User.Identity?.Name;
+
+                    if (string.IsNullOrWhiteSpace(nome) && !string.IsNullOrWhiteSpace(email))
+                    {
+                        var atIdx = email.IndexOf('@');
+                        nome = atIdx > 0 ? email.Substring(0, atIdx) : email;
+                    }
+
+                    var participante = new LigaParticipante
+                    {
+                        LigaId = liga.Id,
+                        UserId = userId,
+                        Nome = nome ?? email ?? "Participante",
+                        Email = email ?? "",
+                        DataEntrada = DateTime.Now,
+                        PontuacaoTotal = 0,
+                        Ativo = true
+                    };
+
+                    _context.LigaParticipantes.Add(participante);
+                    await _context.SaveChangesAsync();
+                }
+
+                TempData["Sucesso"] = "Liga criada com sucesso. Você já foi adicionado como participante.";
+
+                return RedirectToAction("Index", "MinhasLigas");
             }
 
             await CarregarCampeonatos();
             return View(liga);
+        }
+
+        private bool UsuarioPodeGerenciarLiga(Liga liga)
+        {
+            if (UsuarioEhAdministrador())
+            {
+                return true;
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            return !string.IsNullOrWhiteSpace(userId) &&
+                   !string.IsNullOrWhiteSpace(liga.CriadorUserId) &&
+                   liga.CriadorUserId == userId;
         }
 
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
@@ -451,7 +508,7 @@ namespace FutPlay.Controllers
             return View(liga);
         }
 
-        [Authorize(Roles = AppRoles.Administrador)]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -462,11 +519,16 @@ namespace FutPlay.Controllers
             if (liga == null)
                 return NotFound();
 
+            if (!UsuarioPodeGerenciarLiga(liga))
+            {
+                return Forbid();
+            }
+
             await CarregarCampeonatos();
             return View(liga);
         }
 
-        [Authorize(Roles = AppRoles.Administrador)]
+        [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Liga liga)
@@ -474,12 +536,37 @@ namespace FutPlay.Controllers
             if (id != liga.Id)
                 return NotFound();
 
+            var ligaBanco = await _context.Ligas
+                .FirstOrDefaultAsync(l => l.Id == id);
+
+            if (ligaBanco == null)
+                return NotFound();
+
+            if (!UsuarioPodeGerenciarLiga(ligaBanco))
+            {
+                return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
-                _context.Update(liga);
+                ligaBanco.Nome = liga.Nome;
+                ligaBanco.CampeonatoId = liga.CampeonatoId;
+                ligaBanco.Publica = liga.Publica;
+                ligaBanco.Ativo = liga.Ativo;
+
+                if (UsuarioEhAdministrador())
+                {
+                    ligaBanco.CodigoConvite = string.IsNullOrWhiteSpace(liga.CodigoConvite)
+                        ? ligaBanco.CodigoConvite
+                        : liga.CodigoConvite.Trim().ToUpper();
+                }
+
+                _context.Update(ligaBanco);
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                TempData["Sucesso"] = "Liga atualizada com sucesso.";
+
+                return RedirectToAction("Index", "MinhasLigas");
             }
 
             await CarregarCampeonatos();

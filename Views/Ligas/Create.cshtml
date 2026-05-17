@@ -8,8 +8,11 @@
     <h1>Nova Liga</h1>
 
     <p class="text-muted">
-        Crie uma liga para os participantes enviarem palpites.
+        Crie uma liga de palpites para jogar com amigos. Ela pode ser pública ou privada por convite.
     </p>
+    <div class="form-text">
+        Compartilhe este código com convidados para eles entrarem na sua liga.
+    </div>
 
     <div class="card shadow-sm mt-3">
         <div class="card-body">
@@ -33,12 +36,19 @@
                 <div class="mb-3">
                     <label asp-for="CodigoConvite" class="form-label"></label>
                     <input asp-for="CodigoConvite" class="form-control" readonly />
+                    <div class="form-text">
+                        Compartilhe este código com convidados para eles entrarem na sua liga.
+                    </div>
                     <span asp-validation-for="CodigoConvite" class="text-danger"></span>
                 </div>
 
                 <div class="form-check mb-3">
                     <input asp-for="Publica" class="form-check-input" />
                     <label asp-for="Publica" class="form-check-label"></label>
+                </div>
+
+                <div class="form-text mb-3">
+                    Liga pública aparece no catálogo. Liga privada só pode ser acessada por código de convite.
                 </div>
 
                 <div class="form-check mb-3">

@@ -12,6 +12,7 @@
             <form asp-action="Edit" method="post">
                 <input type="hidden" asp-for="Id" />
                 <input type="hidden" asp-for="DataCriacao" />
+                <input type="hidden" asp-for="CriadorUserId" />
 
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -34,10 +35,16 @@
                     <input asp-for="CodigoConvite" class="form-control" readonly />
                     <span asp-validation-for="CodigoConvite" class="text-danger"></span>
                 </div>
+                <div class="form-text">
+                    Compartilhe este código com convidados para eles entrarem na sua liga.
+                </div>
 
                 <div class="form-check mb-3">
                     <input asp-for="Publica" class="form-check-input" />
                     <label asp-for="Publica" class="form-check-label"></label>
+                </div>
+                <div class="form-text mb-3">
+                    Liga pública aparece no catálogo. Liga privada só pode ser acessada por código de convite.
                 </div>
 
                 <div class="form-check mb-3">
