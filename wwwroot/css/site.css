@@ -4548,3 +4548,140 @@ body {
         flex-direction: column;
     }
 }
+
+/* Ranking - melhorias */
+
+.futplay-ranking-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+    .futplay-ranking-summary article {
+        background: #fff;
+        border: 1px solid #e7e9ed;
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .futplay-ranking-summary span {
+        display: block;
+        color: #66727b;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+
+    .futplay-ranking-summary strong {
+        display: block;
+        color: #111820;
+        font-size: 1.8rem;
+        font-weight: 900;
+    }
+
+.futplay-ranking-leader-banner {
+    background: linear-gradient(135deg, #063f2d, #0b8c57);
+    color: #fff;
+    border-radius: 22px;
+    padding: 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 18px;
+    align-items: center;
+}
+
+.futplay-ranking-leader-medal {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.24);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.4rem;
+}
+
+.futplay-ranking-leader-banner span {
+    display: block;
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    font-weight: 800;
+    color: #b7f7d2;
+    margin-bottom: 4px;
+}
+
+.futplay-ranking-leader-banner h2 {
+    margin: 0;
+    font-weight: 900;
+    font-size: 1.5rem;
+}
+
+.futplay-ranking-leader-banner p {
+    margin: 3px 0 0;
+    color: rgba(255,255,255,.78);
+}
+
+.futplay-ranking-leader-points {
+    text-align: center;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 16px;
+    padding: 14px 20px;
+}
+
+    .futplay-ranking-leader-points strong {
+        display: block;
+        font-size: 2rem;
+        line-height: 1;
+    }
+
+.futplay-ranking-table-top {
+    background: #f6faf8;
+}
+
+.futplay-ranking-hit-rate {
+    display: inline-flex;
+    min-width: 48px;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #e8f7ef;
+    color: #087a4f;
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.futplay-ranking-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 991px) {
+    .futplay-ranking-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .futplay-ranking-leader-banner {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .futplay-ranking-leader-medal {
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .futplay-ranking-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .futplay-ranking-leader-points {
+        width: 100%;
+    }
+}
