@@ -36,5 +36,6 @@ namespace FutPlay.Models
         public DateTime DataCriacao { get; set; } = DateTime.Now;
 
         public bool Ativo { get; set; } = true;
+
     }
 }

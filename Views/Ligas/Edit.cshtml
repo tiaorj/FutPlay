@@ -4,75 +4,234 @@
     ViewData["Title"] = "Editar Liga";
 }
 
-<div class="container mt-4">
-    <h1>Editar Liga</h1>
+<div class="container futplay-portal-shell">
 
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <form asp-action="Edit" method="post">
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="DataCriacao" />
-                <input type="hidden" asp-for="CriadorUserId" />
+    <section class="futplay-league-create-hero mb-4">
+        <div>
+            <div class="futplay-league-kicker">Gerenciar bolão</div>
 
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <h1>Editar Liga</h1>
 
-                <div class="mb-3">
-                    <label asp-for="Nome" class="form-label"></label>
-                    <input asp-for="Nome" class="form-control" />
-                    <span asp-validation-for="Nome" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="CampeonatoId" class="form-label"></label>
-                    <select asp-for="CampeonatoId" class="form-select" asp-items="ViewBag.CampeonatoId">
-                        <option value="">Selecione...</option>
-                    </select>
-                    <span asp-validation-for="CampeonatoId" class="text-danger"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="CodigoConvite" class="form-label"></label>
-                    <input asp-for="CodigoConvite" class="form-control" readonly />
-                    <span asp-validation-for="CodigoConvite" class="text-danger"></span>
-                </div>
-                <div class="form-text">
-                    Compartilhe este código com convidados para eles entrarem na sua liga.
-                </div>
-
-                <div class="form-check mb-3">
-                    <input asp-for="Publica" class="form-check-input" />
-                    <label asp-for="Publica" class="form-check-label"></label>
-                </div>
-                <div class="form-text mb-3">
-                    Liga pública aparece no catálogo. Liga privada só pode ser acessada por código de convite.
-                </div>
-
-                <div class="form-check mb-3">
-                    <input asp-for="Ativo" class="form-check-input" />
-                    <label asp-for="Ativo" class="form-check-label"></label>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success">
-                        Salvar Alterações
-                    </button>
-
-                    <a asp-action="Convites"
-                       asp-route-id="@Model.Id"
-                       class="btn btn-outline-success">
-                        Convites
-                    </a>
-
-                    <a asp-action="Index" class="btn btn-outline-secondary">
-                        Voltar
-                    </a>
-                </div>
-            </form>
+            <p>
+                Atualize as informações da liga, controle se ela será pública ou privada
+                e acesse a área de convites para chamar participantes.
+            </p>
         </div>
+    </section>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+
+            <section class="futplay-league-create-card">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="DataCriacao" />
+                    <input type="hidden" asp-for="CriadorUserId" />
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label fw-semibold"></label>
+                        <input asp-for="Nome"
+                               class="form-control form-control-lg"
+                               placeholder="Ex: Bolão Família Copa 2026" />
+                        <span asp-validation-for="Nome" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CampeonatoId" class="form-label fw-semibold"></label>
+                        <select asp-for="CampeonatoId"
+                                class="form-select form-select-lg"
+                                asp-items="ViewBag.CampeonatoId">
+                            <option value="">Selecione o campeonato...</option>
+                        </select>
+                        <span asp-validation-for="CampeonatoId" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="CodigoConvite" class="form-label fw-semibold"></label>
+
+                        <div class="input-group input-group-lg">
+                            <input asp-for="CodigoConvite"
+                                   class="form-control text-uppercase"
+                                   readonly />
+
+                            <button type="button"
+                                    class="btn btn-outline-success"
+                                    onclick="copiarCodigoConvite()">
+                                Copiar
+                            </button>
+                        </div>
+
+                        <div class="form-text">
+                            Compartilhe este código com convidados para eles entrarem na liga.
+                        </div>
+
+                        <span asp-validation-for="CodigoConvite" class="text-danger"></span>
+                    </div>
+
+                    <div class="futplay-league-type-box mb-3">
+                        <div class="form-check">
+                            <input asp-for="Publica" class="form-check-input" />
+                            <label asp-for="Publica" class="form-check-label fw-semibold"></label>
+                        </div>
+
+                        <div class="futplay-league-type-help">
+                            <strong>Tipo da liga</strong>
+
+                            <ul>
+                                <li>
+                                    <strong>Liga pública:</strong> aparece no catálogo de ligas e usuários logados podem entrar.
+                                </li>
+                                <li>
+                                    <strong>Liga privada:</strong> não aparece no catálogo. A entrada acontece por código ou link de convite.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    @if (User.IsInRole(AppRoles.Administrador))
+                    {
+                        <div class="futplay-league-type-box mb-3">
+                            <div class="form-check">
+                                <input asp-for="Ativo" class="form-check-input" />
+                                <label asp-for="Ativo" class="form-check-label fw-semibold"></label>
+                            </div>
+
+                            <div class="form-text">
+                                Se desativar a liga, ela não ficará disponível para participação.
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <input type="hidden" asp-for="Ativo" />
+                    }
+
+                    <div class="d-flex flex-column flex-md-row gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            Salvar Alterações
+                        </button>
+
+                        <a asp-action="Convites"
+                           asp-route-id="@Model.Id"
+                           class="btn btn-outline-success btn-lg">
+                            Convites
+                        </a>
+
+                        <a asp-controller="MinhasLigas"
+                           asp-action="Index"
+                           class="btn btn-outline-secondary btn-lg">
+                            Voltar
+                        </a>
+                    </div>
+                </form>
+            </section>
+
+        </div>
+
+        <aside class="col-lg-5">
+
+            <section class="futplay-home-side-card mb-4">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Resumo</span>
+                        <h2>Informações da liga</h2>
+                    </div>
+                </div>
+
+                <dl class="futplay-team-info-list">
+                    <dt>Nome</dt>
+                    <dd>@Model.Nome</dd>
+
+                    <dt>Tipo</dt>
+                    <dd>@(Model.Publica ? "Pública" : "Privada")</dd>
+
+                    <dt>Status</dt>
+                    <dd>@(Model.Ativo ? "Ativa" : "Inativa")</dd>
+
+                    <dt>Código</dt>
+                    <dd>@Model.CodigoConvite</dd>
+
+                    <dt>Data de criação</dt>
+                    <dd>@Model.DataCriacao.ToString("dd/MM/yyyy")</dd>
+                </dl>
+            </section>
+
+            <section class="futplay-home-side-card mb-4">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Participantes</span>
+                        <h2>Convites</h2>
+                    </div>
+                </div>
+
+                <p class="futplay-home-join-text">
+                    Use a tela de convites para criar links individuais para os participantes.
+                    Cada convidado poderá entrar com o e-mail informado no convite.
+                </p>
+
+                <a asp-action="Convites"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-success w-100">
+                    Gerenciar Convites
+                </a>
+            </section>
+
+            <section class="futplay-home-side-card">
+                <div class="futplay-home-section-title compact">
+                    <div>
+                        <span>Dica</span>
+                        <h2>Pública ou privada?</h2>
+                    </div>
+                </div>
+
+                <div class="futplay-league-create-choice">
+                    <div>
+                        <strong>Privada</strong>
+                        <p>
+                            Melhor para bolões fechados com amigos, família ou trabalho.
+                        </p>
+                    </div>
+
+                    <div>
+                        <strong>Pública</strong>
+                        <p>
+                            Melhor para bolões abertos, onde qualquer usuário logado pode participar.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </aside>
     </div>
 </div>
 
 @section Scripts {
+    <script>
+        function copiarCodigoConvite() {
+            const campo = document.getElementById("CodigoConvite");
+
+            if (!campo) {
+                return;
+            }
+
+            campo.select();
+            campo.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(campo.value)
+                .then(() => {
+                    alert("Código copiado com sucesso!");
+                })
+                .catch(() => {
+                    document.execCommand("copy");
+                    alert("Código copiado com sucesso!");
+                });
+        }
+    </script>
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
