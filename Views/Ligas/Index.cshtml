@@ -1,5 +1,5 @@
 @model List<FutPlay.ViewModels.LigaCatalogoItemViewModel>
-
+@using FutPlay.Settings
 @{
     ViewData["Title"] = "Ligas";
 
@@ -219,7 +219,7 @@
         <aside class="col-xl-3 d-none d-xl-block">
             <section class="fp-side-ad">
                 <span>Publicidade</span>
-                <strong>FutPlay</strong>
+                <strong>@AppBrand.Name</strong>
                 <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
             </section>
 

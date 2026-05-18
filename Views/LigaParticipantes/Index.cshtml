@@ -1,5 +1,5 @@
 @model List<FutPlay.Models.LigaParticipante>
-
+@using FutPlay.Settings
 @{
     ViewData["Title"] = User.IsInRole(AppRoles.Administrador) ? "Participantes" : "Meu Cadastro";
 }
@@ -13,7 +13,7 @@
                 <p class="futplay-portal-lead mb-0">
                     @if (User.IsInRole(AppRoles.Administrador))
                     {
-                        <span>Participantes cadastrados nas ligas do FutPlay.</span>
+                        <span>Participantes cadastrados nas ligas do @AppBrand.Name.</span>
                     }
                     else
                     {

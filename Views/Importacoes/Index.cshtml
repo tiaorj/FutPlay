@@ -1,5 +1,5 @@
 ﻿@model List<FutPlay.ViewModels.ApiLigaViewModel>
-
+@using FutPlay.Settings
 @{
     ViewData["Title"] = "Importações";
 }
@@ -9,7 +9,7 @@
         <div>
             <h1 class="futplay-page-title mb-1">Importações</h1>
             <p class="futplay-subtitle mb-0">
-                Integração com API de futebol para importar campeonatos para o FutPlay.
+                Integração com API de futebol para importar campeonatos para o @AppBrand.Name.
             </p>
         </div>
     </div>
@@ -47,7 +47,7 @@
 
         <div class="card-body">
             <p class="text-muted">
-                Use dados mockados para testar o FutPlay sem consumir requisições da API.
+                Use dados mockados para testar o @AppBrand.Name sem consumir requisições da API.
             </p>
 
             <a asp-controller="MockData" asp-action="Index" class="btn btn-warning">
@@ -68,7 +68,7 @@
 
             <div class="card-body">
                 <p class="text-muted">
-                    Gere dados mockados para testar o FutPlay sem consumir requisições da API.
+                    Gere dados mockados para testar o @AppBrand.Name sem consumir requisições da API.
                 </p>
 
                 <form asp-action="GerarDadosTeste" method="post">
