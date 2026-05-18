@@ -1,6 +1,6 @@
 ﻿@page
 @model FutPlay.Areas.Identity.Pages.Account.RegisterModel
-
+@using FutPlay.Settings
 @{
     ViewData["Title"] = "Criar conta";
     Layout = "/Views/Shared/_Layout.cshtml";
@@ -13,7 +13,7 @@
         <div class="fp-auth-hero fp-auth-hero-register">
             <div class="fp-auth-brand">
                 <span>⚽</span>
-                <strong>FutPlay</strong>
+                <strong>@AppBrand.Name</strong>
             </div>
 
             <div class="fp-auth-hero-content">
@@ -30,7 +30,7 @@
             <div class="fp-auth-match-card">
                 <div class="fp-auth-match-header">
                     <span>Seu primeiro bolão</span>
-                    <small>FutPlay</small>
+                    <small>@AppBrand.Name</small>
                 </div>
 
                 <div class="fp-auth-match-board">
@@ -57,7 +57,7 @@
             <div class="fp-auth-card-head">
                 <span>Cadastro</span>
                 <h2>Criar conta grátis</h2>
-                <p>Informe seus dados para acessar o FutPlay.</p>
+                <p>Informe seus dados para acessar o @AppBrand.Name.</p>
             </div>
 
             <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
@@ -104,7 +104,7 @@
                     <span>Já tem uma conta?</span>
 
                     <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">
-                        Entrar no FutPlay
+                        Entrar no @AppBrand.Name
                     </a>
                 </div>
             </form>

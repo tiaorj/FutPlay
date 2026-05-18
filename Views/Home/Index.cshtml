@@ -1,5 +1,5 @@
 @model FutPlay.ViewModels.DashboardViewModel
-
+@using FutPlay.Settings
 @{
     ViewData["Title"] = "Portal de Futebol";
 
@@ -16,7 +16,10 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title">
-        <span>Jogos de futebol, campeonatos e bolões</span>
+        <h2>Seu bolão de futebol online</h2>
+        <p>
+            Acompanhe jogos, participe de ligas públicas ou privadas e mostre quem entende mais de futebol.
+        </p>
     </div>
 
     <div class="row g-3">
@@ -127,7 +130,7 @@
                     <div class="fp-feature-league">
                         <div>
                             <span>Partida em destaque</span>
-                            <strong>@(jogoDestaque.Campeonato?.Nome ?? jogoDestaque.Fase ?? "FutPlay")</strong>
+                            <strong>@(jogoDestaque.Campeonato?.Nome ?? jogoDestaque.Fase ?? "Meu Pitaco FC")</strong>
                         </div>
 
                         <small>@jogoDestaque.Status</small>
@@ -277,7 +280,7 @@
         <aside class="col-xl-3 d-none d-xl-block">
             <section class="fp-side-ad">
                 <span>Publicidade</span>
-                <strong>FutPlay</strong>
+                <strong>⚽ Meu Pitaco FC</strong>
                 <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
             </section>
 

@@ -1,10 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using FutPlay.Settings
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData["Title"] - FutPlay</title>
+    <title>@ViewData["Title"] - @AppBrand.Name</title>
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -25,7 +26,7 @@
                     <span class="fp-sport-brand-ball">⚽</span>
 
                     <span>
-                        <span class="fp-sport-brand-text">FutPlay</span>
+                        <span class="fp-sport-brand-text">@AppBrand.Name</span>
                         <small>futebol & bolão</small>
                     </span>
                 </a>
@@ -204,7 +205,7 @@
     <footer class="futplay-footer mt-5">
         <div class="container py-3 d-flex flex-column flex-md-row justify-content-between align-items-center">
             <span>
-                &copy; @DateTime.Now.Year - FutPlay
+                &copy; @DateTime.Now.Year - ⚽ @AppBrand.Name. Todos os direitos reservados.
             </span>
 
             <span class="text-muted small">
