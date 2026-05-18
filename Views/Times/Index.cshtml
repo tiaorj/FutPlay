@@ -22,6 +22,12 @@
                 + Novo time/seleção
             </a>
         }
+        @if (User.IsInRole(FutPlay.Services.AppRoles.Administrador))
+        {
+            <a asp-action="ImportarApi" class="btn btn-success">
+                Importar da API
+            </a>
+        }
     </div>
 
     <div class="row g-3">

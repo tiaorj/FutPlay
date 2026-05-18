@@ -1,0 +1,154 @@
+﻿@model List<FutPlay.ViewModels.ApiTimeViewModel>
+
+@{
+    ViewData["Title"] = "Importar Times da API";
+
+    var pais = ViewBag.Pais as string ?? "Brazil";    
+}
+
+<div class="container fp-score-home">
+
+    <section class="fp-bet-header mb-3">
+        <div class="fp-bet-header-ball">
+            🛡️
+        </div>
+
+        <div class="fp-bet-header-info">
+            <span>Administração</span>
+            <h1>Importar Times da API</h1>
+            <p>Busque clubes diretamente da API-Football e importe para o sistema.</p>
+        </div>
+
+        <div class="fp-bet-header-actions">
+            <a asp-action="Index">Voltar para Times</a>
+        </div>
+    </section>
+
+    @if (TempData["Mensagem"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Mensagem"]
+        </div>
+    }
+
+    @if (TempData["Erro"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Erro"]
+        </div>
+    }
+
+    <section class="fp-home-card mb-3">
+        <form asp-action="ImportarApi" method="post" class="row g-3">
+            @Html.AntiForgeryToken()
+
+            <div class="col-md-8">
+                <label class="form-label">País</label>
+                <input type="text"
+                       name="pais"
+                       value="@pais"
+                       class="form-control"
+                       placeholder="Ex: Brazil, Argentina, England, Spain" />
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    Buscar Times
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="fp-home-card">
+        <div class="fp-card-header-link">
+            <h2>Resultado da busca</h2>
+            <span>@Model.Count time(s)</span>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="fp-empty-mini">
+                Informe país para buscar times na API.
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Escudo</th>
+                            <th>Time</th>
+                            <th>País</th>
+                            <th>API ID</th>
+                            <th>Status</th>
+                            <th class="text-end">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var time in Model)
+                        {
+                            <tr>
+                                <td style="width: 70px;">
+                                    @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
+                                    {
+                                        <img src="@time.EscudoUrl"
+                                             alt="@time.Nome"
+                                             style="width: 40px; height: 40px; object-fit: contain;" />
+                                    }
+                                    else
+                                    {
+                                        <span class="fp-mini-crest">FP</span>
+                                    }
+                                </td>
+
+                                <td>
+                                    <strong>@time.Nome</strong>
+                                </td>
+
+                                <td>@time.Pais</td>
+
+                                <td>@time.ApiTeamId</td>
+
+                                <td>
+                                    @if (time.JaImportado)
+                                    {
+                                        <span class="badge bg-secondary">Já importado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Novo</span>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    @if (!time.JaImportado)
+                                    {
+                                        <form asp-action="ImportarTimeApi" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+
+                                            <input type="hidden" name="apiTeamId" value="@time.ApiTeamId" />
+                                            <input type="hidden" name="nome" value="@time.Nome" />
+                                            <input type="hidden" name="pais" value="@time.Pais" />
+                                            <input type="hidden" name="escudoUrl" value="@time.EscudoUrl" />                                            
+
+                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                Importar
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                            Importado
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

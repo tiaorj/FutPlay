@@ -73,6 +73,7 @@ builder.Services.AddScoped<CampeonatoSincronizacaoService>();
 builder.Services.AddScoped<ClassificacaoService>();
 builder.Services.AddScoped<PontuacaoService>();
 builder.Services.AddScoped<MockDataService>();
+builder.Services.AddScoped<ImportacaoTimesService>();
 
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("sqlserver");

@@ -12,10 +12,14 @@ namespace FutPlay.Controllers
     public class TimesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ImportacaoTimesService _importacaoTimesService;
 
-        public TimesController(AppDbContext context)
+        public TimesController(
+            AppDbContext context,
+            ImportacaoTimesService importacaoTimesService)
         {
             _context = context;
+            _importacaoTimesService = importacaoTimesService;
         }
 
         public async Task<IActionResult> Index(string filtro = "todos", string? pais = null)
@@ -136,6 +140,79 @@ namespace FutPlay.Controllers
             await _context.SaveChangesAsync();
 
             return Redirect(ObterReturnUrlSeguro(returnUrl));
+        }
+
+        [Authorize(Roles = AppRoles.Administrador)]
+        public IActionResult ImportarApi()
+        {
+            ViewBag.Pais = "Brazil";
+
+            return View(new List<ApiTimeViewModel>());
+        }
+
+        [Authorize(Roles = AppRoles.Administrador)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportarApi(string pais)
+        {
+            if (string.IsNullOrWhiteSpace(pais))
+            {
+                ModelState.AddModelError("", "Informe o país para buscar os times.");
+                return View(new List<ApiTimeViewModel>());
+            }
+
+            try
+            {
+                var times = await _importacaoTimesService.BuscarTimesAsync(pais);
+
+                ViewBag.Pais = pais;
+
+                if (!times.Any())
+                {
+                    TempData["Erro"] = "Nenhum time encontrado na API para o país informado.";
+                }
+
+                return View(times);
+            }
+            catch (Exception ex)
+            {
+                ViewBag.Pais = pais;
+                TempData["Erro"] = ex.Message;
+
+                return View(new List<ApiTimeViewModel>());
+            }
+        }
+
+        [Authorize(Roles = AppRoles.Administrador)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportarTimeApi(
+            int apiTeamId,
+            string nome,
+            string? pais,
+            string? escudoUrl)
+        {
+            try
+            {
+                bool importado = await _importacaoTimesService.ImportarTimeAsync(
+                    apiTeamId,
+                    nome,
+                    pais,
+                    escudoUrl);
+
+                TempData["Mensagem"] = importado
+                    ? $"Time {nome} importado com sucesso."
+                    : $"Time {nome} já estava importado.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Erro"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(ImportarApi), new
+            {
+                pais                
+            });
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
