@@ -21,6 +21,7 @@
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <section class="fp-bet-header mb-3">
+
             <div class="fp-bet-header-ball">
                 🎯
             </div>
@@ -50,10 +51,57 @@
                 }
             </div>
         </section>
+        <section class="futplay-rules-card mb-3">
+            <div class="futplay-rules-title">
+                <span>🧮</span>
+                <div>
+                    <strong>Regras de pontuação</strong>
+                    <small>Veja como seus palpites viram pontos no ranking</small>
+                </div>
+            </div>
 
+            <div class="futplay-points-grid">
+                <div class="futplay-points-item highlight">
+                    <strong>10 pts</strong>
+                    <span>Placar exato</span>
+                </div>
+
+                <div class="futplay-points-item">
+                    <strong>5 pts</strong>
+                    <span>Acertar o vencedor ou empate</span>
+                </div>
+
+                <div class="futplay-points-item">
+                    <strong>+2 pts</strong>
+                    <span>Acertar os gols do time da casa</span>
+                </div>
+
+                <div class="futplay-points-item">
+                    <strong>+2 pts</strong>
+                    <span>Acertar os gols do visitante</span>
+                </div>
+
+                <div class="futplay-points-item">
+                    <strong>0 pts</strong>
+                    <span>Errar o resultado e os gols</span>
+                </div>
+            </div>
+
+            <div class="futplay-points-example mt-3">
+                <strong>Exemplo:</strong>
+                se o resultado for <b>Brasil 2 x 1 Argentina</b>,
+                o palpite <b>Brasil 2 x 0 Argentina</b> vale <b>7 pontos</b>:
+                5 pelo vencedor + 2 pelos gols do Brasil.
+
+                <p class="futplay-points-note mt-2 mb-0">
+                    No placar exato, vale a pontuação máxima de 10 pontos, sem somar bônus adicionais.
+                </p>
+            </div>
+        </section>
         <div class="row g-3">
 
             <aside class="col-xl-3 col-lg-4">
+                
                 <section class="fp-home-card">
                     <div class="fp-card-header-link">
                         <h2>Participante</h2>
@@ -330,7 +378,7 @@
                     <strong>@AppBrand.Name</strong>
                     <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
                 </section>
-
+               
                 <section class="fp-home-card mt-3">
                     <div class="fp-card-header-link">
                         <h2>Ações rápidas</h2>

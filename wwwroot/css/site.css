@@ -7650,3 +7650,137 @@ body {
     outline: none;
     box-shadow: 0 0 0 .22rem rgba(39, 55, 184, .18);
 }
+
+/* Regras e explicações - Ligas e Palpites */
+.futplay-rules-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.futplay-rules-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+    .futplay-rules-title > span {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--fp-green-100);
+        color: var(--fp-green-800);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .futplay-rules-title strong {
+        display: block;
+        color: var(--fp-green-900);
+        font-size: 1rem;
+    }
+
+    .futplay-rules-title small {
+        display: block;
+        color: var(--fp-muted);
+        font-size: 0.82rem;
+    }
+
+.futplay-rules-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+    .futplay-rules-grid div {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+    }
+
+    .futplay-rules-grid strong {
+        display: block;
+        color: #0f172a;
+        font-size: 0.88rem;
+        margin-bottom: 4px;
+    }
+
+    .futplay-rules-grid span {
+        display: block;
+        color: #64748b;
+        font-size: 0.8rem;
+        line-height: 1.35;
+    }
+
+@media (max-width: 991px) {
+    .futplay-rules-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .futplay-rules-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Pontuação dos palpites */
+.futplay-points-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.futplay-points-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+}
+
+    .futplay-points-item.highlight {
+        background: var(--fp-green-100);
+        border-color: rgba(5, 150, 105, 0.25);
+    }
+
+    .futplay-points-item strong {
+        display: block;
+        color: var(--fp-green-900);
+        font-size: 1.05rem;
+        margin-bottom: 4px;
+    }
+
+    .futplay-points-item span {
+        display: block;
+        color: #64748b;
+        font-size: 0.8rem;
+        line-height: 1.3;
+    }
+
+.futplay-points-example {
+    background: #f8fafc;
+    border-left: 4px solid var(--fp-green-700);
+    border-radius: 10px;
+    padding: 12px;
+    color: #475569;
+    font-size: 0.88rem;
+}
+
+@media (max-width: 991px) {
+    .futplay-points-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575px) {
+    .futplay-points-grid {
+        grid-template-columns: 1fr;
+    }
+}
