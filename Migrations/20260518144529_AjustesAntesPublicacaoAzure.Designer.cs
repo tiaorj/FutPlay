@@ -4,6 +4,7 @@ using FutPlay.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FutPlay.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518144529_AjustesAntesPublicacaoAzure")]
+    partial class AjustesAntesPublicacaoAzure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -68,35 +71,6 @@ namespace FutPlay.Migrations
                     b.HasIndex("ApiLeagueId");
 
                     b.ToTable("FutPlay_Campeonatos", (string)null);
-                });
-
-            modelBuilder.Entity("FutPlay.Models.CampeonatoFavorito", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CampeonatoId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CampeonatoId");
-
-                    b.HasIndex("UserId", "CampeonatoId")
-                        .IsUnique();
-
-                    b.ToTable("FutPlay_CampeonatoFavoritos", (string)null);
                 });
 
             modelBuilder.Entity("FutPlay.Models.Classificacao", b =>
@@ -238,10 +212,6 @@ namespace FutPlay.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("CriadorUserId")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("DataCriacao")
                         .HasColumnType("datetime2");
 
@@ -256,8 +226,6 @@ namespace FutPlay.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CampeonatoId");
-
-                    b.HasIndex("CriadorUserId");
 
                     b.ToTable("FutPlay_Ligas", (string)null);
                 });
@@ -458,35 +426,6 @@ namespace FutPlay.Migrations
                     b.HasIndex("ApiTeamId");
 
                     b.ToTable("FutPlay_Times", (string)null);
-                });
-
-            modelBuilder.Entity("FutPlay.Models.TimeFavorito", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CriadoEm")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TimeId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TimeId");
-
-                    b.HasIndex("UserId", "TimeId")
-                        .IsUnique();
-
-                    b.ToTable("FutPlay_TimeFavoritos", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -691,25 +630,6 @@ namespace FutPlay.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("FutPlay.Models.CampeonatoFavorito", b =>
-                {
-                    b.HasOne("FutPlay.Models.Campeonato", "Campeonato")
-                        .WithMany()
-                        .HasForeignKey("CampeonatoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Campeonato");
-
-                    b.Navigation("Usuario");
-                });
-
             modelBuilder.Entity("FutPlay.Models.Classificacao", b =>
                 {
                     b.HasOne("FutPlay.Models.Campeonato", "Campeonato")
@@ -764,13 +684,7 @@ namespace FutPlay.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Criador")
-                        .WithMany()
-                        .HasForeignKey("CriadorUserId");
-
                     b.Navigation("Campeonato");
-
-                    b.Navigation("Criador");
                 });
 
             modelBuilder.Entity("FutPlay.Models.LigaConvite", b =>
@@ -833,25 +747,6 @@ namespace FutPlay.Migrations
                     b.Navigation("Liga");
 
                     b.Navigation("LigaParticipante");
-                });
-
-            modelBuilder.Entity("FutPlay.Models.TimeFavorito", b =>
-                {
-                    b.HasOne("FutPlay.Models.Time", "Time")
-                        .WithMany()
-                        .HasForeignKey("TimeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Usuario")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Time");
-
-                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

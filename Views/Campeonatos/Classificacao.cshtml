@@ -4,9 +4,8 @@
     ViewData["Title"] = "Classificação";
 
     var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
-
     var grupos = Model.Classificacoes
-        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Classificação" : $"Grupo {c.Grupo}")
+        .GroupBy(c => c.Grupo)
         .ToList();
 }
 
@@ -25,22 +24,15 @@
         </div>
 
         <div class="fp-champ-info">
-            <span>Classificação</span>
+            <span>Classificação da competição</span>
             <h1>@Model.Campeonato.Nome @Model.Campeonato.Ano</h1>
-            <p>Tabela completa do campeonato.</p>
+            <p>Tabela de pontos completa, separada por grupos quando existir.</p>
         </div>
 
         <div class="fp-champ-actions">
-            @if (User.IsInRole(AppRoles.Administrador))
-            {
-                <a asp-action="RecalcularClassificacao"
-                   asp-route-id="@Model.Campeonato.Id">
-                    Recalcular
-                </a>
-            }
-
-            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Portal</a>
-            <a asp-action="Index">Competições</a>
+            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Visão geral</a>
+            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="jogos">Jogos</a>
+            <a asp-action="Index">Outras competições</a>
         </div>
     </section>
 
@@ -75,141 +67,67 @@
                     <h2>Navegação</h2>
                 </div>
 
-                <div class="d-grid gap-2">
+                <div class="fp-score-filter-column">
                     <a asp-action="Portal"
                        asp-route-id="@Model.Campeonato.Id"
-                       class="btn btn-outline-primary">
-                        Portal
+                       class="fp-score-filter">
+                        Visão geral
                     </a>
 
-                    <a asp-controller="Jogos"
-                       asp-action="Index"
-                       class="btn btn-outline-primary">
+                    <a asp-action="Portal"
+                       asp-route-id="@Model.Campeonato.Id"
+                       asp-route-aba="jogos"
+                       class="fp-score-filter">
                         Jogos
                     </a>
 
-                    <a asp-action="Index"
-                       class="btn btn-success">
+                    <span class="fp-score-filter active">Classificação</span>
+
+                    <a asp-action="Index" class="fp-score-filter">
                         Competições
                     </a>
                 </div>
             </section>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Admin</h2>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a asp-action="RecalcularClassificacao"
+                           asp-route-id="@Model.Campeonato.Id"
+                           class="btn btn-outline-primary">
+                            Recalcular classificação
+                        </a>
+                    </div>
+                </section>
+            }
         </aside>
 
         <main class="col-xl-9 col-lg-8">
             <section class="fp-score-board">
                 <div class="fp-score-board-tabs">
-                    <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Portal</a>
-                    <a class="active" href="#">Tabela</a>
-                    <a asp-controller="Jogos" asp-action="Index">Jogos</a>
+                    <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Visão geral</a>
+                    <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="jogos">Jogos</a>
+                    <a class="active" href="#">Classificação</a>
+                    <a asp-action="Index">Competições</a>
                 </div>
 
                 <div class="fp-score-filter-row">
-                    <span class="fp-score-filter active">Classificação</span>
+                    <span class="fp-score-filter active">Tabela de pontos</span>
                     <span class="fp-score-filter">@totalTimes times</span>
                     <span class="fp-score-filter">@grupos.Count grupo(s)</span>
                 </div>
 
-                @if (!Model.Classificacoes.Any())
+                @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                 {
-                    <div class="fp-empty-mini m-3">
-                        Nenhuma classificação cadastrada para este campeonato ainda.
-                    </div>
-                }
-                else
-                {
-                    @foreach (var grupo in grupos)
-                    {
-                        <div class="fp-standing-group">
-                            <div class="fp-match-list-title">
-                                <span>🏆 @grupo.Key</span>
-                                <small>@grupo.Count() time(s)</small>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table fp-standing-table align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th>Time</th>
-                                            <th>PTS</th>
-                                            <th>J</th>
-                                            <th>V</th>
-                                            <th>E</th>
-                                            <th>D</th>
-                                            <th>GP</th>
-                                            <th>GC</th>
-                                            <th>SG</th>
-                                            <th>%</th>
-                                            <th>Forma</th>
-                                        </tr>
-                                    </thead>
-
-                                    <tbody>
-                                        @foreach (var item in grupo.OrderBy(c => c.Posicao))
-                                        {
-                                            var aproveitamento = item.Jogos > 0
-                                            ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
-                                            : 0;
-
-                                            var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
-                                            ? resultados
-                                            : new List<string>();
-
-                                            <tr>
-                                                <td>
-                                                    <div class="fp-standing-team">
-                                                        <span class="fp-standing-position">@item.Posicao</span>
-
-                                                        <span class="fp-mini-crest">
-                                                            @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
-                                                            {
-                                                                <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
-                                                            }
-                                                            else
-                                                            {
-                                                                <span>@(item.Time?.Sigla ?? "FC")</span>
-                                                            }
-                                                        </span>
-
-                                                        <strong>@item.Time?.Nome</strong>
-                                                    </div>
-                                                </td>
-
-                                                <td class="fp-standing-points">@item.Pontos</td>
-                                                <td>@item.Jogos</td>
-                                                <td>@item.Vitorias</td>
-                                                <td>@item.Empates</td>
-                                                <td>@item.Derrotas</td>
-                                                <td>@item.GolsPro</td>
-                                                <td>@item.GolsContra</td>
-                                                <td>@item.SaldoGols</td>
-                                                <td>@aproveitamento.ToString("0")</td>
-
-                                                <td>
-                                                    <div class="fp-form-dots">
-                                                        @foreach (var resultado in forma)
-                                                        {
-                                                            var dotClass = resultado == "V"
-                                                            ? "win"
-                                                            : resultado == "E" ? "draw" : "loss";
-
-                                                            <span class="fp-form-dot @dotClass" title="@resultado"></span>
-                                                        }
-
-                                                        @for (int i = forma.Count; i < 5; i++)
-                                                        {
-                                                            <span class="fp-form-dot empty"></span>
-                                                        }
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    }
-                }
+                    Classificacoes = Model.Classificacoes,
+                    UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                    EmptyMessage = "Nenhuma classificação cadastrada para este campeonato ainda."
+                })
             </section>
         </main>
     </div>

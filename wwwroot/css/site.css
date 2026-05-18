@@ -7784,3 +7784,222 @@ body {
         grid-template-columns: 1fr;
     }
 }
+/* =========================================================
+   Ajustes de navegação: competições, rodadas e portal
+   ========================================================= */
+
+.fp-score-filter-row {
+    flex-wrap: wrap;
+}
+
+.fp-match-list-title a {
+    color: var(--fp-blue);
+    font-size: .78rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.fp-match-list-title a:hover {
+    text-decoration: underline;
+}
+
+.fp-round-toolbar {
+    align-items: center;
+    background: #fbfcfd;
+    border-bottom: 1px solid #f0f2f5;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 12px 14px;
+}
+
+.fp-round-nav {
+    align-items: center;
+    border: 1px solid #dce5ef;
+    border-radius: 999px;
+    color: var(--fp-blue);
+    display: inline-flex;
+    font-size: .78rem;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 32px;
+    padding: 6px 12px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.fp-round-nav:hover {
+    background: var(--fp-blue);
+    border-color: var(--fp-blue);
+    color: #fff;
+}
+
+.fp-round-nav.disabled {
+    background: #eef2f6;
+    border-color: #eef2f6;
+    color: #a4afbb;
+}
+
+.fp-round-select-form {
+    min-width: 0;
+}
+
+.fp-round-select-form .form-select {
+    font-weight: 800;
+}
+
+.fp-selected-competition-bar {
+    align-items: center;
+    background: #f8fafc;
+    border-top: 1px solid #f0f2f5;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 10px 14px;
+}
+
+.fp-selected-competition-bar strong,
+.fp-selected-competition-bar small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-selected-competition-bar strong {
+    color: var(--fp-text-score);
+    font-size: .9rem;
+    font-weight: 900;
+}
+
+.fp-selected-competition-bar small {
+    color: var(--fp-muted-score);
+    font-size: .74rem;
+}
+
+.fp-selected-competition-bar a {
+    color: var(--fp-blue);
+    font-size: .78rem;
+    font-weight: 900;
+    text-decoration: none;
+}
+
+.fp-game-competition-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 14px 16px;
+}
+
+.fp-game-competition-card {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #eef2f6;
+    border-radius: 8px;
+    color: var(--fp-text-score);
+    display: grid;
+    gap: 8px;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 84px;
+    padding: 12px;
+    text-decoration: none;
+}
+
+.fp-game-competition-card:hover {
+    border-color: #cbd7e6;
+    color: var(--fp-blue);
+}
+
+.fp-game-competition-card strong,
+.fp-game-competition-card small,
+.fp-game-competition-card b {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-game-competition-card strong {
+    font-size: .88rem;
+    font-weight: 900;
+}
+
+.fp-game-competition-card small,
+.fp-game-competition-card b {
+    color: var(--fp-muted-score);
+    font-size: .73rem;
+}
+
+.fp-game-competition-card .fp-competition-app-logo {
+    grid-row: span 3;
+}
+
+.fp-portal-section {
+    border-top: 1px solid #f0f2f5;
+}
+
+.fp-standings-compact {
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px 12px;
+}
+
+.fp-standing-compact-row {
+    align-items: center;
+    border-top: 1px solid #f0f2f5;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    padding: 9px 0;
+}
+
+.fp-standing-compact-row:first-child {
+    border-top: 0;
+}
+
+.fp-standing-compact-row span {
+    color: var(--fp-muted-score);
+    font-weight: 900;
+    text-align: center;
+}
+
+.fp-standing-compact-row strong {
+    color: var(--fp-text-score);
+    font-size: .86rem;
+    font-weight: 900;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-standing-compact-row b {
+    color: var(--fp-text-score);
+    font-size: .82rem;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.fp-champ-actions a.active {
+    background: var(--fp-blue);
+    color: #fff;
+}
+
+@media (max-width: 576px) {
+    .fp-round-toolbar,
+    .fp-selected-competition-bar {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .fp-round-select-form,
+    .fp-selected-competition-bar div {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .fp-game-competition-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,20 +1,18 @@
-@model List<FutPlay.Models.Jogo>
+@model FutPlay.ViewModels.JogosIndexViewModel
 
 @{
     ViewData["Title"] = "Jogos";
 
-    var totalJogos = Model.Count;
-    var totalFinalizados = Model.Count(j => string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase));
-    var totalAgendados = Model.Count(j => !string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase));
-    var totalHoje = Model.Count(j => j.DataJogo.Date == DateTime.Today);
-
-    var grupos = Model
+    var grupos = Model.Jogos
         .OrderBy(j => j.DataJogo)
         .GroupBy(j =>
-            !string.IsNullOrWhiteSpace(j.Campeonato?.Nome)
-                ? j.Campeonato.Nome
-                : "Sem campeonato")
+            Model.AgruparPorCampeonato
+                ? (!string.IsNullOrWhiteSpace(j.Campeonato?.Nome) ? j.Campeonato.Nome : "Sem campeonato")
+                : j.DataJogo.ToString("dd/MM/yyyy"))
         .ToList();
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+    var exibirSeletorCompeticao = Model.AbaCompeticoesAtiva && !Model.CampeonatoId.HasValue;
+    var campeonatoSelecionado = Model.Campeonatos.FirstOrDefault(c => c.Selecionado);
 
     string StatusCss(string? status)
     {
@@ -24,6 +22,7 @@
         }
 
         if (string.Equals(status, "Ao Vivo", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(status, "Em andamento", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(status, "Em Andamento", StringComparison.OrdinalIgnoreCase))
         {
             return "live";
@@ -36,7 +35,11 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
-        <span>Jogos de futebol cadastrados no FutPlay</span>
+        <span>
+            @(campeonatoSelecionado == null
+                ? "Jogos por data, favoritos e competições"
+                : $"Jogos de {campeonatoSelecionado.Nome} por rodada")
+        </span>
 
         @if (User.IsInRole(AppRoles.Administrador))
         {
@@ -56,23 +59,23 @@
 
                 <div class="fp-score-stats-list">
                     <div>
+                        <span>Rodada</span>
+                        <strong>@(Model.RodadaSelecionada?.ToString() ?? "-")</strong>
+                    </div>
+
+                    <div>
                         <span>Total</span>
-                        <strong>@totalJogos</strong>
+                        <strong>@Model.TotalJogos</strong>
                     </div>
 
                     <div>
                         <span>Hoje</span>
-                        <strong>@totalHoje</strong>
-                    </div>
-
-                    <div>
-                        <span>Agendados</span>
-                        <strong>@totalAgendados</strong>
+                        <strong>@Model.TotalHoje</strong>
                     </div>
 
                     <div>
                         <span>Finalizados</span>
-                        <strong>@totalFinalizados</strong>
+                        <strong>@Model.TotalFinalizados</strong>
                     </div>
                 </div>
             </section>
@@ -83,132 +86,403 @@
                 </div>
 
                 <div class="fp-score-filter-column">
-                    <span class="fp-score-filter active">Todos</span>
-                    <span class="fp-score-filter">Hoje</span>
-                    <span class="fp-score-filter">Próximos</span>
-                    <span class="fp-score-filter">Finalizados</span>
+                    <a asp-action="Index"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-rodada="@Model.RodadaSelecionada"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       asp-route-filtro="todos"
+                       class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
+                        Todos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-rodada="@Model.RodadaSelecionada"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       asp-route-filtro="hoje"
+                       class="fp-score-filter @(Model.Filtro == "hoje" ? "active" : "")">
+                        Hoje
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-rodada="@Model.RodadaSelecionada"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       asp-route-filtro="proximos"
+                       class="fp-score-filter @(Model.Filtro == "proximos" ? "active" : "")">
+                        Próximos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-rodada="@Model.RodadaSelecionada"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       asp-route-filtro="finalizados"
+                       class="fp-score-filter @(Model.Filtro == "finalizados" ? "active" : "")">
+                        Finalizados
+                    </a>
+                </div>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>Competições</h2>
                 </div>
 
-                <p class="fp-side-text mt-3 mb-0">
-                    Os filtros visuais serão ligados na próxima etapa. Por enquanto a tela exibe todos os jogos.
-                </p>
+                <form asp-action="Index" method="get" class="fp-compact-filter-form">
+                    <input type="hidden" name="aba" value="@Model.Aba" />
+                    <input type="hidden" name="filtro" value="@Model.Filtro" />
+
+                    <select class="form-select form-select-sm" name="campeonatoId" onchange="this.form.submit()">
+                        <option value="">Todas as competições</option>
+                        @foreach (var campeonato in Model.Campeonatos)
+                        {
+                            <option value="@campeonato.Id" selected="@campeonato.Selecionado">
+                                @campeonato.Nome (@campeonato.TotalJogos)
+                            </option>
+                        }
+                    </select>
+
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Aplicar</button>
+                </form>
             </section>
         </aside>
 
         <main class="col-xl-6 col-lg-8">
             <section class="fp-score-board">
                 <div class="fp-score-board-tabs">
-                    <a class="active" href="#">Todos</a>
-                    <a href="#">Favoritos</a>
-                    <a asp-controller="Campeonatos" asp-action="Index">Competições</a>
+                    <a asp-action="Index"
+                       asp-route-aba="todos"
+                       asp-route-filtro="@Model.Filtro"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       class="@(Model.AbaTodosAtiva ? "active" : "")">
+                        Todos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-aba="favoritos"
+                       asp-route-filtro="@Model.Filtro"
+                       asp-route-campeonatoId="@Model.CampeonatoId"
+                       class="@(Model.AbaFavoritosAtiva ? "active" : "")">
+                        Favoritos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-aba="competicoes"
+                       asp-route-filtro="@Model.Filtro"
+                       class="@(Model.AbaCompeticoesAtiva ? "active" : "")">
+                        Competições
+                    </a>
                 </div>
 
-                <div class="fp-score-filter-row">
-                    <span class="fp-score-filter active">Todos (@totalJogos)</span>
-                    <span class="fp-score-filter">Hoje (@totalHoje)</span>
-                    <span class="fp-score-filter">Próximos (@totalAgendados)</span>
-                    <span class="fp-score-filter">Finalizados (@totalFinalizados)</span>
-                </div>
-
-                @if (!Model.Any())
+                @if (exibirSeletorCompeticao)
                 {
-                    <div class="fp-empty-mini m-3">
-                        Nenhum jogo cadastrado ainda.
+                    <div class="fp-score-filter-row">
+                        <span class="fp-score-filter active">Escolha uma competição</span>
+                        <span class="fp-score-filter">@Model.Campeonatos.Count opção(ões)</span>
                     </div>
-                }
-                else
-                {
-                    <div class="fp-score-match-list">
-                        @foreach (var grupo in grupos)
-                        {
-                            <div class="fp-match-list-title">
-                                <span>⚽ @grupo.Key</span>
-                                <small>@grupo.Count() jogo(s)</small>
-                            </div>
 
-                            @foreach (var jogo in grupo.OrderBy(j => j.DataJogo))
+                    @if (!Model.Campeonatos.Any())
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Nenhuma competição com jogos encontrada para este filtro.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-game-competition-grid">
+                            @foreach (var campeonato in Model.Campeonatos)
                             {
-                                var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
-                                ? jogo.TimeCasa.Sigla
-                                : "CAS";
-
-                                var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
-                                ? jogo.TimeVisitante.Sigla
-                                : "VIS";
-
-                                <article class="fp-score-match-row fp-score-match-row-full">
-                                    <div class="fp-score-match-time">
-                                        <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
-                                        <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                    </div>
-
-                                    <div class="fp-score-match-clubs">
-                                        <div class="fp-score-club">
-                                            <span class="fp-mini-crest">
-                                                @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
-                                                {
-                                                    <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
-                                                }
-                                                else
-                                                {
-                                                    @casaSigla
-                                                }
-                                            </span>
-
-                                            <span>@jogo.TimeCasa?.Nome</span>
-                                        </div>
-
-                                        <div class="fp-score-club">
-                                            <span class="fp-mini-crest">
-                                                @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
-                                                {
-                                                    <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
-                                                }
-                                                else
-                                                {
-                                                    @visitanteSigla
-                                                }
-                                            </span>
-
-                                            <span>@jogo.TimeVisitante?.Nome</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="fp-score-match-score">
-                                        @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
+                                <a asp-action="Index"
+                                   asp-route-aba="competicoes"
+                                   asp-route-filtro="@Model.Filtro"
+                                   asp-route-campeonatoId="@campeonato.Id"
+                                   class="fp-game-competition-card">
+                                    <span class="fp-competition-app-logo">
+                                        @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
                                         {
-                                            <strong>@jogo.GolsCasa</strong>
-                                            <strong>@jogo.GolsVisitante</strong>
+                                            <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
                                         }
                                         else
                                         {
-                                            <strong>-</strong>
-                                            <strong>-</strong>
+                                            <span>FP</span>
                                         }
-                                    </div>
+                                    </span>
 
-                                    <div class="fp-score-match-extra">
-                                        <span class="fp-status @StatusCss(jogo.Status)">
-                                            @jogo.Status
-                                        </span>
-
-                                        <a asp-action="Details"
-                                           asp-route-id="@jogo.Id">
-                                            Detalhes
-                                        </a>
-
-                                        @if (User.IsInRole(AppRoles.Administrador))
+                                    <strong>@campeonato.Nome</strong>
+                                    <small>
+                                        @campeonato.Ano
+                                        @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
                                         {
-                                            <a asp-action="Edit"
-                                               asp-route-id="@jogo.Id">
-                                                Editar
-                                            </a>
+                                            <span> &middot; @campeonato.Pais</span>
                                         }
-                                    </div>
-                                </article>
+                                    </small>
+                                    <b>@campeonato.TotalJogos jogo(s)</b>
+                                </a>
                             }
-                        }
+                        </div>
+                    }
+                }
+                else
+                {
+                    @if (Model.CampeonatoId.HasValue)
+                    {
+                        <div class="fp-round-toolbar">
+                            @if (Model.RodadaAnterior.HasValue)
+                            {
+                                <a asp-action="Index"
+                                   asp-route-aba="@Model.Aba"
+                                   asp-route-filtro="@Model.Filtro"
+                                   asp-route-campeonatoId="@Model.CampeonatoId"
+                                   asp-route-rodada="@Model.RodadaAnterior"
+                                   class="fp-round-nav">
+                                    Anterior
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="fp-round-nav disabled">Anterior</span>
+                            }
+
+                            <form asp-action="Index" method="get" class="fp-round-select-form">
+                                <input type="hidden" name="aba" value="@Model.Aba" />
+                                <input type="hidden" name="filtro" value="@Model.Filtro" />
+                                <input type="hidden" name="campeonatoId" value="@Model.CampeonatoId" />
+
+                                <select name="rodada" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    @if (!Model.Rodadas.Any())
+                                    {
+                                        <option value="">Sem rodadas</option>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var rodada in Model.Rodadas)
+                                        {
+                                            <option value="@rodada.Rodada" selected="@rodada.Selecionada">
+                                                Rodada @rodada.Rodada - @rodada.TotalJogos jogo(s)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </form>
+
+                            @if (Model.ProximaRodada.HasValue)
+                            {
+                                <a asp-action="Index"
+                                   asp-route-aba="@Model.Aba"
+                                   asp-route-filtro="@Model.Filtro"
+                                   asp-route-campeonatoId="@Model.CampeonatoId"
+                                   asp-route-rodada="@Model.ProximaRodada"
+                                   class="fp-round-nav">
+                                    Próxima
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="fp-round-nav disabled">Próxima</span>
+                            }
+                        </div>
+                    }
+
+                    <div class="fp-score-filter-row">
+                        <a asp-action="Index"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.RodadaSelecionada"
+                           asp-route-campeonatoId="@Model.CampeonatoId"
+                           asp-route-filtro="todos"
+                           class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
+                            Todos (@Model.TotalJogos)
+                        </a>
+
+                        <a asp-action="Index"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.RodadaSelecionada"
+                           asp-route-campeonatoId="@Model.CampeonatoId"
+                           asp-route-filtro="hoje"
+                           class="fp-score-filter @(Model.Filtro == "hoje" ? "active" : "")">
+                            Hoje (@Model.TotalHoje)
+                        </a>
+
+                        <a asp-action="Index"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.RodadaSelecionada"
+                           asp-route-campeonatoId="@Model.CampeonatoId"
+                           asp-route-filtro="proximos"
+                           class="fp-score-filter @(Model.Filtro == "proximos" ? "active" : "")">
+                            Próximos (@Model.TotalProximos)
+                        </a>
+
+                        <a asp-action="Index"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.RodadaSelecionada"
+                           asp-route-campeonatoId="@Model.CampeonatoId"
+                           asp-route-filtro="finalizados"
+                           class="fp-score-filter @(Model.Filtro == "finalizados" ? "active" : "")">
+                            Finalizados (@Model.TotalFinalizados)
+                        </a>
                     </div>
+
+                    @if (Model.CampeonatoId.HasValue && campeonatoSelecionado != null)
+                    {
+                        <div class="fp-selected-competition-bar">
+                            <span class="fp-competition-app-logo">
+                                @if (!string.IsNullOrWhiteSpace(campeonatoSelecionado.LogoUrl))
+                                {
+                                    <img src="@campeonatoSelecionado.LogoUrl" alt="@campeonatoSelecionado.Nome" />
+                                }
+                                else
+                                {
+                                    <span>FP</span>
+                                }
+                            </span>
+
+                            <div>
+                                <strong>@campeonatoSelecionado.Nome @campeonatoSelecionado.Ano</strong>
+                                <small>
+                                    @(string.IsNullOrWhiteSpace(campeonatoSelecionado.Tipo) ? "Competição" : campeonatoSelecionado.Tipo)
+                                    @if (!string.IsNullOrWhiteSpace(campeonatoSelecionado.Pais))
+                                    {
+                                        <span> &middot; @campeonatoSelecionado.Pais</span>
+                                    }
+                                </small>
+                            </div>
+
+                            <a asp-controller="Campeonatos"
+                               asp-action="Portal"
+                               asp-route-id="@campeonatoSelecionado.Id"
+                               asp-route-aba="jogos"
+                               asp-route-rodada="@Model.RodadaSelecionada">
+                                Portal
+                            </a>
+                        </div>
+                    }
+
+                    @if (Model.AbaFavoritosAtiva && !Model.UsuarioAutenticado)
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Entre na sua conta para ver jogos dos seus times favoritos.
+                            <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">
+                                Fazer login
+                            </a>
+                        </div>
+                    }
+                    else if (Model.AbaFavoritosAtiva && Model.TotalTimesFavoritos == 0)
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Você ainda não favoritou times. Abra a tela de Times e marque seus clubes ou seleções.
+                        </div>
+                    }
+                    else if (!Model.Jogos.Any())
+                    {
+                        <div class="fp-empty-mini m-3">
+                            Nenhum jogo encontrado para esta rodada e filtro.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-score-match-list">
+                            @foreach (var grupo in grupos)
+                            {
+                                <div class="fp-match-list-title">
+                                    <span>@grupo.Key</span>
+                                    <small>@grupo.Count() jogo(s)</small>
+                                </div>
+
+                                @foreach (var jogo in grupo.OrderBy(j => j.DataJogo))
+                                {
+                                    var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
+                                        ? jogo.TimeCasa.Sigla
+                                        : "CAS";
+
+                                    var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
+                                        ? jogo.TimeVisitante.Sigla
+                                        : "VIS";
+
+                                    var casaFavorito = Model.TimesFavoritosIds.Contains(jogo.TimeCasaId);
+                                    var visitanteFavorito = Model.TimesFavoritosIds.Contains(jogo.TimeVisitanteId);
+
+                                    <article class="fp-score-match-row fp-score-match-row-full">
+                                        <div class="fp-score-match-time">
+                                            <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
+                                            <span>@jogo.DataJogo.ToString("dd/MM")</span>
+                                        </div>
+
+                                        <div class="fp-score-match-clubs">
+                                            <div class="fp-score-club">
+                                                <span class="fp-mini-crest">
+                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                                    {
+                                                        <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                                    }
+                                                    else
+                                                    {
+                                                        @casaSigla
+                                                    }
+                                                </span>
+
+                                                <span>@jogo.TimeCasa?.Nome</span>
+
+                                                @if (casaFavorito)
+                                                {
+                                                    <span class="fp-favorite-dot">★</span>
+                                                }
+                                            </div>
+
+                                            <div class="fp-score-club">
+                                                <span class="fp-mini-crest">
+                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                                    {
+                                                        <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                                    }
+                                                    else
+                                                    {
+                                                        @visitanteSigla
+                                                    }
+                                                </span>
+
+                                                <span>@jogo.TimeVisitante?.Nome</span>
+
+                                                @if (visitanteFavorito)
+                                                {
+                                                    <span class="fp-favorite-dot">★</span>
+                                                }
+                                            </div>
+                                        </div>
+
+                                        <div class="fp-score-match-score">
+                                            @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
+                                            {
+                                                <strong>@jogo.GolsCasa</strong>
+                                                <strong>@jogo.GolsVisitante</strong>
+                                            }
+                                            else
+                                            {
+                                                <strong>-</strong>
+                                                <strong>-</strong>
+                                            }
+                                        </div>
+
+                                        <div class="fp-score-match-extra">
+                                            <span class="fp-status @StatusCss(jogo.Status)">
+                                                @jogo.Status
+                                            </span>
+
+                                            <a asp-action="Details" asp-route-id="@jogo.Id">
+                                                Detalhes
+                                            </a>
+
+                                            @if (User.IsInRole(AppRoles.Administrador))
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@jogo.Id">
+                                                    Editar
+                                                </a>
+                                            }
+                                        </div>
+                                    </article>
+                                }
+                            }
+                        </div>
+                    }
                 }
             </section>
         </main>
@@ -226,16 +500,17 @@
                 </div>
 
                 <div class="d-grid gap-2">
+                    <a asp-controller="Times"
+                       asp-action="Index"
+                       asp-route-filtro="favoritos"
+                       class="btn btn-outline-primary">
+                        Meus times
+                    </a>
+
                     <a asp-controller="Campeonatos"
                        asp-action="Index"
                        class="btn btn-outline-primary">
                         Competições
-                    </a>
-
-                    <a asp-controller="Times"
-                       asp-action="Index"
-                       class="btn btn-outline-primary">
-                        Times
                     </a>
 
                     <a asp-controller="Ligas"

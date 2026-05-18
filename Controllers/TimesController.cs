@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FutPlay.ViewModels;
+using System.Security.Claims;
 
 namespace FutPlay.Controllers
 {
@@ -17,15 +18,124 @@ namespace FutPlay.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string filtro = "todos", string? pais = null)
         {
-            var times = await _context.Times
+            filtro = NormalizarFiltro(filtro);
+
+            var usuarioAutenticado = User.Identity?.IsAuthenticated == true;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var timesFavoritosIds = new HashSet<int>();
+
+            if (usuarioAutenticado && !string.IsNullOrWhiteSpace(userId))
+            {
+                timesFavoritosIds = (await _context.TimeFavoritos
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.TimeId)
+                    .ToListAsync())
+                    .ToHashSet();
+            }
+
+            var todosTimes = await _context.Times
                 .OrderByDescending(t => t.Ativo)
                 .ThenBy(t => t.Tipo)
                 .ThenBy(t => t.Nome)
                 .ToListAsync();
 
-            return View(times);
+            IEnumerable<Time> times = todosTimes;
+
+            times = filtro switch
+            {
+                "clubes" => times.Where(t => string.Equals(t.Tipo, "Clube", StringComparison.OrdinalIgnoreCase)),
+                "selecoes" => times.Where(EhSelecao),
+                "ativos" => times.Where(t => t.Ativo),
+                "favoritos" => usuarioAutenticado
+                    ? times.Where(t => timesFavoritosIds.Contains(t.Id))
+                    : Enumerable.Empty<Time>(),
+                _ => times
+            };
+
+            if (!string.IsNullOrWhiteSpace(pais))
+            {
+                times = times.Where(t => string.Equals(t.Pais, pais, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var viewModel = new TimesIndexViewModel
+            {
+                Times = times
+                    .OrderByDescending(t => t.Ativo)
+                    .ThenBy(t => t.Tipo)
+                    .ThenBy(t => t.Nome)
+                    .ToList(),
+                Paises = todosTimes
+                    .Select(t => t.Pais)
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Select(p => p!)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(p => p)
+                    .ToList(),
+                TimesFavoritosIds = timesFavoritosIds,
+                Filtro = filtro,
+                Pais = pais,
+                UsuarioAutenticado = usuarioAutenticado,
+                TotalTimes = todosTimes.Count,
+                TotalAtivos = todosTimes.Count(t => t.Ativo),
+                TotalClubes = todosTimes.Count(t => string.Equals(t.Tipo, "Clube", StringComparison.OrdinalIgnoreCase)),
+                TotalSelecoes = todosTimes.Count(EhSelecao),
+                TotalFavoritos = todosTimes.Count(t => timesFavoritosIds.Contains(t.Id))
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarFavorito(int id, string? returnUrl = null)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                TempData["Erro"] = "Entre na sua conta para favoritar times.";
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity", returnUrl = ObterReturnUrlSeguro(returnUrl) });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                TempData["Erro"] = "Não foi possível identificar seu usuário.";
+                return Redirect(ObterReturnUrlSeguro(returnUrl));
+            }
+
+            var timeExiste = await _context.Times.AnyAsync(t => t.Id == id);
+
+            if (!timeExiste)
+            {
+                return NotFound();
+            }
+
+            var favorito = await _context.TimeFavoritos
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.TimeId == id);
+
+            if (favorito == null)
+            {
+                _context.TimeFavoritos.Add(new TimeFavorito
+                {
+                    UserId = userId,
+                    TimeId = id
+                });
+
+                TempData["Sucesso"] = "Time adicionado aos favoritos.";
+            }
+            else
+            {
+                _context.TimeFavoritos.Remove(favorito);
+                TempData["Sucesso"] = "Time removido dos favoritos.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Redirect(ObterReturnUrlSeguro(returnUrl));
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
@@ -200,6 +310,34 @@ namespace FutPlay.Controllers
             }
 
             return View(time);
+        }
+
+        private string ObterReturnUrlSeguro(string? returnUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return returnUrl;
+            }
+
+            return Url.Action(nameof(Index), "Times") ?? "/";
+        }
+
+        private static string NormalizarFiltro(string? filtro)
+        {
+            return filtro?.ToLowerInvariant() switch
+            {
+                "clubes" => "clubes",
+                "selecoes" => "selecoes",
+                "ativos" => "ativos",
+                "favoritos" => "favoritos",
+                _ => "todos"
+            };
+        }
+
+        private static bool EhSelecao(Time time)
+        {
+            return string.Equals(time.Tipo, "Seleção", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(time.Tipo, "Selecao", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

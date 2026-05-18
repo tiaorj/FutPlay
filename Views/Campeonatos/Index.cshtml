@@ -1,24 +1,16 @@
-@model List<FutPlay.Models.Campeonato>
+@model FutPlay.ViewModels.CampeonatosIndexViewModel
 
 @{
     ViewData["Title"] = "Campeonatos";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 
-    var totalCampeonatos = Model.Count;
-    var totalAtivos = Model.Count(c => c.Ativo);
-    var totalInativos = Model.Count(c => !c.Ativo);
-    var totalPaises = Model
-        .Select(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
-        .Distinct()
-        .Count();
-
-    var principais = Model
-        .Where(c => c.Ativo)
-        .OrderByDescending(c => c.Ano)
+    var competicoes = Model.Campeonatos
+        .OrderByDescending(c => c.Ativo)
+        .ThenByDescending(c => c.Ano)
         .ThenBy(c => c.Nome)
-        .Take(12)
         .ToList();
 
-    var grupos = Model
+    var grupos = competicoes
         .GroupBy(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
         .OrderBy(g => g.Key)
         .ToList();
@@ -27,7 +19,7 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
-        <span>Competições, tabelas, jogos e portais de campeonatos</span>
+        <span>Escolha uma competição para ver jogos, classificação e resumo</span>
 
         @if (User.IsInRole(AppRoles.Administrador))
         {
@@ -48,41 +40,88 @@
                 <div class="fp-score-stats-list">
                     <div>
                         <span>Total</span>
-                        <strong>@totalCampeonatos</strong>
+                        <strong>@Model.TotalCampeonatos</strong>
                     </div>
 
                     <div>
                         <span>Ativos</span>
-                        <strong>@totalAtivos</strong>
+                        <strong>@Model.TotalAtivos</strong>
                     </div>
 
                     <div>
-                        <span>Inativos</span>
-                        <strong>@totalInativos</strong>
+                        <span>Favoritos</span>
+                        <strong>@Model.TotalFavoritos</strong>
                     </div>
 
                     <div>
                         <span>Países</span>
-                        <strong>@totalPaises</strong>
+                        <strong>@Model.TotalPaises</strong>
                     </div>
                 </div>
             </section>
 
             <section class="fp-home-card mt-3">
                 <div class="fp-card-header-link">
-                    <h2>Navegação</h2>
+                    <h2>Filtros</h2>
                 </div>
 
                 <div class="fp-score-filter-column">
-                    <span class="fp-score-filter active">Todos</span>
-                    <span class="fp-score-filter">Ativos</span>
-                    <span class="fp-score-filter">Favoritos</span>
-                    <span class="fp-score-filter">Por país</span>
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="todos"
+                       class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
+                        Todos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="ativos"
+                       class="fp-score-filter @(Model.Filtro == "ativos" ? "active" : "")">
+                        Ativos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="favoritos"
+                       class="fp-score-filter @(Model.Filtro == "favoritos" ? "active" : "")">
+                        Favoritos
+                    </a>
+                </div>
+            </section>
+
+            <section class="fp-home-card mt-3">
+                <div class="fp-card-header-link">
+                    <h2>País e tipo</h2>
                 </div>
 
-                <p class="fp-side-text mt-3 mb-0">
-                    Esta tela lista todos os campeonatos cadastrados. Na próxima etapa podemos ligar filtros reais.
-                </p>
+                <form asp-action="Index" method="get" class="fp-compact-filter-form">
+                    <input type="hidden" name="filtro" value="@Model.Filtro" />
+
+                    <select class="form-select form-select-sm" name="pais" onchange="this.form.submit()">
+                        <option value="">Todos os países</option>
+                        @foreach (var pais in Model.Paises)
+                        {
+                            <option value="@pais" selected="@(string.Equals(Model.Pais, pais, StringComparison.OrdinalIgnoreCase))">
+                                @pais
+                            </option>
+                        }
+                    </select>
+
+                    <select class="form-select form-select-sm" name="tipo" onchange="this.form.submit()">
+                        <option value="">Todos os tipos</option>
+                        @foreach (var tipo in Model.Tipos)
+                        {
+                            <option value="@tipo" selected="@(string.Equals(Model.Tipo, tipo, StringComparison.OrdinalIgnoreCase))">
+                                @tipo
+                            </option>
+                        }
+                    </select>
+
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Aplicar</button>
+                </form>
             </section>
 
             @if (User.IsInRole(AppRoles.Administrador))
@@ -108,42 +147,117 @@
         </aside>
 
         <main class="col-xl-6 col-lg-8">
-
             <section class="fp-score-board">
                 <div class="fp-score-board-tabs">
-                    <a class="active" href="#">Todos</a>
-                    <a href="#">Favoritos</a>
-                    <a asp-controller="Jogos" asp-action="Index">Jogos</a>
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="todos"
+                       class="@(Model.Filtro == "todos" ? "active" : "")">
+                        Todos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="ativos"
+                       class="@(Model.Filtro == "ativos" ? "active" : "")">
+                        Ativos
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="favoritos"
+                       class="@(Model.Filtro == "favoritos" ? "active" : "")">
+                        Favoritos
+                    </a>
+
+                    <a asp-controller="Jogos"
+                       asp-action="Index"
+                       asp-route-aba="competicoes">
+                        Jogos
+                    </a>
                 </div>
 
                 <div class="fp-score-filter-row">
-                    <span class="fp-score-filter active">Todos (@totalCampeonatos)</span>
-                    <span class="fp-score-filter">Ativos (@totalAtivos)</span>
-                    <span class="fp-score-filter">Países (@totalPaises)</span>
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="todos"
+                       class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
+                        Todos (@Model.TotalCampeonatos)
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="ativos"
+                       class="fp-score-filter @(Model.Filtro == "ativos" ? "active" : "")">
+                        Ativos (@Model.TotalAtivos)
+                    </a>
+
+                    <a asp-action="Index"
+                       asp-route-pais="@Model.Pais"
+                       asp-route-tipo="@Model.Tipo"
+                       asp-route-filtro="favoritos"
+                       class="fp-score-filter @(Model.Filtro == "favoritos" ? "active" : "")">
+                        Favoritos (@Model.TotalFavoritos)
+                    </a>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Pais))
+                    {
+                        <a asp-action="Index"
+                           asp-route-tipo="@Model.Tipo"
+                           asp-route-filtro="@Model.Filtro"
+                           class="fp-score-filter active">
+                            @Model.Pais
+                        </a>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.Tipo))
+                    {
+                        <a asp-action="Index"
+                           asp-route-pais="@Model.Pais"
+                           asp-route-filtro="@Model.Filtro"
+                           class="fp-score-filter active">
+                            @Model.Tipo
+                        </a>
+                    }
                 </div>
 
-                @if (!Model.Any())
+                @if (Model.Filtro == "favoritos" && !Model.UsuarioAutenticado)
                 {
                     <div class="fp-empty-mini m-3">
-                        Nenhum campeonato cadastrado ainda.
+                        Entre na sua conta para ver e salvar campeonatos favoritos.
+                        <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">
+                            Fazer login
+                        </a>
+                    </div>
+                }
+                else if (!competicoes.Any())
+                {
+                    <div class="fp-empty-mini m-3">
+                        Nenhuma competição encontrada para estes filtros.
                     </div>
                 }
                 else
                 {
                     <section class="fp-competition-feature-panel">
                         <div class="fp-match-list-title">
-                            <span>🏆 Principais competições</span>
-                            <small>@principais.Count destaque(s)</small>
+                            <span>Escolha uma competição</span>
+                            <small>@competicoes.Count opção(ões)</small>
                         </div>
 
                         <div class="fp-competition-app-grid">
-                            @foreach (var campeonato in principais)
+                            @foreach (var campeonato in competicoes.Take(18))
                             {
+                                var favorito = Model.CampeonatosFavoritosIds.Contains(campeonato.Id);
+
                                 <article class="fp-competition-app-card">
                                     <a asp-action="Portal"
                                        asp-route-id="@campeonato.Id"
                                        class="fp-competition-app-link">
-
                                         <span class="fp-competition-app-logo">
                                             @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
                                             {
@@ -161,12 +275,24 @@
                                             @campeonato.Ano
                                             @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
                                             {
-                                                <span> · @campeonato.Pais</span>
+                                                <span> &middot; @campeonato.Pais</span>
                                             }
                                         </small>
+
+                                        <small>@campeonato.Tipo</small>
                                     </a>
 
-                                    <span class="fp-competition-star">☆</span>
+                                    <form asp-action="AlternarFavorito"
+                                          method="post"
+                                          class="fp-inline-favorite-form fp-competition-star">
+                                        <input type="hidden" name="id" value="@campeonato.Id" />
+                                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                        <button type="submit"
+                                                class="fp-favorite-button @(favorito ? "active" : "")"
+                                                title="@(favorito ? "Remover dos favoritos" : "Adicionar aos favoritos")">
+                                            @(favorito ? "★" : "☆")
+                                        </button>
+                                    </form>
                                 </article>
                             }
                         </div>
@@ -174,7 +300,7 @@
 
                     <section class="fp-competition-country-panel">
                         <div class="fp-match-list-title">
-                            <span>🌎 Competições por país</span>
+                            <span>Outras competições por país</span>
                             <small>@grupos.Count grupo(s)</small>
                         </div>
 
@@ -202,6 +328,8 @@
                                         <div class="fp-competition-country-items">
                                             @foreach (var campeonato in grupo.OrderByDescending(c => c.Ativo).ThenByDescending(c => c.Ano).ThenBy(c => c.Nome))
                                             {
+                                                var favorito = Model.CampeonatosFavoritosIds.Contains(campeonato.Id);
+
                                                 <article class="fp-competition-row-app">
                                                     <div class="fp-competition-row-logo">
                                                         @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
@@ -220,14 +348,36 @@
                                                             @campeonato.Tipo
                                                             @if (!campeonato.Ativo)
                                                             {
-                                                                <span> · Inativo</span>
+                                                                <span> &middot; Inativo</span>
                                                             }
                                                         </span>
                                                     </div>
 
                                                     <div class="fp-competition-row-actions-app">
-                                                        <a asp-action="Portal" asp-route-id="@campeonato.Id">Portal</a>
-                                                        <a asp-action="Classificacao" asp-route-id="@campeonato.Id">Tabela</a>
+                                                        <form asp-action="AlternarFavorito"
+                                                              method="post"
+                                                              class="fp-inline-favorite-form">
+                                                            <input type="hidden" name="id" value="@campeonato.Id" />
+                                                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                                            <button type="submit"
+                                                                    class="fp-favorite-button @(favorito ? "active" : "")"
+                                                                    title="@(favorito ? "Remover dos favoritos" : "Adicionar aos favoritos")">
+                                                                @(favorito ? "★" : "☆")
+                                                            </button>
+                                                        </form>
+
+                                                        <a asp-action="Portal" asp-route-id="@campeonato.Id">Abrir</a>
+                                                        <a asp-controller="Jogos"
+                                                           asp-action="Index"
+                                                           asp-route-aba="competicoes"
+                                                           asp-route-campeonatoId="@campeonato.Id">
+                                                            Jogos
+                                                        </a>
+                                                        <a asp-action="Portal"
+                                                           asp-route-id="@campeonato.Id"
+                                                           asp-route-aba="classificacao">
+                                                            Classificação
+                                                        </a>
                                                         <a asp-action="Details" asp-route-id="@campeonato.Id">Detalhes</a>
 
                                                         @if (User.IsInRole(AppRoles.Administrador))
@@ -267,6 +417,7 @@
                 <div class="d-grid gap-2">
                     <a asp-controller="Jogos"
                        asp-action="Index"
+                       asp-route-aba="competicoes"
                        class="btn btn-outline-primary">
                         Ver jogos
                     </a>

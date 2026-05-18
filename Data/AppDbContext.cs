@@ -19,6 +19,8 @@ namespace FutPlay.Data
         public DbSet<Palpite> Palpites { get; set; }
         public DbSet<Classificacao> Classificacoes { get; set; }
         public DbSet<LigaConvite> LigaConvites { get; set; }
+        public DbSet<TimeFavorito> TimeFavoritos { get; set; }
+        public DbSet<CampeonatoFavorito> CampeonatoFavoritos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +34,22 @@ namespace FutPlay.Data
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
             modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
             modelBuilder.Entity<LigaConvite>().ToTable("FutPlay_LigaConvites");
+            modelBuilder.Entity<TimeFavorito>().ToTable("FutPlay_TimeFavoritos");
+            modelBuilder.Entity<CampeonatoFavorito>().ToTable("FutPlay_CampeonatoFavoritos");
+
+            modelBuilder.Entity<TimeFavorito>()
+                .HasIndex(f => new { f.UserId, f.TimeId })
+                .IsUnique();
+
+            modelBuilder.Entity<TimeFavorito>()
+                .HasIndex(f => f.TimeId);
+
+            modelBuilder.Entity<CampeonatoFavorito>()
+                .HasIndex(f => new { f.UserId, f.CampeonatoId })
+                .IsUnique();
+
+            modelBuilder.Entity<CampeonatoFavorito>()
+                .HasIndex(f => f.CampeonatoId);
 
             modelBuilder.Entity<LigaConvite>()
                 .HasIndex(c => c.LigaId);
@@ -150,6 +168,30 @@ namespace FutPlay.Data
                 .WithMany()
                 .HasForeignKey(p => p.JogoId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<TimeFavorito>()
+                .HasOne(f => f.Usuario)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TimeFavorito>()
+                .HasOne(f => f.Time)
+                .WithMany()
+                .HasForeignKey(f => f.TimeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CampeonatoFavorito>()
+                .HasOne(f => f.Usuario)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CampeonatoFavorito>()
+                .HasOne(f => f.Campeonato)
+                .WithMany()
+                .HasForeignKey(f => f.CampeonatoId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

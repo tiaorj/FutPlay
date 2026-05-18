@@ -1,10 +1,12 @@
 ﻿using FutPlay.Data;
 using FutPlay.Models;
 using FutPlay.Services;
+using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FutPlay.Controllers
 {
@@ -17,16 +19,161 @@ namespace FutPlay.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string aba = "todos",
+            string filtro = "todos",
+            int? rodada = null,
+            int? campeonatoId = null)
         {
-            var jogos = await _context.Jogos
+            aba = NormalizarAba(aba);
+            filtro = NormalizarFiltro(filtro);
+
+            var hoje = DateTime.Today;
+            var usuarioAutenticado = User.Identity?.IsAuthenticated == true;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var timesFavoritosIds = new HashSet<int>();
+
+            if (usuarioAutenticado && !string.IsNullOrWhiteSpace(userId))
+            {
+                timesFavoritosIds = (await _context.TimeFavoritos
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.TimeId)
+                    .ToListAsync())
+                    .ToHashSet();
+            }
+
+            var jogosBase = await _context.Jogos
                 .Include(j => j.Campeonato)
                 .Include(j => j.TimeCasa)
                 .Include(j => j.TimeVisitante)
+                .Where(j => j.Ativo)
                 .OrderBy(j => j.DataJogo)
                 .ToListAsync();
 
-            return View(jogos);
+            IEnumerable<Jogo> jogosDaAba = jogosBase;
+
+            if (aba == "favoritos")
+            {
+                jogosDaAba = usuarioAutenticado
+                    ? jogosDaAba.Where(j =>
+                        timesFavoritosIds.Contains(j.TimeCasaId) ||
+                        timesFavoritosIds.Contains(j.TimeVisitanteId))
+                    : Enumerable.Empty<Jogo>();
+            }
+
+            var campeonatos = jogosDaAba
+                .Where(j => j.Campeonato != null)
+                .GroupBy(j => j.CampeonatoId)
+                .Select(g => new CampeonatoFiltroViewModel
+                {
+                    Id = g.Key,
+                    Nome = g.First().Campeonato?.Nome ?? "Campeonato",
+                    Pais = g.First().Campeonato?.Pais,
+                    Tipo = g.First().Campeonato?.Tipo,
+                    LogoUrl = g.First().Campeonato?.LogoUrl,
+                    Ano = g.First().Campeonato?.Ano ?? 0,
+                    TotalJogos = g.Count(),
+                    Selecionado = campeonatoId == g.Key
+                })
+                .OrderBy(c => c.Nome)
+                .ToList();
+
+            if (campeonatoId.HasValue)
+            {
+                jogosDaAba = jogosDaAba.Where(j => j.CampeonatoId == campeonatoId.Value);
+            }
+
+            var jogosContexto = jogosDaAba.ToList();
+            var navegarPorRodada = campeonatoId.HasValue;
+
+            var rodadas = navegarPorRodada
+                ? jogosContexto
+                    .Where(j => j.Rodada.HasValue)
+                    .GroupBy(j => j.Rodada!.Value)
+                    .Select(g => new RodadaFiltroViewModel
+                    {
+                        Rodada = g.Key,
+                        DataReferencia = g.Min(j => j.DataJogo.Date),
+                        TotalJogos = g.Count()
+                    })
+                    .OrderBy(r => r.Rodada)
+                    .ToList()
+                : new List<RodadaFiltroViewModel>();
+
+            var rodadaSelecionada = navegarPorRodada ? rodada : null;
+
+            if (rodadaSelecionada.HasValue && !rodadas.Any(r => r.Rodada == rodadaSelecionada.Value))
+            {
+                rodadaSelecionada = null;
+            }
+
+            if (!rodadaSelecionada.HasValue && rodadas.Any())
+            {
+                rodadaSelecionada = rodadas
+                    .OrderBy(r => Math.Abs((r.DataReferencia - hoje).TotalDays))
+                    .ThenBy(r => r.Rodada)
+                    .First()
+                    .Rodada;
+            }
+
+            foreach (var rodadaOpcao in rodadas)
+            {
+                rodadaOpcao.Selecionada = rodadaOpcao.Rodada == rodadaSelecionada;
+            }
+
+            var rodadasOrdenadas = rodadas.Select(r => r.Rodada).ToList();
+            int? rodadaAnterior = null;
+            int? proximaRodada = null;
+
+            if (rodadaSelecionada.HasValue)
+            {
+                var rodadaIndex = rodadasOrdenadas.IndexOf(rodadaSelecionada.Value);
+
+                if (rodadaIndex > 0)
+                {
+                    rodadaAnterior = rodadasOrdenadas[rodadaIndex - 1];
+                }
+
+                if (rodadaIndex >= 0 && rodadaIndex < rodadasOrdenadas.Count - 1)
+                {
+                    proximaRodada = rodadasOrdenadas[rodadaIndex + 1];
+                }
+            }
+
+            var jogosDaRodada = navegarPorRodada &&
+                rodadaSelecionada.HasValue &&
+                rodadas.Any(r => r.Rodada == rodadaSelecionada.Value)
+                ? jogosContexto.Where(j => j.Rodada == rodadaSelecionada.Value).ToList()
+                : jogosContexto;
+
+            var jogosFiltrados = AplicarFiltro(jogosDaRodada, filtro, hoje)
+                .OrderBy(j => j.DataJogo)
+                .ToList();
+
+            var viewModel = new JogosIndexViewModel
+            {
+                Jogos = jogosFiltrados,
+                Rodadas = rodadas,
+                Campeonatos = campeonatos,
+                TimesFavoritosIds = timesFavoritosIds,
+                Aba = aba,
+                Filtro = filtro,
+                RodadaSelecionada = rodadaSelecionada,
+                RodadaAnterior = rodadaAnterior,
+                ProximaRodada = proximaRodada,
+                CampeonatoId = campeonatoId,
+                UsuarioAutenticado = usuarioAutenticado,
+                TotalJogos = jogosDaRodada.Count,
+                TotalHoje = jogosDaRodada.Count(j => j.DataJogo.Date == hoje),
+                TotalProximos = jogosDaRodada.Count(j => EhProximo(j, hoje)),
+                TotalFinalizados = jogosDaRodada.Count(EhFinalizado),
+                TotalFavoritos = jogosBase.Count(j =>
+                    timesFavoritosIds.Contains(j.TimeCasaId) ||
+                    timesFavoritosIds.Contains(j.TimeVisitanteId)),
+                TotalTimesFavoritos = timesFavoritosIds.Count
+            };
+
+            return View(viewModel);
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
@@ -144,6 +291,51 @@ namespace FutPlay.Controllers
                 "Id",
                 "Nome"
             );
+        }
+
+        private static IEnumerable<Jogo> AplicarFiltro(
+            IEnumerable<Jogo> jogos,
+            string filtro,
+            DateTime hoje)
+        {
+            return filtro switch
+            {
+                "hoje" => jogos.Where(j => j.DataJogo.Date == hoje),
+                "proximos" => jogos.Where(j => EhProximo(j, hoje)),
+                "finalizados" => jogos.Where(EhFinalizado),
+                _ => jogos
+            };
+        }
+
+        private static bool EhFinalizado(Jogo jogo)
+        {
+            return string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool EhProximo(Jogo jogo, DateTime hoje)
+        {
+            return jogo.DataJogo.Date >= hoje && !EhFinalizado(jogo);
+        }
+
+        private static string NormalizarAba(string? aba)
+        {
+            return aba?.ToLowerInvariant() switch
+            {
+                "favoritos" => "favoritos",
+                "competicoes" => "competicoes",
+                _ => "todos"
+            };
+        }
+
+        private static string NormalizarFiltro(string? filtro)
+        {
+            return filtro?.ToLowerInvariant() switch
+            {
+                "hoje" => "hoje",
+                "proximos" => "proximos",
+                "finalizados" => "finalizados",
+                _ => "todos"
+            };
         }
     }
 }

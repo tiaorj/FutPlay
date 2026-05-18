@@ -1,0 +1,113 @@
+@model FutPlay.ViewModels.ClassificacaoTabelaViewModel
+
+@{
+    var grupos = Model.Classificacoes
+        .GroupBy(c => c.Grupo)
+        .ToList();
+}
+
+@if (!Model.Classificacoes.Any())
+{
+    <div class="fp-empty-mini m-3">
+        @Model.EmptyMessage
+    </div>
+}
+else
+{
+    @foreach (var grupo in grupos)
+    {
+        <div class="fp-standing-group">
+            <div class="fp-match-list-title">
+                <span>
+                    @if (string.IsNullOrWhiteSpace(grupo.Key))
+                    {
+                        <text>Classifica&ccedil;&atilde;o</text>
+                    }
+                    else
+                    {
+                        <text>Grupo @grupo.Key</text>
+                    }
+                </span>
+                <small>@grupo.Count() time(s)</small>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table fp-standing-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>PTS</th>
+                            <th>J</th>
+                            <th>V</th>
+                            <th>E</th>
+                            <th>D</th>
+                            <th>SG</th>
+                            <th>%</th>
+                            <th>Forma</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in grupo.OrderBy(c => c.Posicao))
+                        {
+                            var aproveitamento = item.Jogos > 0
+                                ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
+                                : 0;
+
+                            var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
+                                ? resultados
+                                : new List<string>();
+
+                            <tr>
+                                <td>
+                                    <div class="fp-standing-team">
+                                        <span class="fp-standing-position">@item.Posicao</span>
+
+                                        <span class="fp-mini-crest">
+                                            @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
+                                            {
+                                                <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
+                                            }
+                                            else
+                                            {
+                                                <span>@(item.Time?.Sigla ?? "FC")</span>
+                                            }
+                                        </span>
+
+                                        <strong>@item.Time?.Nome</strong>
+                                    </div>
+                                </td>
+
+                                <td class="fp-standing-points">@item.Pontos</td>
+                                <td>@item.Jogos</td>
+                                <td>@item.Vitorias</td>
+                                <td>@item.Empates</td>
+                                <td>@item.Derrotas</td>
+                                <td>@item.SaldoGols</td>
+                                <td>@aproveitamento.ToString("0")</td>
+
+                                <td>
+                                    <div class="fp-form-dots">
+                                        @foreach (var resultado in forma)
+                                        {
+                                            var dotClass = resultado == "V"
+                                                ? "win"
+                                                : resultado == "E" ? "draw" : "loss";
+
+                                            <span class="fp-form-dot @dotClass" title="@resultado"></span>
+                                        }
+
+                                        @for (int i = forma.Count; i < 5; i++)
+                                        {
+                                            <span class="fp-form-dot empty"></span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}

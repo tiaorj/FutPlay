@@ -5,6 +5,7 @@ using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FutPlay.Controllers
 {
@@ -21,15 +22,137 @@ namespace FutPlay.Controllers
             _classificacaoService = classificacaoService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string filtro = "todos", string? pais = null, string? tipo = null)
         {
-            var campeonatos = await _context.Campeonatos
+            filtro = NormalizarFiltro(filtro);
+
+            var usuarioAutenticado = User.Identity?.IsAuthenticated == true;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var campeonatosFavoritosIds = new HashSet<int>();
+
+            if (usuarioAutenticado && !string.IsNullOrWhiteSpace(userId))
+            {
+                campeonatosFavoritosIds = (await _context.CampeonatoFavoritos
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.CampeonatoId)
+                    .ToListAsync())
+                    .ToHashSet();
+            }
+
+            var todosCampeonatos = await _context.Campeonatos
                 .OrderByDescending(c => c.Ativo)
-                .OrderByDescending(c => c.Ano)
+                .ThenByDescending(c => c.Ano)
                 .ThenBy(c => c.Nome)
                 .ToListAsync();
 
-            return View(campeonatos);
+            IEnumerable<Campeonato> campeonatos = todosCampeonatos;
+
+            campeonatos = filtro switch
+            {
+                "ativos" => campeonatos.Where(c => c.Ativo),
+                "favoritos" => usuarioAutenticado
+                    ? campeonatos.Where(c => campeonatosFavoritosIds.Contains(c.Id))
+                    : Enumerable.Empty<Campeonato>(),
+                _ => campeonatos
+            };
+
+            if (!string.IsNullOrWhiteSpace(pais))
+            {
+                campeonatos = campeonatos.Where(c => string.Equals(c.Pais, pais, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(tipo))
+            {
+                campeonatos = campeonatos.Where(c => string.Equals(c.Tipo, tipo, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var viewModel = new CampeonatosIndexViewModel
+            {
+                Campeonatos = campeonatos
+                    .OrderByDescending(c => c.Ativo)
+                    .ThenByDescending(c => c.Ano)
+                    .ThenBy(c => c.Nome)
+                    .ToList(),
+                Paises = todosCampeonatos
+                    .Select(c => c.Pais)
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Select(p => p!)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(p => p)
+                    .ToList(),
+                Tipos = todosCampeonatos
+                    .Select(c => c.Tipo)
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(t => t)
+                    .ToList(),
+                CampeonatosFavoritosIds = campeonatosFavoritosIds,
+                Filtro = filtro,
+                Pais = pais,
+                Tipo = tipo,
+                UsuarioAutenticado = usuarioAutenticado,
+                TotalCampeonatos = todosCampeonatos.Count,
+                TotalAtivos = todosCampeonatos.Count(c => c.Ativo),
+                TotalInativos = todosCampeonatos.Count(c => !c.Ativo),
+                TotalPaises = todosCampeonatos
+                    .Select(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count(),
+                TotalFavoritos = todosCampeonatos.Count(c => campeonatosFavoritosIds.Contains(c.Id))
+            };
+
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AlternarFavorito(int id, string? returnUrl = null)
+        {
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                TempData["Erro"] = "Entre na sua conta para favoritar campeonatos.";
+                return RedirectToPage(
+                    "/Account/Login",
+                    new { area = "Identity", returnUrl = ObterReturnUrlSeguro(returnUrl) });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                TempData["Erro"] = "Não foi possível identificar seu usuário.";
+                return Redirect(ObterReturnUrlSeguro(returnUrl));
+            }
+
+            var campeonatoExiste = await _context.Campeonatos.AnyAsync(c => c.Id == id);
+
+            if (!campeonatoExiste)
+            {
+                return NotFound();
+            }
+
+            var favorito = await _context.CampeonatoFavoritos
+                .FirstOrDefaultAsync(f => f.UserId == userId && f.CampeonatoId == id);
+
+            if (favorito == null)
+            {
+                _context.CampeonatoFavoritos.Add(new CampeonatoFavorito
+                {
+                    UserId = userId,
+                    CampeonatoId = id
+                });
+
+                TempData["Sucesso"] = "Campeonato adicionado aos favoritos.";
+            }
+            else
+            {
+                _context.CampeonatoFavoritos.Remove(favorito);
+                TempData["Sucesso"] = "Campeonato removido dos favoritos.";
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Redirect(ObterReturnUrlSeguro(returnUrl));
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
@@ -263,12 +386,15 @@ namespace FutPlay.Controllers
             return RedirectToAction(nameof(Classificacao), new { id });
         }
 
-        public async Task<IActionResult> Portal(int? id)
+        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", int? rodada = null)
         {
             if (id == null)
             {
                 return NotFound();
             }
+
+            aba = NormalizarAbaPortal(aba);
+            var hoje = DateTime.Today;
 
             var campeonato = await _context.Campeonatos
                 .FirstOrDefaultAsync(c => c.Id == id);
@@ -285,37 +411,122 @@ namespace FutPlay.Controllers
                 .ThenBy(c => c.Posicao)
                 .ToListAsync();
 
-            var proximosJogos = await _context.Jogos
+            var jogosCampeonato = await _context.Jogos
                 .Include(j => j.TimeCasa)
                 .Include(j => j.TimeVisitante)
                 .Where(j =>
                     j.CampeonatoId == id &&
-                    j.Ativo &&
-                    j.DataJogo >= DateTime.Now &&
-                    j.Status != "Finalizado")
+                    j.Ativo)
                 .OrderBy(j => j.DataJogo)
                 .ToListAsync();
 
-            var jogosFinalizados = await _context.Jogos
-                .Include(j => j.TimeCasa)
-                .Include(j => j.TimeVisitante)
-                .Where(j =>
-                    j.CampeonatoId == id &&
-                    j.Ativo &&
-                    j.Status == "Finalizado")
+            var rodadas = ObterRodadas(
+                jogosCampeonato,
+                hoje,
+                rodada,
+                out var rodadaSelecionada,
+                out var rodadaAnterior,
+                out var proximaRodada);
+
+            var jogosDaRodada = rodadaSelecionada.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionada.Value)
+                ? jogosCampeonato.Where(j => j.Rodada == rodadaSelecionada.Value).OrderBy(j => j.DataJogo).ToList()
+                : jogosCampeonato;
+
+            var proximosJogos = jogosCampeonato
+                .Where(j => j.DataJogo >= DateTime.Now && !EhFinalizado(j))
+                .OrderBy(j => j.DataJogo)
+                .ToList();
+
+            var jogosFinalizados = jogosCampeonato
+                .Where(EhFinalizado)
                 .OrderByDescending(j => j.DataJogo)
-                .ToListAsync();
+                .ToList();
 
             var viewModel = new PortalCampeonatoViewModel
             {
                 Campeonato = campeonato,
                 Classificacoes = classificacoes,
+                JogosDaRodada = jogosDaRodada,
                 ProximosJogos = proximosJogos,
                 JogosFinalizados = jogosFinalizados,
+                Rodadas = rodadas,
+                Aba = aba,
+                RodadaSelecionada = rodadaSelecionada,
+                RodadaAnterior = rodadaAnterior,
+                ProximaRodada = proximaRodada,
+                TotalJogos = jogosCampeonato.Count,
+                TotalHoje = jogosCampeonato.Count(j => j.DataJogo.Date == hoje),
+                TotalProximos = jogosCampeonato.Count(j => EhProximo(j, hoje)),
+                TotalFinalizados = jogosCampeonato.Count(EhFinalizado),
                 UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value)
             };
 
             return View(viewModel);
+        }
+
+        private static List<RodadaFiltroViewModel> ObterRodadas(
+            List<Jogo> jogos,
+            DateTime hoje,
+            int? rodada,
+            out int? rodadaSelecionada,
+            out int? rodadaAnterior,
+            out int? proximaRodada)
+        {
+            var rodadas = jogos
+                .Where(j => j.Rodada.HasValue)
+                .GroupBy(j => j.Rodada!.Value)
+                .Select(g => new RodadaFiltroViewModel
+                {
+                    Rodada = g.Key,
+                    DataReferencia = g.Min(j => j.DataJogo.Date),
+                    TotalJogos = g.Count()
+                })
+                .OrderBy(r => r.Rodada)
+                .ToList();
+
+            rodadaSelecionada = rodada;
+
+            var rodadaInformada = rodadaSelecionada;
+
+            if (rodadaInformada.HasValue && !rodadas.Any(r => r.Rodada == rodadaInformada.Value))
+            {
+                rodadaSelecionada = null;
+            }
+
+            if (!rodadaSelecionada.HasValue && rodadas.Any())
+            {
+                rodadaSelecionada = rodadas
+                    .OrderBy(r => Math.Abs((r.DataReferencia - hoje).TotalDays))
+                    .ThenBy(r => r.Rodada)
+                    .First()
+                    .Rodada;
+            }
+
+            foreach (var rodadaOpcao in rodadas)
+            {
+                rodadaOpcao.Selecionada = rodadaOpcao.Rodada == rodadaSelecionada;
+            }
+
+            var rodadasOrdenadas = rodadas.Select(r => r.Rodada).ToList();
+            rodadaAnterior = null;
+            proximaRodada = null;
+
+            if (rodadaSelecionada.HasValue)
+            {
+                var rodadaIndex = rodadasOrdenadas.IndexOf(rodadaSelecionada.Value);
+
+                if (rodadaIndex > 0)
+                {
+                    rodadaAnterior = rodadasOrdenadas[rodadaIndex - 1];
+                }
+
+                if (rodadaIndex >= 0 && rodadaIndex < rodadasOrdenadas.Count - 1)
+                {
+                    proximaRodada = rodadasOrdenadas[rodadaIndex + 1];
+                }
+            }
+
+            return rodadas;
         }
 
         private async Task<Dictionary<int, List<string>>> ObterUltimosResultadosPorTimeAsync(int campeonatoId)
@@ -371,6 +582,47 @@ namespace FutPlay.Controllers
             {
                 resultados.Add(resultado);
             }
+        }
+
+        private string ObterReturnUrlSeguro(string? returnUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return returnUrl;
+            }
+
+            return Url.Action(nameof(Index), "Campeonatos") ?? "/";
+        }
+
+        private static bool EhFinalizado(Jogo jogo)
+        {
+            return string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool EhProximo(Jogo jogo, DateTime hoje)
+        {
+            return jogo.DataJogo.Date >= hoje && !EhFinalizado(jogo);
+        }
+
+        private static string NormalizarFiltro(string? filtro)
+        {
+            return filtro?.ToLowerInvariant() switch
+            {
+                "ativos" => "ativos",
+                "favoritos" => "favoritos",
+                _ => "todos"
+            };
+        }
+
+        private static string NormalizarAbaPortal(string? aba)
+        {
+            return aba?.ToLowerInvariant() switch
+            {
+                "jogos" => "jogos",
+                "classificacao" => "classificacao",
+                "visao" => "visao-geral",
+                _ => "visao-geral"
+            };
         }
     }
 }
