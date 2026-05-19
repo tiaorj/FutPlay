@@ -390,7 +390,7 @@ namespace FutPlay.Controllers
             return RedirectToAction(nameof(Classificacao), new { id });
         }
 
-        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", int? rodada = null)
+        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", string modo = "rodada", string? dataSelecionada = null, int? rodadaSelecionada = null)
         {
             if (id == null)
             {
@@ -424,17 +424,46 @@ namespace FutPlay.Controllers
                 .OrderBy(j => j.DataJogo)
                 .ToListAsync();
 
+            // Rodadas: mantive compatibilidade, usando o parâmetro 'rodadaSelecionada' (query string 'rodadaSelecionada')
             var rodadas = ObterRodadas(
                 jogosCampeonato,
                 hoje,
-                rodada,
-                out var rodadaSelecionada,
+                rodadaSelecionada,
+                out var rodadaSelecionadaOut,
                 out var rodadaAnterior,
                 out var proximaRodada);
 
-            var jogosDaRodada = rodadaSelecionada.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionada.Value)
-                ? jogosCampeonato.Where(j => j.Rodada == rodadaSelecionada.Value).OrderBy(j => j.DataJogo).ToList()
-                : jogosCampeonato;
+            // Datas disponíveis para modo=data
+            var datas = jogosCampeonato
+                .GroupBy(j => j.DataJogo.Date)
+                .Select(g => new DataFiltroViewModel
+                {
+                    Data = g.Key.Date,
+                    TotalJogos = g.Count(),
+                    Selecionada = !string.IsNullOrWhiteSpace(dataSelecionada) && DateTime.TryParse(dataSelecionada, out var d) && d.Date == g.Key
+                })
+                .OrderBy(d => d.Data)
+                .ToList();
+
+            // Lógica para escolher quais jogos exibir
+            List<Jogo> jogosDaRodada;
+            if (string.Equals(modo, "data", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(dataSelecionada) && DateTime.TryParse(dataSelecionada, out var dataSel))
+                {
+                    jogosDaRodada = jogosCampeonato.Where(j => j.DataJogo.Date == dataSel.Date).OrderBy(j => j.DataJogo).ToList();
+                }
+                else
+                {
+                    jogosDaRodada = jogosCampeonato;
+                }
+            }
+            else // modo=rodada (comportamento anterior)
+            {
+                jogosDaRodada = rodadaSelecionadaOut.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionadaOut.Value)
+                    ? jogosCampeonato.Where(j => j.Rodada == rodadaSelecionadaOut.Value).OrderBy(j => j.DataJogo).ToList()
+                    : jogosCampeonato;
+            }
 
             var proximosJogos = jogosCampeonato
                 .Where(j => j.DataJogo >= DateTime.Now && !EhFinalizado(j))
@@ -456,14 +485,18 @@ namespace FutPlay.Controllers
                 JogosFinalizados = jogosFinalizados,
                 Rodadas = rodadas,
                 Aba = aba,
-                RodadaSelecionada = rodadaSelecionada,
+                RodadaSelecionada = rodadaSelecionadaOut,
                 RodadaAnterior = rodadaAnterior,
                 ProximaRodada = proximaRodada,
                 TotalJogos = jogosCampeonato.Count,
                 TotalHoje = jogosCampeonato.Count(j => j.DataJogo.Date == hoje),
                 TotalProximos = jogosCampeonato.Count(j => EhProximo(j, hoje)),
                 TotalFinalizados = jogosCampeonato.Count(EhFinalizado),
-                UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value)
+                UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value),
+                // novas props
+                Datas = datas,
+                Modo = modo,
+                DataSelecionada = dataSelecionada
             };
 
             return View(viewModel);

@@ -1,4 +1,5 @@
 @model FutPlay.ViewModels.PortalCampeonatoViewModel
+@using System.Globalization
 
 @{
     ViewData["Title"] = "Portal do Campeonato";
@@ -114,6 +115,27 @@
             _ => 9
         };
     }
+
+    // Helper para exibir horário com pt-BR e "Horário a definir" quando 00:00
+    string FormatarHorario(DateTime dt)
+    {
+        if (dt.TimeOfDay == TimeSpan.Zero)
+        {
+            return "Horário a definir";
+        }
+
+        return dt.ToString("HH:mm", CultureInfo.GetCultureInfo("pt-BR"));
+    }
+
+    // Abreviação do dia da semana em pt-BR com capitalização inicial
+    string DiaAbreviado(DateTime dt)
+    {
+        var cultura = CultureInfo.GetCultureInfo("pt-BR");
+        var abbr = cultura.DateTimeFormat.GetAbbreviatedDayName(dt.DayOfWeek) ?? string.Empty;
+        if (string.IsNullOrEmpty(abbr)) return string.Empty;
+        var txt = char.ToUpperInvariant(abbr[0]) + (abbr.Length > 1 ? abbr.Substring(1) : string.Empty);
+        return txt.Replace(".", "");
+    }
 }
 
 <div class="container fp-competition-tv-page">
@@ -177,8 +199,17 @@
                         </div>
 
                         <div class="fp-featured-date">
-                            <strong>@jogoDestaque.DataJogo.ToString("dd/MM/yyyy")</strong>
-                            <span>@jogoDestaque.DataJogo.ToString("ddd, HH:mm")</span>
+                            <strong>@jogoDestaque.DataJogo.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR"))</strong>
+                            <span>
+                                @if (string.Equals(jogoDestaque.Status, "Finalizado", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <text>FT</text>
+                                }
+                                else
+                                {
+                                    <text>@DiaAbreviado(jogoDestaque.DataJogo), @FormatarHorario(jogoDestaque.DataJogo)</text>
+                                }
+                            </span>
                         </div>
 
                         <div class="fp-featured-team">
@@ -195,12 +226,6 @@
                             <strong>@jogoDestaque.TimeVisitante?.Nome</strong>
                         </div>
                     </div>
-
-                   @*  <div class="fp-odds-strip">
-                        <span>1 <b>1.86</b></span>
-                        <span>X <b>3.40</b></span>
-                        <span>2 <b>4.00</b></span>
-                    </div> *@
                 </section>
             }
 
@@ -208,21 +233,33 @@
                 <h2>Partidas</h2>
 
                 <div class="fp-tv-segmented">
-                    <span>Por data</span>
-                    <span class="active">Por rodada</span>
+                    <a asp-action="Portal"
+                       asp-route-id="@Model.Campeonato.Id"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-modo="data"
+                       class="@(Model.Modo == "data" ? "active" : "")">Por data</a>
+                    <a asp-action="Portal"
+                       asp-route-id="@Model.Campeonato.Id"
+                       asp-route-aba="@Model.Aba"
+                       asp-route-modo="rodada"
+                       class="@(Model.Modo != "data" ? "active" : "")">Por rodada</a>
                     @if (exibirPorGrupos)
-                    {
-                        <span>Por grupo</span>
-                    }
-                </div>
-
-                <div class="fp-tv-roundbar">
-                    @if (Model.RodadaAnterior.HasValue)
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="@Model.Aba"
-                           asp-route-rodada="@Model.RodadaAnterior"
+                           asp-route-modo="grupo">Por grupo</a>
+                    }
+                </div>
+
+                <div class="fp-tv-roundbar">
+                    @if (Model.RodadaAnterior.HasValue && Model.Modo != "data")
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-modo="rodada"
+                           asp-route-rodadaSelecionada="@Model.RodadaAnterior"
                            aria-label="Rodada anterior">
                             ‹
                         </a>
@@ -232,32 +269,59 @@
                         <span class="disabled">‹</span>
                     }
 
-                    <form asp-action="Portal" method="get">
-                        <input type="hidden" name="id" value="@Model.Campeonato.Id" />
-                        <input type="hidden" name="aba" value="@Model.Aba" />
-                        <select name="rodada" class="form-select form-select-sm" onchange="this.form.submit()">
-                            @if (!Model.Rodadas.Any())
-                            {
-                                <option value="">Sem rodadas</option>
-                            }
-                            else
-                            {
-                                @foreach (var rodada in Model.Rodadas)
+                    @if (Model.Modo == "data")
+                    {
+                        <form asp-action="Portal" method="get">
+                            <input type="hidden" name="id" value="@Model.Campeonato.Id" />
+                            <input type="hidden" name="aba" value="@Model.Aba" />
+                            <input type="hidden" name="modo" value="data" />
+                            <select name="dataSelecionada" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @if (!Model.Datas.Any())
                                 {
-                                    <option value="@rodada.Rodada" selected="@rodada.Selecionada">
-                                        Rodada @rodada.Rodada
-                                    </option>
+                                    <option value="">Sem datas</option>
                                 }
-                            }
-                        </select>
-                    </form>
+                                else
+                                {
+                                    @foreach (var d in Model.Datas)
+                                    {
+                                        var value = d.Data.ToString("yyyy-MM-dd");
+                                        <option value="@value" selected="@(d.Selecionada)">@d.Data.ToString("dd/MM/yyyy") (@d.TotalJogos partidas)</option>
+                                    }
+                                }
+                            </select>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="Portal" method="get">
+                            <input type="hidden" name="id" value="@Model.Campeonato.Id" />
+                            <input type="hidden" name="aba" value="@Model.Aba" />
+                            <input type="hidden" name="modo" value="rodada" />
+                            <select name="rodadaSelecionada" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @if (!Model.Rodadas.Any())
+                                {
+                                    <option value="">Sem rodadas</option>
+                                }
+                                else
+                                {
+                                    @foreach (var rodada in Model.Rodadas)
+                                    {
+                                        <option value="@rodada.Rodada" selected="@rodada.Selecionada">
+                                            Rodada @rodada.Rodada
+                                        </option>
+                                    }
+                                }
+                            </select>
+                        </form>
+                    }
 
-                    @if (Model.ProximaRodada.HasValue)
+                    @if (Model.ProximaRodada.HasValue && Model.Modo != "data")
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="@Model.Aba"
-                           asp-route-rodada="@Model.ProximaRodada"
+                           asp-route-modo="rodada"
+                           asp-route-rodadaSelecionada="@Model.ProximaRodada"
                            aria-label="Próxima rodada">
                             ›
                         </a>
@@ -271,7 +335,7 @@
                 @if (!Model.JogosDaRodada.Any())
                 {
                     <div class="fp-empty-mini">
-                        Nenhuma partida encontrada para a rodada selecionada.
+                        Nenhuma partida encontrada para a seleção atual.
                     </div>
                 }
                 else
@@ -289,7 +353,11 @@
                                    class="fp-tv-fixture-row">
                                     <span class="fp-tv-fixture-time">
                                         <b>@jogo.DataJogo.ToString("dd/MM")</b>
-                                        <small>@(string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) ? "FT" : jogo.DataJogo.ToString("HH:mm"))</small>
+                                        <small>
+                                            @(string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase)
+                                                ? "FT"
+                                                : FormatarHorario(jogo.DataJogo))
+                                        </small>
                                     </span>
 
                                     <span class="fp-tv-fixture-teams">
@@ -422,7 +490,7 @@
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="visao-geral"
-                           asp-route-rodada="@Model.RodadaSelecionada"
+                           asp-route-rodadaSelecionada="@Model.RodadaSelecionada"
                            class="@(Model.AbaVisaoGeralAtiva || Model.AbaJogosAtiva ? "active" : "")">
                             Visão geral
                         </a>
@@ -453,7 +521,7 @@
                     {
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
-                            Classificacoes = Model.Classificacoes,
+                            Classificacoes = gruposClassificacao.FirstOrDefault()?.OrderBy(c => c.Posicao).ToList() ?? new List<FutPlay.Models.Classificacao>(),
                             UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
                             AgruparPorGrupo = true,
                             EmptyMessage = "Nenhuma classificação disponível para esta competição."
@@ -497,7 +565,7 @@
                                                         @(jogo.GolsVisitante.HasValue ? jogo.GolsVisitante.ToString() : "-")
                                                     </small>
                                                 </span>
-                                                <time>@jogo.DataJogo.ToString("d MMM")<br />@jogo.DataJogo.ToString("HH:mm")</time>
+                                                <time>@jogo.DataJogo.ToString("d MMM", CultureInfo.GetCultureInfo("pt-BR"))<br />@FormatarHorario(jogo.DataJogo)</time>
                                             </article>
                                         }
                                     </section>
@@ -535,7 +603,7 @@
                                             }
                                         </span>
 
-                                        <strong>@jogo.DataJogo.ToString("dd/MM/yyyy")</strong>
+                                        <strong>@jogo.DataJogo.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("pt-BR"))</strong>
 
                                         <span class="fp-tv-crest">
                                             @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
@@ -551,7 +619,7 @@
 
                                     <footer>
                                         <b>@jogo.TimeCasa?.Nome</b>
-                                        <span>@jogo.DataJogo.ToString("ddd, HH:mm")</span>
+                                        <span>@DiaAbreviado(jogo.DataJogo), @FormatarHorario(jogo.DataJogo)</span>
                                         <b>@jogo.TimeVisitante?.Nome</b>
                                     </footer>
                                 </article>

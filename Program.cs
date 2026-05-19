@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.RateLimiting;
 using FutPlay.Models.Api;
 using Serilog;
 using System.Threading.RateLimiting;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +96,16 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 var app = builder.Build();
 
 await IdentitySeedService.SeedAsync(app.Services, app.Configuration);
+
+// Configure Request Localization (pt-BR) - aplica cultura globalmente
+var supportedCultures = new[] { new CultureInfo("pt-BR") };
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("pt-BR"),
+    SupportedCultures = supportedCultures.ToList(),
+    SupportedUICultures = supportedCultures.ToList()
+};
+app.UseRequestLocalization(localizationOptions);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

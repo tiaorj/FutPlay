@@ -1,4 +1,5 @@
 ﻿using FutPlay.Models;
+using System.Collections.Generic;
 
 namespace FutPlay.ViewModels
 {
@@ -17,6 +18,11 @@ namespace FutPlay.ViewModels
         public List<Jogo> JogosFinalizados { get; set; } = new();
 
         public List<RodadaFiltroViewModel> Rodadas { get; set; } = new();
+
+        // usa o DataFiltroViewModel definido em ViewModels/DataFiltroViewModel.cs
+        public List<DataFiltroViewModel> Datas { get; set; } = new();
+        public string? Modo { get; set; } = "rodada";
+        public string? DataSelecionada { get; set; }
 
         public Dictionary<int, List<string>> UltimosResultadosPorTime { get; set; } = new();
 
