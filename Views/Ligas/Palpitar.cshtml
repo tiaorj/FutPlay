@@ -9,6 +9,9 @@
     var bloqueados = Model.Jogos.Count(j => j.Bloqueado);
     var jogoDestaque = Model.Jogos.FirstOrDefault(j => !j.Bloqueado) ?? Model.Jogos.FirstOrDefault();
     var percentualConcluido = totalJogos == 0 ? 0 : Convert.ToInt32((palpitados * 100.0) / totalJogos);
+    var rodadaTitulo = Model.RodadaSelecionada.HasValue
+        ? $"Rodada {Model.RodadaSelecionada}"
+        : "Todos os jogos";
 }
 
 <div class="container fp-score-home">
@@ -17,6 +20,7 @@
         <input type="hidden" asp-for="LigaId" />
         <input type="hidden" asp-for="ParticipanteBloqueado" />
         <input type="hidden" asp-for="Origem" />
+        <input type="hidden" asp-for="RodadaSelecionada" />
 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
@@ -209,8 +213,58 @@
                         <a asp-controller="MinhasLigas" asp-action="Index">Meu bolão</a>
                     </div>
 
+                    @if (Model.Rodadas.Any())
+                    {
+                        <div class="fp-round-toolbar">
+                            @if (Model.RodadaAnterior.HasValue)
+                            {
+                                <a asp-action="Palpitar"
+                                   asp-route-id="@Model.LigaId"
+                                   asp-route-participanteId="@Model.LigaParticipanteId"
+                                   asp-route-origem="@Model.Origem"
+                                   asp-route-rodada="@Model.RodadaAnterior"
+                                   class="fp-round-nav">
+                                    Anterior
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="fp-round-nav disabled">Anterior</span>
+                            }
+
+                            <div class="fp-round-select-form">
+                                <select class="form-select form-select-sm"
+                                        onchange="carregarRodada(this.value)">
+                                    @foreach (var rodada in Model.Rodadas)
+                                    {
+                                        <option value="@rodada.Rodada" selected="@rodada.Selecionada">
+                                            Rodada @rodada.Rodada - @rodada.TotalJogos jogo(s)
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+
+                            @if (Model.ProximaRodada.HasValue)
+                            {
+                                <a asp-action="Palpitar"
+                                   asp-route-id="@Model.LigaId"
+                                   asp-route-participanteId="@Model.LigaParticipanteId"
+                                   asp-route-origem="@Model.Origem"
+                                   asp-route-rodada="@Model.ProximaRodada"
+                                   class="fp-round-nav">
+                                    Próxima
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="fp-round-nav disabled">Próxima</span>
+                            }
+                        </div>
+                    }
+
                     <div class="fp-score-filter-row">
-                        <span class="fp-score-filter active">Todos (@totalJogos)</span>
+                        <span class="fp-score-filter active">@rodadaTitulo (@totalJogos)</span>
+                        <span class="fp-score-filter">@Model.TotalJogosCampeonato jogo(s) no campeonato</span>
                         <span class="fp-score-filter">Pendentes (@pendentes)</span>
                         <span class="fp-score-filter">Palpitados (@palpitados)</span>
                         <span class="fp-score-filter">Bloqueados (@bloqueados)</span>
@@ -226,7 +280,7 @@
                     {
                         <div class="fp-bet-pick-list">
                             <div class="fp-match-list-title">
-                                <span>⚽ Jogos da rodada</span>
+                                <span>⚽ @rodadaTitulo</span>
                                 <small>@pendentes pendente(s)</small>
                             </div>
 
@@ -261,6 +315,7 @@
                                     <input type="hidden" asp-for="Jogos[i].DataJogo" />
                                     <input type="hidden" asp-for="Jogos[i].Fase" />
                                     <input type="hidden" asp-for="Jogos[i].Grupo" />
+                                    <input type="hidden" asp-for="Jogos[i].Rodada" />
                                     <input type="hidden" asp-for="Jogos[i].JaPalpitado" />
                                     <input type="hidden" asp-for="Jogos[i].Bloqueado" />
 
@@ -418,8 +473,41 @@
     <script>
         function carregarParticipante(participanteId) {
             if (participanteId) {
-                window.location.href = '@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })' + '?participanteId=' + participanteId;
+                const url = montarUrlPalpitar();
+                url.searchParams.set("participanteId", participanteId);
+                window.location.href = url.pathname + url.search;
             }
+        }
+
+        function carregarRodada(rodada) {
+            const url = montarUrlPalpitar();
+
+            if (rodada) {
+                url.searchParams.set("rodada", rodada);
+            }
+
+            window.location.href = url.pathname + url.search;
+        }
+
+        function montarUrlPalpitar() {
+            const url = new URL('@Url.Action("Palpitar", "Ligas", new { id = Model.LigaId })', window.location.origin);
+            const participanteId = document.querySelector("[name='LigaParticipanteId']")?.value;
+            const origem = '@Model.Origem';
+            const rodada = '@Model.RodadaSelecionada';
+
+            if (participanteId) {
+                url.searchParams.set("participanteId", participanteId);
+            }
+
+            if (origem) {
+                url.searchParams.set("origem", origem);
+            }
+
+            if (rodada) {
+                url.searchParams.set("rodada", rodada);
+            }
+
+            return url;
         }
 
         function normalizarPlacaresAntesSalvar() {

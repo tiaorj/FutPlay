@@ -7,6 +7,10 @@
     var grupos = Model.Classificacoes
         .GroupBy(c => c.Grupo)
         .ToList();
+    var exibirPorGrupos = Model.ExibirPorGrupos;
+    var totalGrupos = exibirPorGrupos
+        ? grupos.Count
+        : Model.Classificacoes.Any() ? 1 : 0;
 }
 
 <div class="container fp-score-home">
@@ -51,8 +55,8 @@
                     </div>
 
                     <div>
-                        <span>Grupos</span>
-                        <strong>@grupos.Count</strong>
+                        <span>Formato</span>
+                        <strong>@Model.FormatoDescricao</strong>
                     </div>
 
                     <div>
@@ -119,13 +123,16 @@
                 <div class="fp-score-filter-row">
                     <span class="fp-score-filter active">Tabela de pontos</span>
                     <span class="fp-score-filter">@totalTimes times</span>
-                    <span class="fp-score-filter">@grupos.Count grupo(s)</span>
+                    <span class="fp-score-filter">
+                        @(exibirPorGrupos ? $"{totalGrupos} grupo(s)" : "Tabela única")
+                    </span>
                 </div>
 
                 @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                 {
                     Classificacoes = Model.Classificacoes,
                     UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                    AgruparPorGrupo = exibirPorGrupos,
                     EmptyMessage = "Nenhuma classificação cadastrada para este campeonato ainda."
                 })
             </section>

@@ -4,42 +4,121 @@
     ViewData["Title"] = "Portal do Campeonato";
 
     var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
+    var exibirPorGrupos = Model.ExibirClassificacaoPorGrupos;
+    var isPontosCorridos = !exibirPorGrupos;
     var gruposClassificacao = Model.Classificacoes
-        .GroupBy(c => c.Grupo)
+        .GroupBy(c => exibirPorGrupos ? c.Grupo : null)
+        .OrderBy(g => string.IsNullOrWhiteSpace(g.Key) ? "Z" : g.Key)
         .ToList();
+    var totalGruposClassificacao = exibirPorGrupos
+        ? gruposClassificacao.Count
+        : Model.Classificacoes.Any() ? 1 : 0;
     var jogosPorDia = Model.JogosDaRodada
         .OrderBy(j => j.DataJogo)
         .GroupBy(j => j.DataJogo.ToString("dd/MM/yyyy"))
         .ToList();
-    var classificacaoResumo = gruposClassificacao
-        .SelectMany(g => g.OrderBy(c => c.Posicao).Take(4))
+    var jogosDestaque = Model.JogosDaRodada
+        .OrderBy(j => j.DataJogo)
+        .Take(4)
         .ToList();
+    var jogoDestaque = Model.ProximosJogos.FirstOrDefault()
+        ?? Model.JogosFinalizados.FirstOrDefault()
+        ?? Model.JogosDaRodada.FirstOrDefault();
     var rodadaTitulo = Model.RodadaSelecionada.HasValue
         ? $"Rodada {Model.RodadaSelecionada}"
-        : "Jogos";
+        : "Rodada";
+    var jogosEliminatoria = Model.Jogos
+        .Where(EhFaseEliminatoria)
+        .OrderBy(j => j.DataJogo)
+        .ToList();
+    var fasesEliminatorias = jogosEliminatoria
+        .GroupBy(j => NomeFaseEliminatoria(j.Fase))
+        .OrderBy(g => OrdemFaseEliminatoria(g.Key))
+        .ToList();
 
-    string StatusCss(string? status)
+    string Sigla(FutPlay.Models.Time? time, string fallback)
     {
-        if (string.Equals(status, "Finalizado", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(time?.Sigla))
         {
-            return "finished";
+            return time.Sigla;
         }
 
-        if (string.Equals(status, "Ao Vivo", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(status, "Em andamento", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(status, "Em Andamento", StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(time?.Nome))
         {
-            return "live";
+            return time.Nome.Substring(0, Math.Min(3, time.Nome.Length)).ToUpperInvariant();
         }
 
-        return "scheduled";
+        return fallback;
+    }
+
+    string NomeGrupo(string? grupo)
+    {
+        return string.IsNullOrWhiteSpace(grupo) ? "Geral" : $"Grupo {grupo}";
+    }
+
+    bool EhFaseEliminatoria(FutPlay.Models.Jogo jogo)
+    {
+        var fase = jogo.Fase ?? string.Empty;
+
+        return fase.Contains("final", StringComparison.OrdinalIgnoreCase) ||
+               fase.Contains("oitava", StringComparison.OrdinalIgnoreCase) ||
+               fase.Contains("quarta", StringComparison.OrdinalIgnoreCase) ||
+               fase.Contains("semi", StringComparison.OrdinalIgnoreCase) ||
+               fase.Contains("16", StringComparison.OrdinalIgnoreCase);
+    }
+
+    string NomeFaseEliminatoria(string? fase)
+    {
+        if (string.IsNullOrWhiteSpace(fase))
+        {
+            return "Fase eliminatoria";
+        }
+
+        if (fase.Contains("16", StringComparison.OrdinalIgnoreCase))
+        {
+            return "16Avos-de-final";
+        }
+
+        if (fase.Contains("oitava", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Oitavas-de-Final";
+        }
+
+        if (fase.Contains("quarta", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Quartas de final";
+        }
+
+        if (fase.Contains("semi", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Semifinais";
+        }
+
+        if (fase.Contains("final", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Final";
+        }
+
+        return fase;
+    }
+
+    int OrdemFaseEliminatoria(string fase)
+    {
+        return fase switch
+        {
+            "16Avos-de-final" => 1,
+            "Oitavas-de-Final" => 2,
+            "Quartas de final" => 3,
+            "Semifinais" => 4,
+            "Final" => 5,
+            _ => 9
+        };
     }
 }
 
-<div class="container fp-score-home">
-
-    <section class="fp-champ-header mb-3">
-        <div class="fp-champ-logo">
+<div class="container fp-competition-tv-page">
+    <section class="fp-tv-titlebar">
+        <div class="fp-tv-title-logo">
             @if (!string.IsNullOrWhiteSpace(Model.Campeonato.LogoUrl))
             {
                 <img src="@Model.Campeonato.LogoUrl" alt="@Model.Campeonato.Nome" />
@@ -50,8 +129,8 @@
             }
         </div>
 
-        <div class="fp-champ-info">
-            <span>Portal da competição</span>
+        <div>
+            <span>@Model.FormatoDescricao</span>
             <h1>@Model.Campeonato.Nome @Model.Campeonato.Ano</h1>
             <p>
                 @Model.Campeonato.Tipo
@@ -62,515 +141,438 @@
             </p>
         </div>
 
-        <div class="fp-champ-actions">
-            <a asp-action="Portal"
-               asp-route-id="@Model.Campeonato.Id"
-               asp-route-aba="jogos"
-               asp-route-rodada="@Model.RodadaSelecionada"
-               class="@(Model.AbaJogosAtiva ? "active" : "")">
-                Jogos
-            </a>
+        <div class="fp-tv-title-actions">
+            <a asp-action="Index">Competições</a>
 
-            <a asp-action="Portal"
-               asp-route-id="@Model.Campeonato.Id"
-               asp-route-aba="classificacao"
-               class="@(Model.AbaClassificacaoAtiva ? "active" : "")">
-                Classificação
-            </a>
-
-            <a asp-action="Index">Outras competições</a>
+            @if (User.IsInRole(AppRoles.Administrador) && Model.Campeonato.ApiLeagueId.HasValue)
+            {
+                <form asp-controller="Importacoes" asp-action="SincronizarCampeonato" method="post">
+                    <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
+                    <button type="submit">Sincronizar</button>
+                </form>
+            }
         </div>
     </section>
 
-    <div class="row g-3">
-
-        <aside class="col-xl-3 col-lg-4">
-            <section class="fp-home-card">
-                <div class="fp-card-header-link">
-                    <h2>Resumo</h2>
-                </div>
-
-                <div class="fp-score-stats-list">
-                    <div>
-                        <span>Times</span>
-                        <strong>@totalTimes</strong>
-                    </div>
-
-                    <div>
-                        <span>Jogos</span>
-                        <strong>@Model.TotalJogos</strong>
-                    </div>
-
-                    <div>
-                        <span>Hoje</span>
-                        <strong>@Model.TotalHoje</strong>
-                    </div>
-
-                    <div>
-                        <span>Rodada</span>
-                        <strong>@(Model.RodadaSelecionada?.ToString() ?? "-")</strong>
-                    </div>
-                </div>
-            </section>
-
-            <section class="fp-home-card mt-3">
-                <div class="fp-card-header-link">
-                    <h2>Navegação</h2>
-                </div>
-
-                <div class="fp-score-filter-column">
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="visao-geral"
-                       class="fp-score-filter @(Model.AbaVisaoGeralAtiva ? "active" : "")">
-                        Visão geral
-                    </a>
-
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="jogos"
-                       asp-route-rodada="@Model.RodadaSelecionada"
-                       class="fp-score-filter @(Model.AbaJogosAtiva ? "active" : "")">
-                        Jogos
-                    </a>
-
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="classificacao"
-                       class="fp-score-filter @(Model.AbaClassificacaoAtiva ? "active" : "")">
-                        Classificação
-                    </a>
-
-                    <a asp-action="Index" class="fp-score-filter">
-                        Competições
-                    </a>
-                </div>
-            </section>
-
-            @if (User.IsInRole(AppRoles.Administrador))
+    <div class="fp-tv-grid @(isPontosCorridos ? "league" : "cup")">
+        <aside class="fp-tv-left">
+            @if (isPontosCorridos && jogoDestaque != null)
             {
-                <section class="fp-home-card mt-3">
-                    <div class="fp-card-header-link">
-                        <h2>Admin</h2>
-                    </div>
+                <section class="fp-tv-card fp-featured-match">
+                    <h2>Destacado</h2>
 
-                    <div class="d-grid gap-2">
-                        <a asp-action="RecalcularClassificacao"
-                           asp-route-id="@Model.Campeonato.Id"
-                           class="btn btn-outline-primary">
-                            Recalcular classificação
-                        </a>
-
-                        @if (Model.Campeonato.ApiLeagueId.HasValue)
-                        {
-                            <form asp-controller="Importacoes"
-                                  asp-action="SincronizarCampeonato"
-                                  method="post">
-                                <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
-                                <button type="submit" class="btn btn-success w-100">
-                                    Sincronizar
-                                </button>
-                            </form>
-                        }
-                    </div>
-                </section>
-            }
-        </aside>
-
-        <main class="col-xl-6 col-lg-8">
-            <section class="fp-score-board">
-                <div class="fp-score-board-tabs">
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="visao-geral"
-                       class="@(Model.AbaVisaoGeralAtiva ? "active" : "")">
-                        Visão geral
-                    </a>
-
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="jogos"
-                       asp-route-rodada="@Model.RodadaSelecionada"
-                       class="@(Model.AbaJogosAtiva ? "active" : "")">
-                        Jogos
-                    </a>
-
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="classificacao"
-                       class="@(Model.AbaClassificacaoAtiva ? "active" : "")">
-                        Classificação
-                    </a>
-
-                    <a asp-action="Index">Competições</a>
-                </div>
-
-                @if (Model.AbaVisaoGeralAtiva)
-                {
-                    <div class="fp-score-filter-row">
-                        <span class="fp-score-filter active">Visão geral</span>
-                        <span class="fp-score-filter">@Model.TotalProximos próximos</span>
-                        <span class="fp-score-filter">@Model.TotalFinalizados finalizados</span>
-                    </div>
-
-                    <section class="fp-portal-section">
-                        <div class="fp-match-list-title">
-                            <span>Próximos jogos</span>
-                            <a asp-action="Portal"
-                               asp-route-id="@Model.Campeonato.Id"
-                               asp-route-aba="jogos"
-                               asp-route-rodada="@Model.RodadaSelecionada">
-                                Ver rodada
-                            </a>
-                        </div>
-
-                        @if (!Model.ProximosJogos.Any())
-                        {
-                            <div class="fp-empty-mini m-3">
-                                Nenhum jogo futuro cadastrado para esta competição.
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="fp-score-match-list">
-                                @foreach (var jogo in Model.ProximosJogos.Take(5))
+                    <div class="fp-featured-match-grid">
+                        <div class="fp-featured-team">
+                            <span class="fp-tv-crest large">
+                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeCasa?.EscudoUrl))
                                 {
-                                    var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
-                                        ? jogo.TimeCasa.Sigla
-                                        : "CAS";
-                                    var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
-                                        ? jogo.TimeVisitante.Sigla
-                                        : "VIS";
-
-                                    <article class="fp-score-match-row fp-score-match-row-full">
-                                        <div class="fp-score-match-time">
-                                            <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
-                                            <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                        </div>
-
-                                        <div class="fp-score-match-clubs">
-                                            <div class="fp-score-club">
-                                                <span class="fp-mini-crest">
-                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
-                                                    {
-                                                        <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
-                                                    }
-                                                    else
-                                                    {
-                                                        @casaSigla
-                                                    }
-                                                </span>
-                                                <span>@jogo.TimeCasa?.Nome</span>
-                                            </div>
-
-                                            <div class="fp-score-club">
-                                                <span class="fp-mini-crest">
-                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
-                                                    {
-                                                        <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
-                                                    }
-                                                    else
-                                                    {
-                                                        @visitanteSigla
-                                                    }
-                                                </span>
-                                                <span>@jogo.TimeVisitante?.Nome</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="fp-score-match-score">
-                                            <strong>-</strong>
-                                            <strong>-</strong>
-                                        </div>
-
-                                        <div class="fp-score-match-extra">
-                                            <span class="fp-status @StatusCss(jogo.Status)">
-                                                @jogo.Status
-                                            </span>
-
-                                            <a asp-controller="Jogos"
-                                               asp-action="Details"
-                                               asp-route-id="@jogo.Id">
-                                                Detalhes
-                                            </a>
-                                        </div>
-                                    </article>
-                                }
-                            </div>
-                        }
-                    </section>
-
-                    <section class="fp-portal-section">
-                        <div class="fp-match-list-title">
-                            <span>Classificação resumida</span>
-                            <a asp-action="Portal"
-                               asp-route-id="@Model.Campeonato.Id"
-                               asp-route-aba="classificacao">
-                                Ver completa
-                            </a>
-                        </div>
-
-                        @if (!classificacaoResumo.Any())
-                        {
-                            <div class="fp-empty-mini m-3">
-                                Nenhuma classificação disponível para esta competição.
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="fp-standings-compact">
-                                @foreach (var item in classificacaoResumo)
-                                {
-                                    <div class="fp-standing-compact-row">
-                                        <span>@item.Posicao</span>
-                                        <strong>@item.Time?.Nome</strong>
-                                        <b>@item.Pontos pts</b>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </section>
-                }
-                else if (Model.AbaJogosAtiva)
-                {
-                    <div class="fp-round-toolbar">
-                        @if (Model.RodadaAnterior.HasValue)
-                        {
-                            <a asp-action="Portal"
-                               asp-route-id="@Model.Campeonato.Id"
-                               asp-route-aba="jogos"
-                               asp-route-rodada="@Model.RodadaAnterior"
-                               class="fp-round-nav">
-                                Anterior
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="fp-round-nav disabled">Anterior</span>
-                        }
-
-                        <form asp-action="Portal" method="get" class="fp-round-select-form">
-                            <input type="hidden" name="id" value="@Model.Campeonato.Id" />
-                            <input type="hidden" name="aba" value="jogos" />
-
-                            <select name="rodada" class="form-select form-select-sm" onchange="this.form.submit()">
-                                @if (!Model.Rodadas.Any())
-                                {
-                                    <option value="">Sem rodadas</option>
+                                    <img src="@jogoDestaque.TimeCasa.EscudoUrl" alt="@jogoDestaque.TimeCasa.Nome" />
                                 }
                                 else
                                 {
-                                    @foreach (var rodada in Model.Rodadas)
-                                    {
-                                        <option value="@rodada.Rodada" selected="@rodada.Selecionada">
-                                            Rodada @rodada.Rodada - @rodada.TotalJogos jogo(s)
-                                        </option>
-                                    }
+                                    @Sigla(jogoDestaque.TimeCasa, "CAS")
                                 }
-                            </select>
-                        </form>
-
-                        @if (Model.ProximaRodada.HasValue)
-                        {
-                            <a asp-action="Portal"
-                               asp-route-id="@Model.Campeonato.Id"
-                               asp-route-aba="jogos"
-                               asp-route-rodada="@Model.ProximaRodada"
-                               class="fp-round-nav">
-                                Próxima
-                            </a>
-                        }
-                        else
-                        {
-                            <span class="fp-round-nav disabled">Próxima</span>
-                        }
-                    </div>
-
-                    <div class="fp-score-filter-row">
-                        <span class="fp-score-filter active">@rodadaTitulo</span>
-                        <span class="fp-score-filter">@Model.JogosDaRodada.Count jogo(s)</span>
-                        <span class="fp-score-filter">@Model.Campeonato.Nome</span>
-                    </div>
-
-                    @if (!Model.JogosDaRodada.Any())
-                    {
-                        <div class="fp-empty-mini m-3">
-                            Nenhum jogo encontrado para a rodada selecionada.
+                            </span>
+                            <strong>@jogoDestaque.TimeCasa?.Nome</strong>
                         </div>
+
+                        <div class="fp-featured-date">
+                            <strong>@jogoDestaque.DataJogo.ToString("dd/MM/yyyy")</strong>
+                            <span>@jogoDestaque.DataJogo.ToString("ddd, HH:mm")</span>
+                        </div>
+
+                        <div class="fp-featured-team">
+                            <span class="fp-tv-crest large">
+                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeVisitante?.EscudoUrl))
+                                {
+                                    <img src="@jogoDestaque.TimeVisitante.EscudoUrl" alt="@jogoDestaque.TimeVisitante.Nome" />
+                                }
+                                else
+                                {
+                                    @Sigla(jogoDestaque.TimeVisitante, "VIS")
+                                }
+                            </span>
+                            <strong>@jogoDestaque.TimeVisitante?.Nome</strong>
+                        </div>
+                    </div>
+
+                   @*  <div class="fp-odds-strip">
+                        <span>1 <b>1.86</b></span>
+                        <span>X <b>3.40</b></span>
+                        <span>2 <b>4.00</b></span>
+                    </div> *@
+                </section>
+            }
+
+            <section class="fp-tv-card fp-tv-fixtures-card">
+                <h2>Partidas</h2>
+
+                <div class="fp-tv-segmented">
+                    <span>Por data</span>
+                    <span class="active">Por rodada</span>
+                    @if (exibirPorGrupos)
+                    {
+                        <span>Por grupo</span>
+                    }
+                </div>
+
+                <div class="fp-tv-roundbar">
+                    @if (Model.RodadaAnterior.HasValue)
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.RodadaAnterior"
+                           aria-label="Rodada anterior">
+                            ‹
+                        </a>
                     }
                     else
                     {
-                        <div class="fp-score-match-list">
-                            @foreach (var grupo in jogosPorDia)
+                        <span class="disabled">‹</span>
+                    }
+
+                    <form asp-action="Portal" method="get">
+                        <input type="hidden" name="id" value="@Model.Campeonato.Id" />
+                        <input type="hidden" name="aba" value="@Model.Aba" />
+                        <select name="rodada" class="form-select form-select-sm" onchange="this.form.submit()">
+                            @if (!Model.Rodadas.Any())
                             {
-                                <div class="fp-match-list-title">
-                                    <span>@grupo.Key</span>
-                                    <small>@grupo.Count() jogo(s)</small>
-                                </div>
-
-                                @foreach (var jogo in grupo.OrderBy(j => j.DataJogo))
+                                <option value="">Sem rodadas</option>
+                            }
+                            else
+                            {
+                                @foreach (var rodada in Model.Rodadas)
                                 {
-                                    var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
-                                        ? jogo.TimeCasa.Sigla
-                                        : "CAS";
-                                    var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
-                                        ? jogo.TimeVisitante.Sigla
-                                        : "VIS";
-
-                                    <article class="fp-score-match-row fp-score-match-row-full">
-                                        <div class="fp-score-match-time">
-                                            <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
-                                            <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                        </div>
-
-                                        <div class="fp-score-match-clubs">
-                                            <div class="fp-score-club">
-                                                <span class="fp-mini-crest">
-                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
-                                                    {
-                                                        <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
-                                                    }
-                                                    else
-                                                    {
-                                                        @casaSigla
-                                                    }
-                                                </span>
-                                                <span>@jogo.TimeCasa?.Nome</span>
-                                            </div>
-
-                                            <div class="fp-score-club">
-                                                <span class="fp-mini-crest">
-                                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
-                                                    {
-                                                        <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
-                                                    }
-                                                    else
-                                                    {
-                                                        @visitanteSigla
-                                                    }
-                                                </span>
-                                                <span>@jogo.TimeVisitante?.Nome</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="fp-score-match-score">
-                                            @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
-                                            {
-                                                <strong>@jogo.GolsCasa</strong>
-                                                <strong>@jogo.GolsVisitante</strong>
-                                            }
-                                            else
-                                            {
-                                                <strong>-</strong>
-                                                <strong>-</strong>
-                                            }
-                                        </div>
-
-                                        <div class="fp-score-match-extra">
-                                            <span class="fp-status @StatusCss(jogo.Status)">
-                                                @jogo.Status
-                                            </span>
-
-                                            <a asp-controller="Jogos"
-                                               asp-action="Details"
-                                               asp-route-id="@jogo.Id">
-                                                Detalhes
-                                            </a>
-
-                                            @if (User.IsInRole(AppRoles.Administrador))
-                                            {
-                                                <a asp-controller="Jogos"
-                                                   asp-action="Edit"
-                                                   asp-route-id="@jogo.Id">
-                                                    Editar
-                                                </a>
-                                            }
-                                        </div>
-                                    </article>
+                                    <option value="@rodada.Rodada" selected="@rodada.Selecionada">
+                                        Rodada @rodada.Rodada
+                                    </option>
                                 }
                             }
-                        </div>
-                    }
-                }
-                else if (Model.AbaClassificacaoAtiva)
-                {
-                    <div class="fp-score-filter-row">
-                        <span class="fp-score-filter active">Classificação</span>
-                        <span class="fp-score-filter">@totalTimes times</span>
-                        <span class="fp-score-filter">@gruposClassificacao.Count grupo(s)</span>
-                    </div>
+                        </select>
+                    </form>
 
-                    @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
+                    @if (Model.ProximaRodada.HasValue)
                     {
-                        Classificacoes = Model.Classificacoes,
-                        UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
-                        EmptyMessage = "Nenhuma classificação disponível para esta competição."
-                    })
-                }
-            </section>
-        </main>
-
-        <aside class="col-xl-3 d-none d-xl-block">
-            <section class="fp-home-card">
-                <div class="fp-card-header-link">
-                    <h2>Rodada</h2>
-                    <a asp-controller="Jogos"
-                       asp-action="Index"
-                       asp-route-aba="competicoes"
-                       asp-route-campeonatoId="@Model.Campeonato.Id"
-                       asp-route-rodada="@Model.RodadaSelecionada">
-                        Abrir jogos
-                    </a>
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-rodada="@Model.ProximaRodada"
+                           aria-label="Próxima rodada">
+                            ›
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="disabled">›</span>
+                    }
                 </div>
 
-                <div class="fp-score-stats-list">
-                    <div>
-                        <span>Selecionada</span>
-                        <strong>@(Model.RodadaSelecionada?.ToString() ?? "-")</strong>
-                    </div>
-
-                    <div>
-                        <span>Partidas</span>
-                        <strong>@Model.JogosDaRodada.Count</strong>
-                    </div>
-                </div>
-            </section>
-
-            <section class="fp-home-card mt-3">
-                <div class="fp-card-header-link">
-                    <h2>Resultados recentes</h2>
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="jogos">
-                        Ver jogos
-                    </a>
-                </div>
-
-                @if (!Model.JogosFinalizados.Any())
+                @if (!Model.JogosDaRodada.Any())
                 {
                     <div class="fp-empty-mini">
-                        Nenhum resultado recente cadastrado.
+                        Nenhuma partida encontrada para a rodada selecionada.
                     </div>
                 }
                 else
                 {
-                    <div class="fp-result-list">
-                        @foreach (var jogo in Model.JogosFinalizados.Take(6))
+                    <div class="fp-tv-fixture-list">
+                        @foreach (var grupoDia in jogosPorDia)
                         {
-                            <article class="fp-result-row">
-                                <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                <strong>@jogo.TimeCasa?.Nome</strong>
-                                <b>
-                                    @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
-                                        ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
-                                        : "x")
-                                </b>
-                                <strong>@jogo.TimeVisitante?.Nome</strong>
-                            </article>
+                            <div class="fp-tv-date-row">@grupoDia.Key</div>
+
+                            @foreach (var jogo in grupoDia.OrderBy(j => j.DataJogo))
+                            {
+                                <a asp-controller="Jogos"
+                                   asp-action="Details"
+                                   asp-route-id="@jogo.Id"
+                                   class="fp-tv-fixture-row">
+                                    <span class="fp-tv-fixture-time">
+                                        <b>@jogo.DataJogo.ToString("dd/MM")</b>
+                                        <small>@(string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) ? "FT" : jogo.DataJogo.ToString("HH:mm"))</small>
+                                    </span>
+
+                                    <span class="fp-tv-fixture-teams">
+                                        <span>
+                                            <span class="fp-tv-crest">
+                                                @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                                {
+                                                    <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                                }
+                                                else
+                                                {
+                                                    @Sigla(jogo.TimeCasa, "CAS")
+                                                }
+                                            </span>
+                                            @jogo.TimeCasa?.Nome
+                                        </span>
+
+                                        <span>
+                                            <span class="fp-tv-crest">
+                                                @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                                {
+                                                    <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                                }
+                                                else
+                                                {
+                                                    @Sigla(jogo.TimeVisitante, "VIS")
+                                                }
+                                            </span>
+                                            @jogo.TimeVisitante?.Nome
+                                        </span>
+                                    </span>
+
+                                    <span class="fp-tv-fixture-score">
+                                        @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
+                                        {
+                                            <b>@jogo.GolsCasa</b>
+                                            <b>@jogo.GolsVisitante</b>
+                                        }
+                                        else
+                                        {
+                                            <b>-</b>
+                                            <b>-</b>
+                                        }
+                                    </span>
+                                </a>
+                            }
                         }
                     </div>
                 }
             </section>
         </aside>
+
+        <main class="fp-tv-main">
+            @if (isPontosCorridos)
+            {
+                <section class="fp-tv-card fp-league-standings-panel">
+                    <nav class="fp-tv-tabs compact">
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="classificacao"
+                           class="@(Model.AbaClassificacaoAtiva || Model.AbaVisaoGeralAtiva ? "active" : "")">
+                            Classificação
+                        </a>
+
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="estatisticas"
+                           class="@(Model.AbaEstatisticasAtiva ? "active" : "")">
+                            Estatísticas
+                        </a>
+
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="midia"
+                           class="@(Model.AbaMidiaAtiva ? "active" : "")">
+                            Detalhes
+                        </a>
+                    </nav>
+
+                    @if (Model.AbaEstatisticasAtiva)
+                    {
+                        <div class="fp-tv-stats-grid">
+                            <div>
+                                <span>Jogos</span>
+                                <strong>@Model.TotalJogos</strong>
+                            </div>
+                            <div>
+                                <span>Finalizados</span>
+                                <strong>@Model.TotalFinalizados</strong>
+                            </div>
+                            <div>
+                                <span>Próximos</span>
+                                <strong>@Model.TotalProximos</strong>
+                            </div>
+                            <div>
+                                <span>Times</span>
+                                <strong>@totalTimes</strong>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.AbaMidiaAtiva)
+                    {
+                        <div class="fp-tv-about">
+                            <h2>Sobre</h2>
+                            <p>@Model.Campeonato.Nome é exibido em formato de pontos corridos, com tabela única e partidas por rodada.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-tv-table-switch">
+                            <span class="active">Todos</span>
+                            <span>Casa</span>
+                            <span>Fora</span>
+                        </div>
+
+                        @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
+                        {
+                            Classificacoes = Model.Classificacoes,
+                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                            AgruparPorGrupo = false,
+                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                        })
+                    }
+                </section>
+            }
+            else
+            {
+                <section class="fp-tv-card fp-cup-panel">
+                    <nav class="fp-tv-tabs">
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="visao-geral"
+                           asp-route-rodada="@Model.RodadaSelecionada"
+                           class="@(Model.AbaVisaoGeralAtiva || Model.AbaJogosAtiva ? "active" : "")">
+                            Visão geral
+                        </a>
+
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="classificacao"
+                           class="@(Model.AbaClassificacaoAtiva ? "active" : "")">
+                            Classificação
+                        </a>
+
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="fase-eliminatoria"
+                           class="@(Model.AbaFaseEliminatoriaAtiva ? "active" : "")">
+                            Fase eliminatória
+                        </a>
+
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="midia"
+                           class="@(Model.AbaMidiaAtiva ? "active" : "")">
+                            Mídia
+                        </a>
+                    </nav>
+
+                    @if (Model.AbaClassificacaoAtiva)
+                    {
+                        @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
+                        {
+                            Classificacoes = Model.Classificacoes,
+                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                            AgruparPorGrupo = true,
+                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                        })
+                    }
+                    else if (Model.AbaFaseEliminatoriaAtiva)
+                    {
+                        <div class="fp-bracket-toolbar">
+                            <span>&lt;/&gt;</span>
+                            <b>@(fasesEliminatorias.LastOrDefault()?.Key ?? "Fase eliminatória")</b>
+                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">‹</a>
+                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="midia">›</a>
+                        </div>
+
+                        @if (!fasesEliminatorias.Any())
+                        {
+                            <div class="fp-empty-mini m-3">
+                                A fase eliminatória aparecerá aqui quando os jogos de mata-mata forem cadastrados.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="fp-bracket-board">
+                                @foreach (var fase in fasesEliminatorias)
+                                {
+                                    <section class="fp-bracket-stage">
+                                        <h3>@fase.Key</h3>
+
+                                        @foreach (var jogo in fase.OrderBy(j => j.DataJogo))
+                                        {
+                                            <article class="fp-bracket-match">
+                                                <span>
+                                                    <b>@Sigla(jogo.TimeCasa, "CAS")</b>
+                                                    <small>
+                                                        @(jogo.GolsCasa.HasValue ? jogo.GolsCasa.ToString() : "-")
+                                                    </small>
+                                                </span>
+                                                <span>
+                                                    <b>@Sigla(jogo.TimeVisitante, "VIS")</b>
+                                                    <small>
+                                                        @(jogo.GolsVisitante.HasValue ? jogo.GolsVisitante.ToString() : "-")
+                                                    </small>
+                                                </span>
+                                                <time>@jogo.DataJogo.ToString("d MMM")<br />@jogo.DataJogo.ToString("HH:mm")</time>
+                                            </article>
+                                        }
+                                    </section>
+                                }
+                            </div>
+                        }
+                    }
+                    else if (Model.AbaMidiaAtiva)
+                    {
+                        <div class="fp-tv-about">
+                            <h2>Sobre</h2>
+                            <p>@Model.Campeonato.Nome tem classificação por grupos e fase eliminatória. Conteúdos de mídia podem ser ligados aqui no futuro.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-cup-match-grid">
+                            @foreach (var jogo in jogosDestaque)
+                            {
+                                <article class="fp-cup-match-card">
+                                    <header>
+                                        <span>@NomeGrupo(jogo.Grupo), @rodadaTitulo</span>
+                                        <small>@(string.IsNullOrWhiteSpace(jogo.Fase) ? "Sede a definir" : jogo.Fase)</small>
+                                    </header>
+
+                                    <div>
+                                        <span class="fp-tv-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                            }
+                                            else
+                                            {
+                                                @Sigla(jogo.TimeCasa, "CAS")
+                                            }
+                                        </span>
+
+                                        <strong>@jogo.DataJogo.ToString("dd/MM/yyyy")</strong>
+
+                                        <span class="fp-tv-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                            }
+                                            else
+                                            {
+                                                @Sigla(jogo.TimeVisitante, "VIS")
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <footer>
+                                        <b>@jogo.TimeCasa?.Nome</b>
+                                        <span>@jogo.DataJogo.ToString("ddd, HH:mm")</span>
+                                        <b>@jogo.TimeVisitante?.Nome</b>
+                                    </footer>
+                                </article>
+                            }
+                        </div>
+
+                        <div class="fp-cup-summary-heading">
+                            <h2>Classificação</h2>
+                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">Visão completa</a>
+                        </div>
+
+                        @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
+                        {
+                            Classificacoes = gruposClassificacao.FirstOrDefault()?.OrderBy(c => c.Posicao).ToList() ?? new List<FutPlay.Models.Classificacao>(),
+                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                            AgruparPorGrupo = true,
+                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                        })
+                    }
+                </section>
+            }
+        </main>
     </div>
 </div>

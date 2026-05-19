@@ -56,7 +56,7 @@ namespace FutPlay.Controllers
         }
 
         [Authorize(Roles = AppRoles.AdministradorOuParticipante)]
-        public async Task<IActionResult> Palpitar(int? id, int? participanteId, string? origem)
+        public async Task<IActionResult> Palpitar(int? id, int? participanteId, string? origem, int? rodada = null)
         {
             if (id == null)
             {
@@ -88,7 +88,8 @@ namespace FutPlay.Controllers
                     LigaParticipanteId = participanteUsuario.Id,
                     ParticipanteBloqueado = true,
                     NomeParticipanteSelecionado = participanteUsuario.Nome,
-                    Origem = "minhasligas"
+                    Origem = "minhasligas",
+                    RodadaSelecionada = rodada
                 };
 
                 var viewModelUsuario = await MontarViewModelPalpitar(liga.Id, modelUsuario);
@@ -110,7 +111,8 @@ namespace FutPlay.Controllers
                     LigaParticipanteId = participanteUsuario.Id,
                     ParticipanteBloqueado = true,
                     NomeParticipanteSelecionado = participanteUsuario.Nome,
-                    Origem = "minhasligas"
+                    Origem = "minhasligas",
+                    RodadaSelecionada = rodada
                 };
 
                 var viewModelMinhasLigas = await MontarViewModelPalpitar(liga.Id, modelMinhasLigas);
@@ -123,7 +125,8 @@ namespace FutPlay.Controllers
             {
                 LigaParticipanteId = participanteId ?? 0,
                 ParticipanteBloqueado = false,
-                Origem = origem
+                Origem = origem,
+                RodadaSelecionada = rodada
             };
 
             var viewModel = await MontarViewModelPalpitar(liga.Id, model);
@@ -320,7 +323,8 @@ namespace FutPlay.Controllers
             {
                 id = model.LigaId,
                 participanteId = model.LigaParticipanteId,
-                origem = model.Origem
+                origem = model.Origem,
+                rodada = model.RodadaSelecionada
             });
         }
 
@@ -351,6 +355,18 @@ namespace FutPlay.Controllers
                 .OrderBy(j => j.DataJogo)
                 .ToListAsync();
 
+            var rodadas = ObterRodadas(
+                jogos,
+                DateTime.Today,
+                modelPostado?.RodadaSelecionada,
+                out var rodadaSelecionada,
+                out var rodadaAnterior,
+                out var proximaRodada);
+
+            var jogosParaExibir = rodadaSelecionada.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionada.Value)
+                ? jogos.Where(j => j.Rodada == rodadaSelecionada.Value).OrderBy(j => j.DataJogo).ToList()
+                : jogos;
+
             var participanteSelecionado = modelPostado?.LigaParticipanteId ?? 0;
 
             var viewModel = new PalpitarLigaViewModel
@@ -362,6 +378,11 @@ namespace FutPlay.Controllers
                 ParticipanteBloqueado = modelPostado?.ParticipanteBloqueado ?? false,
                 NomeParticipanteSelecionado = modelPostado?.NomeParticipanteSelecionado,
                 Origem = modelPostado?.Origem,
+                Rodadas = rodadas,
+                RodadaSelecionada = rodadaSelecionada,
+                RodadaAnterior = rodadaAnterior,
+                ProximaRodada = proximaRodada,
+                TotalJogosCampeonato = jogos.Count,
                 Participantes = participantes.Select(p => new SelectListItem
                 {
                     Value = p.Id.ToString(),
@@ -370,7 +391,7 @@ namespace FutPlay.Controllers
                 }).ToList()
             };
 
-            foreach (var jogo in jogos)
+            foreach (var jogo in jogosParaExibir)
             {
                 var palpiteExistente = participanteSelecionado > 0
                     ? await _context.Palpites.FirstOrDefaultAsync(p =>
@@ -392,6 +413,7 @@ namespace FutPlay.Controllers
                     DataJogo = jogo.DataJogo,
                     Fase = jogo.Fase,
                     Grupo = jogo.Grupo,
+                    Rodada = jogo.Rodada,
                     GolsCasaPalpite = jogoPostado?.GolsCasaPalpite ?? palpiteExistente?.GolsCasaPalpite,
                     GolsVisitantePalpite = jogoPostado?.GolsVisitantePalpite ?? palpiteExistente?.GolsVisitantePalpite,
                     JaPalpitado = palpiteExistente != null,
@@ -400,6 +422,71 @@ namespace FutPlay.Controllers
             }
 
             return viewModel;
+        }
+
+        private static List<RodadaFiltroViewModel> ObterRodadas(
+            List<Jogo> jogos,
+            DateTime hoje,
+            int? rodada,
+            out int? rodadaSelecionada,
+            out int? rodadaAnterior,
+            out int? proximaRodada)
+        {
+            var rodadas = jogos
+                .Where(j => j.Rodada.HasValue)
+                .GroupBy(j => j.Rodada!.Value)
+                .Select(g => new RodadaFiltroViewModel
+                {
+                    Rodada = g.Key,
+                    DataReferencia = g.Min(j => j.DataJogo.Date),
+                    TotalJogos = g.Count()
+                })
+                .OrderBy(r => r.Rodada)
+                .ToList();
+
+            rodadaSelecionada = rodada;
+
+            var rodadaInformada = rodadaSelecionada;
+
+            if (rodadaInformada.HasValue && !rodadas.Any(r => r.Rodada == rodadaInformada.Value))
+            {
+                rodadaSelecionada = null;
+            }
+
+            if (!rodadaSelecionada.HasValue && rodadas.Any())
+            {
+                rodadaSelecionada = rodadas
+                    .OrderBy(r => Math.Abs((r.DataReferencia - hoje).TotalDays))
+                    .ThenBy(r => r.Rodada)
+                    .First()
+                    .Rodada;
+            }
+
+            foreach (var rodadaOpcao in rodadas)
+            {
+                rodadaOpcao.Selecionada = rodadaOpcao.Rodada == rodadaSelecionada;
+            }
+
+            var rodadasOrdenadas = rodadas.Select(r => r.Rodada).ToList();
+            rodadaAnterior = null;
+            proximaRodada = null;
+
+            if (rodadaSelecionada.HasValue)
+            {
+                var rodadaIndex = rodadasOrdenadas.IndexOf(rodadaSelecionada.Value);
+
+                if (rodadaIndex > 0)
+                {
+                    rodadaAnterior = rodadasOrdenadas[rodadaIndex - 1];
+                }
+
+                if (rodadaIndex >= 0 && rodadaIndex < rodadasOrdenadas.Count - 1)
+                {
+                    proximaRodada = rodadasOrdenadas[rodadaIndex + 1];
+                }
+            }
+
+            return rodadas;
         }
 
         private bool UsuarioEhAdministrador()

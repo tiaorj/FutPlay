@@ -2,7 +2,8 @@
 
 @{
     var grupos = Model.Classificacoes
-        .GroupBy(c => c.Grupo)
+        .GroupBy(c => Model.AgruparPorGrupo ? c.Grupo : null)
+        .OrderBy(g => string.IsNullOrWhiteSpace(g.Key) ? "Z" : g.Key)
         .ToList();
 }
 
@@ -14,9 +15,24 @@
 }
 else
 {
+    @if (Model.AgruparPorGrupo && grupos.Count > 1)
+    {
+        <div class="fp-group-pill-row">
+            @for (int i = 0; i < grupos.Count; i++)
+            {
+                var grupo = grupos[i];
+                var grupoNome = string.IsNullOrWhiteSpace(grupo.Key) ? "Geral" : $"Grupo {grupo.Key}";
+
+                <a href="#grupo-@i" class="@(i == 0 ? "active" : "")">@grupoNome</a>
+            }
+        </div>
+    }
+
     @foreach (var grupo in grupos)
     {
-        <div class="fp-standing-group">
+        var grupoIndex = grupos.IndexOf(grupo);
+
+        <div class="fp-standing-group" id="grupo-@grupoIndex">
             <div class="fp-match-list-title">
                 <span>
                     @if (string.IsNullOrWhiteSpace(grupo.Key))
@@ -35,34 +51,33 @@ else
                 <table class="table fp-standing-table align-middle">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Time</th>
-                            <th>PTS</th>
-                            <th>J</th>
-                            <th>V</th>
-                            <th>E</th>
+                            <th>P</th>
+                            <th>W</th>
                             <th>D</th>
-                            <th>SG</th>
-                            <th>%</th>
-                            <th>Forma</th>
+                            <th>L</th>
+                            <th>DIFF</th>
+                            <th>GLS</th>
+                            <th>Últimos 5</th>
+                            <th>PTS</th>
                         </tr>
                     </thead>
 
                     <tbody>
                         @foreach (var item in grupo.OrderBy(c => c.Posicao))
                         {
-                            var aproveitamento = item.Jogos > 0
-                                ? Math.Round((double)item.Pontos / (item.Jogos * 3) * 100)
-                                : 0;
-
                             var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
                                 ? resultados
                                 : new List<string>();
 
                             <tr>
                                 <td>
-                                    <div class="fp-standing-team">
-                                        <span class="fp-standing-position">@item.Posicao</span>
+                                    <span class="fp-standing-position">@item.Posicao</span>
+                                </td>
 
+                                <td>
+                                    <div class="fp-standing-team">
                                         <span class="fp-mini-crest">
                                             @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
                                             {
@@ -78,13 +93,12 @@ else
                                     </div>
                                 </td>
 
-                                <td class="fp-standing-points">@item.Pontos</td>
                                 <td>@item.Jogos</td>
                                 <td>@item.Vitorias</td>
                                 <td>@item.Empates</td>
                                 <td>@item.Derrotas</td>
                                 <td>@item.SaldoGols</td>
-                                <td>@aproveitamento.ToString("0")</td>
+                                <td>@item.GolsPro:@item.GolsContra</td>
 
                                 <td>
                                     <div class="fp-form-dots">
@@ -103,6 +117,8 @@ else
                                         }
                                     </div>
                                 </td>
+
+                                <td class="fp-standing-points">@item.Pontos</td>
                             </tr>
                         }
                     </tbody>

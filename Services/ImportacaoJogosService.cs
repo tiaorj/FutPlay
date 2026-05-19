@@ -2,6 +2,7 @@ using FutPlay.Data;
 using FutPlay.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace FutPlay.Services
 {
@@ -9,15 +10,21 @@ namespace FutPlay.Services
     {
         private readonly FootballApiService _footballApiService;
         private readonly AppDbContext _context;
+        private readonly ClassificacaoService _classificacaoService;
+        private readonly PontuacaoService _pontuacaoService;
         private readonly ILogger<ImportacaoJogosService> _logger;
 
         public ImportacaoJogosService(
             FootballApiService footballApiService,
             AppDbContext context,
+            ClassificacaoService classificacaoService,
+            PontuacaoService pontuacaoService,
             ILogger<ImportacaoJogosService> logger)
         {
             _footballApiService = footballApiService;
             _context = context;
+            _classificacaoService = classificacaoService;
+            _pontuacaoService = pontuacaoService;
             _logger = logger;
         }
 
@@ -49,6 +56,7 @@ namespace FutPlay.Services
 
                 int jogosImportados = 0;
                 int timesImportados = 0;
+                bool resultadosImportados = false;
 
                 if (resultado.RootElement.TryGetProperty("response", out var response))
                 {
@@ -143,8 +151,8 @@ namespace FutPlay.Services
                             TimeVisitanteId = timeVisitante.Time.Id,
                             DataJogo = dataJogo,
                             Fase = rodada,
-                            Grupo = null,
-                            Rodada = null,
+                            Grupo = ExtrairGrupo(rodada),
+                            Rodada = ExtrairNumeroRodada(rodada),
                             GolsCasa = golsCasa,
                             GolsVisitante = golsVisitante,
                             Status = status,
@@ -154,9 +162,20 @@ namespace FutPlay.Services
 
                         _context.Jogos.Add(jogo);
                         jogosImportados++;
+
+                        if (JogoAfetaClassificacao(jogo))
+                        {
+                            resultadosImportados = true;
+                        }
                     }
 
                     await _context.SaveChangesAsync();
+
+                    if (resultadosImportados)
+                    {
+                        await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
+                        await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+                    }
                 }
 
                 _logger.LogInformation("Importacao de jogos concluida com sucesso. CampeonatoId: {CampeonatoId}", campeonato.Id);
@@ -222,6 +241,42 @@ namespace FutPlay.Services
             }
 
             return string.Join("", partes.Select(p => p[0])).ToUpper();
+        }
+
+        private static bool JogoAfetaClassificacao(Jogo jogo)
+        {
+            return jogo.Ativo &&
+                   string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) &&
+                   jogo.GolsCasa.HasValue &&
+                   jogo.GolsVisitante.HasValue;
+        }
+
+        private static int? ExtrairNumeroRodada(string? rodada)
+        {
+            if (string.IsNullOrWhiteSpace(rodada))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(rodada, @"(?<!\d)(\d{1,3})(?!\d)");
+
+            return match.Success && int.TryParse(match.Groups[1].Value, out var numero)
+                ? numero
+                : null;
+        }
+
+        private static string? ExtrairGrupo(string? rodada)
+        {
+            if (string.IsNullOrWhiteSpace(rodada))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(rodada, @"(?:Group|Grupo)\s+([A-Za-z0-9]+)", RegexOptions.IgnoreCase);
+
+            return match.Success
+                ? match.Groups[1].Value.ToUpperInvariant()
+                : null;
         }
     }
 

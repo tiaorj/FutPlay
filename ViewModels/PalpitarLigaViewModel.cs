@@ -19,6 +19,16 @@ namespace FutPlay.ViewModels
 
         public List<PalpiteJogoViewModel> Jogos { get; set; } = new();
 
+        public List<RodadaFiltroViewModel> Rodadas { get; set; } = new();
+
+        public int? RodadaSelecionada { get; set; }
+
+        public int? RodadaAnterior { get; set; }
+
+        public int? ProximaRodada { get; set; }
+
+        public int TotalJogosCampeonato { get; set; }
+
         public bool ParticipanteBloqueado { get; set; }
 
         public string? NomeParticipanteSelecionado { get; set; }
@@ -43,6 +53,8 @@ namespace FutPlay.ViewModels
         public string? Fase { get; set; }
 
         public string? Grupo { get; set; }
+
+        public int? Rodada { get; set; }
 
         [Range(0, 50, ErrorMessage = "Informe um valor entre 0 e 50.")]
         public int? GolsCasaPalpite { get; set; }

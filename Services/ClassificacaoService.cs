@@ -15,6 +15,17 @@ namespace FutPlay.Services
 
         public async Task RecalcularClassificacaoCampeonatoAsync(int campeonatoId)
         {
+            var campeonato = await _context.Campeonatos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == campeonatoId);
+
+            if (campeonato == null)
+            {
+                return;
+            }
+
+            var classificarPorGrupo = campeonato.UsaClassificacaoPorGrupos;
+
             var jogosFinalizados = await _context.Jogos
                 .Where(j =>
                     j.CampeonatoId == campeonatoId &&
@@ -34,14 +45,16 @@ namespace FutPlay.Services
 
             foreach (var jogo in jogosFinalizados)
             {
+                var grupo = classificarPorGrupo ? jogo.Grupo : null;
+
                 if (!tabela.ContainsKey(jogo.TimeCasaId))
                 {
-                    tabela[jogo.TimeCasaId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeCasaId, jogo.Grupo);
+                    tabela[jogo.TimeCasaId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeCasaId, grupo);
                 }
 
                 if (!tabela.ContainsKey(jogo.TimeVisitanteId))
                 {
-                    tabela[jogo.TimeVisitanteId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeVisitanteId, jogo.Grupo);
+                    tabela[jogo.TimeVisitanteId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeVisitanteId, grupo);
                 }
 
                 var casa = tabela[jogo.TimeCasaId];

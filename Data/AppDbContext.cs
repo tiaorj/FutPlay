@@ -94,6 +94,13 @@ namespace FutPlay.Data
             modelBuilder.Entity<Campeonato>()
                 .HasIndex(c => c.ApiLeagueId);
 
+            modelBuilder.Entity<Campeonato>()
+                .Property(c => c.Formato)
+                .HasDefaultValue(CampeonatoFormato.PontosCorridos);
+
+            modelBuilder.Entity<Campeonato>()
+                .HasIndex(c => c.Formato);
+
             modelBuilder.Entity<Time>()
                 .HasIndex(t => t.ApiTeamId);
 

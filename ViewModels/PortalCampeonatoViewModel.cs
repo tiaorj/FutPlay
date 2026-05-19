@@ -10,6 +10,8 @@ namespace FutPlay.ViewModels
 
         public List<Jogo> JogosDaRodada { get; set; } = new();
 
+        public List<Jogo> Jogos { get; set; } = new();
+
         public List<Jogo> ProximosJogos { get; set; } = new();
 
         public List<Jogo> JogosFinalizados { get; set; } = new();
@@ -34,10 +36,20 @@ namespace FutPlay.ViewModels
 
         public int TotalFinalizados { get; set; }
 
+        public bool ExibirClassificacaoPorGrupos => Campeonato.UsaClassificacaoPorGrupos;
+
+        public string FormatoDescricao => CampeonatoFormato.ObterDescricao(Campeonato.Formato);
+
         public bool AbaVisaoGeralAtiva => Aba == "visao-geral";
 
         public bool AbaJogosAtiva => Aba == "jogos";
 
         public bool AbaClassificacaoAtiva => Aba == "classificacao";
+
+        public bool AbaFaseEliminatoriaAtiva => Aba == "fase-eliminatoria";
+
+        public bool AbaEstatisticasAtiva => Aba == "estatisticas";
+
+        public bool AbaMidiaAtiva => Aba == "midia";
     }
 }

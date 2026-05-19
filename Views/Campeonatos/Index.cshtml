@@ -279,7 +279,7 @@
                                             }
                                         </small>
 
-                                        <small>@campeonato.Tipo</small>
+                                        <small>@campeonato.Tipo &middot; @CampeonatoFormato.ObterDescricao(campeonato.Formato)</small>
                                     </a>
 
                                     <form asp-action="AlternarFavorito"
@@ -345,7 +345,7 @@
                                                     <div class="fp-competition-row-info">
                                                         <strong>@campeonato.Nome @campeonato.Ano</strong>
                                                         <span>
-                                                            @campeonato.Tipo
+                                                            @campeonato.Tipo &middot; @CampeonatoFormato.ObterDescricao(campeonato.Formato)
                                                             @if (!campeonato.Ativo)
                                                             {
                                                                 <span> &middot; Inativo</span>

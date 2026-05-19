@@ -23,6 +23,9 @@
                 <dt class="col-sm-3">Tipo</dt>
                 <dd class="col-sm-9">@Model.Tipo</dd>
 
+                <dt class="col-sm-3">Formato</dt>
+                <dd class="col-sm-9">@CampeonatoFormato.ObterDescricao(Model.Formato)</dd>
+
                 <dt class="col-sm-3">Data de Início</dt>
                 <dd class="col-sm-9">
                     @(Model.DataInicio.HasValue? Model.DataInicio.Value.ToString("dd/MM/yyyy") : "-")

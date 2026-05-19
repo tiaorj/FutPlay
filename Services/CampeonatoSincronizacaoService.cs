@@ -2,6 +2,7 @@ using FutPlay.Data;
 using FutPlay.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace FutPlay.Services
 {
@@ -50,10 +51,19 @@ namespace FutPlay.Services
             {
                 int jogosAtualizados = await AtualizarResultadosCampeonatoAsync(campeonato);
 
+                var mensagem = $"Resultados atualizados com sucesso. Jogos atualizados: {jogosAtualizados}.";
+
+                if (jogosAtualizados > 0)
+                {
+                    await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
+                    await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+                    mensagem += " Classificação e palpites recalculados.";
+                }
+
                 _logger.LogInformation("Resultados atualizados com sucesso. CampeonatoId: {CampeonatoId}", campeonato.Id);
 
                 return CampeonatoSincronizacaoResultado.Ok(
-                    $"Resultados atualizados com sucesso. Jogos atualizados: {jogosAtualizados}.",
+                    mensagem,
                     campeonato.Id,
                     jogosAtualizados
                 );
@@ -127,6 +137,7 @@ namespace FutPlay.Services
                 {
                     var fixture = item.GetProperty("fixture");
                     var goals = item.GetProperty("goals");
+                    var league = item.GetProperty("league");
 
                     int apiFixtureId = fixture.GetProperty("id").GetInt32();
 
@@ -146,6 +157,10 @@ namespace FutPlay.Services
                         .GetString() ?? "";
 
                     string status = FootballApiStatusMapper.ConverterStatusJogo(statusApi);
+
+                    string? rodada = league.TryGetProperty("round", out var roundElement)
+                        ? roundElement.GetString()
+                        : null;
 
                     int? golsCasa = null;
                     int? golsVisitante = null;
@@ -167,6 +182,13 @@ namespace FutPlay.Services
                     jogo.GolsCasa = golsCasa;
                     jogo.GolsVisitante = golsVisitante;
 
+                    if (!string.IsNullOrWhiteSpace(rodada))
+                    {
+                        jogo.Fase = rodada;
+                        jogo.Rodada = ExtrairNumeroRodada(rodada) ?? jogo.Rodada;
+                        jogo.Grupo = ExtrairGrupo(rodada) ?? jogo.Grupo;
+                    }
+
                     _context.Jogos.Update(jogo);
                     jogosAtualizados++;
                 }
@@ -175,6 +197,34 @@ namespace FutPlay.Services
             }
 
             return jogosAtualizados;
+        }
+
+        private static int? ExtrairNumeroRodada(string? rodada)
+        {
+            if (string.IsNullOrWhiteSpace(rodada))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(rodada, @"(?<!\d)(\d{1,3})(?!\d)");
+
+            return match.Success && int.TryParse(match.Groups[1].Value, out var numero)
+                ? numero
+                : null;
+        }
+
+        private static string? ExtrairGrupo(string? rodada)
+        {
+            if (string.IsNullOrWhiteSpace(rodada))
+            {
+                return null;
+            }
+
+            var match = Regex.Match(rodada, @"(?:Group|Grupo)\s+([A-Za-z0-9]+)", RegexOptions.IgnoreCase);
+
+            return match.Success
+                ? match.Groups[1].Value.ToUpperInvariant()
+                : null;
         }
     }
 

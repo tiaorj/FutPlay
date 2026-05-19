@@ -166,6 +166,8 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Campeonato campeonato)
         {
+            ValidarFormato(campeonato);
+
             const int anoMin = 1900;
             int anoMax = DateTime.Now.Year + 5;
 
@@ -244,6 +246,8 @@ namespace FutPlay.Controllers
             {
                 return NotFound();
             }
+
+            ValidarFormato(campeonato);
 
             const int anoMin = 1900;
             int anoMax = DateTime.Now.Year + 5;
@@ -446,6 +450,7 @@ namespace FutPlay.Controllers
             {
                 Campeonato = campeonato,
                 Classificacoes = classificacoes,
+                Jogos = jogosCampeonato,
                 JogosDaRodada = jogosDaRodada,
                 ProximosJogos = proximosJogos,
                 JogosFinalizados = jogosFinalizados,
@@ -594,6 +599,23 @@ namespace FutPlay.Controllers
             return Url.Action(nameof(Index), "Campeonatos") ?? "/";
         }
 
+        private void ValidarFormato(Campeonato campeonato)
+        {
+            if (string.IsNullOrWhiteSpace(campeonato.Formato))
+            {
+                campeonato.Formato = CampeonatoFormato.PontosCorridos;
+                return;
+            }
+
+            if (!CampeonatoFormato.EhValido(campeonato.Formato))
+            {
+                ModelState.AddModelError(nameof(Campeonato.Formato), "Selecione um formato de disputa válido.");
+                return;
+            }
+
+            campeonato.Formato = CampeonatoFormato.Normalizar(campeonato.Formato);
+        }
+
         private static bool EhFinalizado(Jogo jogo)
         {
             return string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase);
@@ -620,6 +642,11 @@ namespace FutPlay.Controllers
             {
                 "jogos" => "jogos",
                 "classificacao" => "classificacao",
+                "fase-eliminatoria" => "fase-eliminatoria",
+                "fase" => "fase-eliminatoria",
+                "mata-mata" => "fase-eliminatoria",
+                "estatisticas" => "estatisticas",
+                "midia" => "midia",
                 "visao" => "visao-geral",
                 _ => "visao-geral"
             };

@@ -9,5 +9,7 @@ namespace FutPlay.ViewModels
         public Dictionary<int, List<string>> UltimosResultadosPorTime { get; set; } = new();
 
         public string EmptyMessage { get; set; } = "Nenhuma classificacao disponivel.";
+
+        public bool AgruparPorGrupo { get; set; } = true;
     }
 }

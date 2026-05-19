@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/navigation.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/competition-portal.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FutPlay.styles.css" asp-append-version="true" />
 </head>
 <body>
@@ -72,12 +73,15 @@
                             <strong>Em alta</strong>
                         </a>
 
-                        <a asp-controller="Jogos"
-                           asp-action="Index"
-                           class="fp-sport-tab @(currentController == "Jogos" ? "active" : "")">
-                            <span>⚽</span>
-                            <strong>Jogos</strong>
-                        </a>
+                        @if (isAdmin)
+                        {
+                            <a asp-controller="Jogos"
+                               asp-action="Index"
+                               class="fp-sport-tab @(currentController == "Jogos" ? "active" : "")">
+                                <span>⚽</span>
+                                <strong>Jogos</strong>
+                            </a>
+                        }
 
                         <a asp-controller="Campeonatos"
                            asp-action="Index"

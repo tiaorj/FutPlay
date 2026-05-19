@@ -13,10 +13,17 @@ namespace FutPlay.Controllers
     public class JogosController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ClassificacaoService _classificacaoService;
+        private readonly PontuacaoService _pontuacaoService;
 
-        public JogosController(AppDbContext context)
+        public JogosController(
+            AppDbContext context,
+            ClassificacaoService classificacaoService,
+            PontuacaoService pontuacaoService)
         {
             _context = context;
+            _classificacaoService = classificacaoService;
+            _pontuacaoService = pontuacaoService;
         }
 
         public async Task<IActionResult> Index(
@@ -198,6 +205,11 @@ namespace FutPlay.Controllers
                 _context.Jogos.Add(jogo);
                 await _context.SaveChangesAsync();
 
+                if (AfetaClassificacao(jogo))
+                {
+                    await RecalcularAutomacoesJogoAsync(jogo.CampeonatoId);
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
@@ -250,10 +262,26 @@ namespace FutPlay.Controllers
                 ModelState.AddModelError("", "O time da casa e o time visitante não podem ser iguais.");
             }
 
+            var jogoAnterior = await _context.Jogos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(j => j.Id == id);
+
+            if (jogoAnterior == null)
+            {
+                return NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Update(jogo);
                 await _context.SaveChangesAsync();
+
+                var campeonatosParaRecalcular = ObterCampeonatosParaRecalculo(jogoAnterior, jogo);
+
+                foreach (var campeonatoId in campeonatosParaRecalcular)
+                {
+                    await RecalcularAutomacoesJogoAsync(campeonatoId);
+                }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -310,6 +338,33 @@ namespace FutPlay.Controllers
         private static bool EhFinalizado(Jogo jogo)
         {
             return string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool AfetaClassificacao(Jogo jogo)
+        {
+            return jogo.Ativo &&
+                   EhFinalizado(jogo) &&
+                   jogo.GolsCasa.HasValue &&
+                   jogo.GolsVisitante.HasValue;
+        }
+
+        private static HashSet<int> ObterCampeonatosParaRecalculo(Jogo jogoAnterior, Jogo jogoAtual)
+        {
+            var campeonatoIds = new HashSet<int>();
+
+            if (AfetaClassificacao(jogoAnterior) || AfetaClassificacao(jogoAtual))
+            {
+                campeonatoIds.Add(jogoAnterior.CampeonatoId);
+                campeonatoIds.Add(jogoAtual.CampeonatoId);
+            }
+
+            return campeonatoIds;
+        }
+
+        private async Task RecalcularAutomacoesJogoAsync(int campeonatoId)
+        {
+            await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonatoId);
+            await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonatoId);
         }
 
         private static bool EhProximo(Jogo jogo, DateTime hoje)

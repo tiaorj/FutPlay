@@ -35,6 +35,15 @@
                 </div>
 
                 <div class="mb-3">
+                    <label asp-for="Formato" class="form-label"></label>
+                    <select asp-for="Formato" class="form-select">
+                        <option value="@CampeonatoFormato.PontosCorridos">Pontos corridos</option>
+                        <option value="@CampeonatoFormato.GruposEMataMata">Grupos + mata-mata</option>
+                    </select>
+                    <span asp-validation-for="Formato" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
                     <label asp-for="DataInicio" class="form-label"></label>
                     <input asp-for="DataInicio" class="form-control" type="date" />
                     <span asp-validation-for="DataInicio" class="text-danger"></span>

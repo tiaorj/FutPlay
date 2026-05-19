@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FutPlay.Models
 {
@@ -16,6 +17,14 @@ namespace FutPlay.Models
         [Required(ErrorMessage = "O tipo do campeonato é obrigatório.")]
         [StringLength(50)]
         public string Tipo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "O formato de disputa é obrigatório.")]
+        [StringLength(30)]
+        [Display(Name = "Formato de Disputa")]
+        public string Formato { get; set; } = CampeonatoFormato.PontosCorridos;
+
+        [NotMapped]
+        public bool UsaClassificacaoPorGrupos => CampeonatoFormato.UsaGrupos(Formato);
 
         [Display(Name = "Data de Início")]
         [DataType(DataType.Date)]
