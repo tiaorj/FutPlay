@@ -516,6 +516,38 @@
     border-top: 0;
 }
 
+.fp-standing-group-heading {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 2px 8px;
+}
+
+.fp-standing-group-heading > span {
+    align-items: center;
+    color: var(--tv-text);
+    display: inline-flex;
+    font-size: 1.05rem;
+    font-weight: 950;
+    gap: 10px;
+}
+
+.fp-standing-group-heading small {
+    color: var(--tv-muted);
+    font-size: .75rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.fp-group-trophy {
+    align-items: center;
+    color: #b9891f;
+    display: inline-flex;
+    font-size: 1.28rem;
+    line-height: 1;
+}
+
 .fp-standing-table {
     font-size: .82rem;
     margin-bottom: 0;

@@ -350,6 +350,11 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
+            if (campeonato.UsaClassificacaoPorGrupos)
+            {
+                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id.Value);
+            }
+
             var classificacoes = await _context.Classificacoes
                 .Include(c => c.Time)
                 .Where(c => c.CampeonatoId == id && c.Ativo)
@@ -403,6 +408,11 @@ namespace FutPlay.Controllers
             if (campeonato == null)
             {
                 return NotFound();
+            }
+
+            if (campeonato.UsaClassificacaoPorGrupos && aba == "classificacao")
+            {
+                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id.Value);
             }
 
             var classificacoes = await _context.Classificacoes

@@ -1,5 +1,28 @@
 @model FutPlay.ViewModels.ClassificacaoTabelaViewModel
 
+@{
+    string TituloGrupo(string? grupo)
+    {
+        if (string.IsNullOrWhiteSpace(grupo) || string.Equals(grupo, "Sem grupo", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Classificacao";
+        }
+
+        var texto = grupo.Trim();
+        return texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase)
+            ? texto
+            : $"Grupo {texto}";
+    }
+
+    string OrdemGrupo(string? grupo)
+    {
+        var titulo = TituloGrupo(grupo);
+        return string.Equals(titulo, "Classificacao", StringComparison.OrdinalIgnoreCase)
+            ? "ZZZ"
+            : titulo;
+    }
+}
+
 @if (Model.Classificacoes == null || !Model.Classificacoes.Any())
 {
     <div class="fp-empty-mini">
@@ -9,8 +32,8 @@
 else if (Model.AgruparPorGrupo)
 {
     var grupos = Model.Classificacoes
-        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Sem grupo" : c.Grupo)
-        .OrderBy(g => g.Key)
+        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Sem grupo" : c.Grupo.Trim())
+        .OrderBy(g => OrdemGrupo(g.Key))
         .ToList();
 
     foreach (var grupo in grupos)
@@ -18,16 +41,10 @@ else if (Model.AgruparPorGrupo)
         var grupoIndex = grupos.IndexOf(grupo);
 
         <div class="fp-standing-group" id="grupo-@grupoIndex">
-            <div class="fp-match-list-title">
+            <div class="fp-standing-group-heading">
                 <span>
-                    @if (string.IsNullOrWhiteSpace(grupo.Key))
-                    {
-                        <text>Classifica&ccedil;&atilde;o</text>
-                    }
-                    else
-                    {
-                        <text>Grupo @grupo.Key</text>
-                    }
+                    <span class="fp-group-trophy" aria-hidden="true">&#127942;</span>
+                    @TituloGrupo(grupo.Key)
                 </span>
                 <small>@grupo.Count() time(s)</small>
             </div>
@@ -126,7 +143,7 @@ else
                     <th>D</th>
                     <th>SG</th>
                     <th>GP:GC</th>
-                    <th>Ultimos 5</th>
+                    <th>Últimos 5</th>
                     <th>PTS</th>
                 </tr>
             </thead>
