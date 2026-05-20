@@ -408,6 +408,15 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
+            var abaNormalizada = string.IsNullOrWhiteSpace(aba)
+                   ? "visao-geral"
+                   : aba.Trim().ToLowerInvariant();
+
+            if (abaNormalizada == "classificacao")
+            {
+                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
+            }
+
             var classificacoes = await _context.Classificacoes
                 .Include(c => c.Time)
                 .Where(c => c.CampeonatoId == id && c.Ativo)

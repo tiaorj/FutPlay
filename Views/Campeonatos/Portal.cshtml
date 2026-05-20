@@ -248,7 +248,10 @@
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="@Model.Aba"
-                           asp-route-modo="grupo">Por grupo</a>
+                           asp-route-modo="grupo"
+                           class="@(Model.Modo == "grupo" ? "active" : "")">
+                            Por grupo
+                        </a>
                     }
                 </div>
 
@@ -431,7 +434,7 @@
 
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
-                           asp-route-aba="midia"
+                           asp-route-aba="detalhes"
                            class="@(Model.AbaMidiaAtiva ? "active" : "")">
                             Detalhes
                         </a>
@@ -457,14 +460,7 @@
                                 <strong>@totalTimes</strong>
                             </div>
                         </div>
-                    }
-                    else if (Model.AbaMidiaAtiva)
-                    {
-                        <div class="fp-tv-about">
-                            <h2>Sobre</h2>
-                            <p>@Model.Campeonato.Nome é exibido em formato de pontos corridos, com tabela única e partidas por rodada.</p>
-                        </div>
-                    }
+                    }                    
                     else
                     {
                         <div class="fp-tv-table-switch">
@@ -508,23 +504,20 @@
                            class="@(Model.AbaFaseEliminatoriaAtiva ? "active" : "")">
                             Fase eliminatória
                         </a>
-
-                        <a asp-action="Portal"
-                           asp-route-id="@Model.Campeonato.Id"
-                           asp-route-aba="midia"
-                           class="@(Model.AbaMidiaAtiva ? "active" : "")">
-                            Mídia
-                        </a>
+                       
                     </nav>
 
                     @if (Model.AbaClassificacaoAtiva)
                     {
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
-                            Classificacoes = gruposClassificacao.FirstOrDefault()?.OrderBy(c => c.Posicao).ToList() ?? new List<FutPlay.Models.Classificacao>(),
-                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
-                            AgruparPorGrupo = true,
-                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                            Classificacoes = Model.Classificacoes
+                            .OrderBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Z" : c.Grupo)
+                            .ThenBy(c => c.Posicao)
+                            .ToList(),
+                                UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                                AgruparPorGrupo = true,
+                                EmptyMessage = "Nenhuma classificação disponível para esta competição."
                         })
                     }
                     else if (Model.AbaFaseEliminatoriaAtiva)
@@ -533,7 +526,7 @@
                             <span>&lt;/&gt;</span>
                             <b>@(fasesEliminatorias.LastOrDefault()?.Key ?? "Fase eliminatória")</b>
                             <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">‹</a>
-                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="midia">›</a>
+                            <span class="disabled">›</span>
                         </div>
 
                         @if (!fasesEliminatorias.Any())
@@ -572,13 +565,6 @@
                                 }
                             </div>
                         }
-                    }
-                    else if (Model.AbaMidiaAtiva)
-                    {
-                        <div class="fp-tv-about">
-                            <h2>Sobre</h2>
-                            <p>@Model.Campeonato.Nome tem classificação por grupos e fase eliminatória. Conteúdos de mídia podem ser ligados aqui no futuro.</p>
-                        </div>
                     }
                     else
                     {
@@ -633,11 +619,14 @@
 
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
-                            Classificacoes = gruposClassificacao.FirstOrDefault()?.OrderBy(c => c.Posicao).ToList() ?? new List<FutPlay.Models.Classificacao>(),
-                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
-                            AgruparPorGrupo = true,
-                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
-                        })
+                            Classificacoes = Model.Classificacoes
+                            .OrderBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Z" : c.Grupo)
+                            .ThenBy(c => c.Posicao)
+                            .ToList(),
+                                UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                                AgruparPorGrupo = true,
+                                EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                                })
                     }
                 </section>
             }

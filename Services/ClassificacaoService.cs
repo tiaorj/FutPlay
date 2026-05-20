@@ -26,14 +26,18 @@ namespace FutPlay.Services
 
             var classificarPorGrupo = campeonato.UsaClassificacaoPorGrupos;
 
-            var jogosFinalizados = await _context.Jogos
+            var jogosDoCampeonato = await _context.Jogos
                 .Where(j =>
                     j.CampeonatoId == campeonatoId &&
-                    j.Ativo &&
-                    j.Status == "Finalizado" &&
+                    j.Ativo)
+                .ToListAsync();
+
+            var jogosFinalizados = jogosDoCampeonato
+                .Where(j =>
+                    string.Equals(j.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) &&
                     j.GolsCasa.HasValue &&
                     j.GolsVisitante.HasValue)
-                .ToListAsync();
+                .ToList();
 
             var classificacoesAtuais = await _context.Classificacoes
                 .Where(c => c.CampeonatoId == campeonatoId)
@@ -41,24 +45,35 @@ namespace FutPlay.Services
 
             _context.Classificacoes.RemoveRange(classificacoesAtuais);
 
-            var tabela = new Dictionary<int, Classificacao>();
+            var tabela = new Dictionary<string, Classificacao>();
+
+            foreach (var jogo in jogosDoCampeonato)
+            {
+                var grupo = classificarPorGrupo ? jogo.Grupo : null;
+
+                var chaveCasa = CriarChaveClassificacao(grupo, jogo.TimeCasaId);
+                var chaveVisitante = CriarChaveClassificacao(grupo, jogo.TimeVisitanteId);
+
+                if (!tabela.ContainsKey(chaveCasa))
+                {
+                    tabela[chaveCasa] = CriarClassificacaoInicial(campeonatoId, jogo.TimeCasaId, grupo);
+                }
+
+                if (!tabela.ContainsKey(chaveVisitante))
+                {
+                    tabela[chaveVisitante] = CriarClassificacaoInicial(campeonatoId, jogo.TimeVisitanteId, grupo);
+                }
+            }
 
             foreach (var jogo in jogosFinalizados)
             {
                 var grupo = classificarPorGrupo ? jogo.Grupo : null;
 
-                if (!tabela.ContainsKey(jogo.TimeCasaId))
-                {
-                    tabela[jogo.TimeCasaId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeCasaId, grupo);
-                }
+                var chaveCasa = CriarChaveClassificacao(grupo, jogo.TimeCasaId);
+                var chaveVisitante = CriarChaveClassificacao(grupo, jogo.TimeVisitanteId);
 
-                if (!tabela.ContainsKey(jogo.TimeVisitanteId))
-                {
-                    tabela[jogo.TimeVisitanteId] = CriarClassificacaoInicial(campeonatoId, jogo.TimeVisitanteId, grupo);
-                }
-
-                var casa = tabela[jogo.TimeCasaId];
-                var visitante = tabela[jogo.TimeVisitanteId];
+                var casa = tabela[chaveCasa];
+                var visitante = tabela[chaveVisitante];
 
                 int golsCasa = jogo.GolsCasa.GetValueOrDefault();
                 int golsVisitante = jogo.GolsVisitante.GetValueOrDefault();
@@ -97,11 +112,12 @@ namespace FutPlay.Services
             }
 
             var classificacoesOrdenadas = tabela.Values
-                .OrderBy(c => c.Grupo)
+                .OrderBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Z" : c.Grupo)
                 .ThenByDescending(c => c.Pontos)
                 .ThenByDescending(c => c.Vitorias)
                 .ThenByDescending(c => c.SaldoGols)
                 .ThenByDescending(c => c.GolsPro)
+                .ThenBy(c => c.TimeId)
                 .ToList();
 
             var grupos = classificacoesOrdenadas
@@ -142,5 +158,10 @@ namespace FutPlay.Services
                 Ativo = true
             };
         }
+        private static string CriarChaveClassificacao(string? grupo, int timeId)
+        {
+            return $"{grupo ?? string.Empty}|{timeId}";
+        }
+
     }
 }

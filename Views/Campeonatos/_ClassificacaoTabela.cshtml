@@ -1,34 +1,19 @@
 @model FutPlay.ViewModels.ClassificacaoTabelaViewModel
 
-@{
-    var grupos = Model.Classificacoes
-        .GroupBy(c => Model.AgruparPorGrupo ? c.Grupo : null)
-        .OrderBy(g => string.IsNullOrWhiteSpace(g.Key) ? "Z" : g.Key)
-        .ToList();
-}
-
-@if (!Model.Classificacoes.Any())
+@if (Model.Classificacoes == null || !Model.Classificacoes.Any())
 {
-    <div class="fp-empty-mini m-3">
+    <div class="fp-empty-mini">
         @Model.EmptyMessage
     </div>
 }
-else
+else if (Model.AgruparPorGrupo)
 {
-    @if (Model.AgruparPorGrupo && grupos.Count > 1)
-    {
-        <div class="fp-group-pill-row">
-            @for (int i = 0; i < grupos.Count; i++)
-            {
-                var grupo = grupos[i];
-                var grupoNome = string.IsNullOrWhiteSpace(grupo.Key) ? "Geral" : $"Grupo {grupo.Key}";
+    var grupos = Model.Classificacoes
+        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Sem grupo" : c.Grupo)
+        .OrderBy(g => g.Key)
+        .ToList();
 
-                <a href="#grupo-@i" class="@(i == 0 ? "active" : "")">@grupoNome</a>
-            }
-        </div>
-    }
-
-    @foreach (var grupo in grupos)
+    foreach (var grupo in grupos)
     {
         var grupoIndex = grupos.IndexOf(grupo);
 
