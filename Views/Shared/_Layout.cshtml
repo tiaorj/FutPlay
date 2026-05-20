@@ -102,7 +102,7 @@
                            asp-action="Index"
                            class="fp-sport-tab @(currentController == "Ligas" ? "active" : "")">
                             <span>🎯</span>
-                            <strong>Ligas</strong>
+                            <strong>bolões</strong>
                         </a>
 
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
@@ -111,7 +111,7 @@
                                asp-action="Index"
                                class="fp-sport-tab @(currentController == "MinhasLigas" ? "active" : "")">
                                 <span>📊</span>
-                                <strong>Meu bolão</strong>
+                                <strong>Meus bolões</strong>
                             </a>
 
                             <a asp-controller="Ligas"
