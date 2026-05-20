@@ -100,13 +100,15 @@
                         <h2>Admin</h2>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <a asp-action="RecalcularClassificacao"
-                           asp-route-id="@Model.Campeonato.Id"
-                           class="btn btn-outline-primary">
+                    <form asp-action="RecalcularClassificacao"
+                          asp-route-id="@Model.Campeonato.Id"
+                          method="post"
+                          asp-antiforgery="true"
+                          class="d-grid gap-2">
+                        <button type="submit" class="btn btn-outline-primary">
                             Recalcular classificação
-                        </a>
-                    </div>
+                        </button>
+                    </form>
                 </section>
             }
         </aside>

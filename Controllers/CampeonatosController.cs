@@ -368,13 +368,10 @@ namespace FutPlay.Controllers
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
-        public async Task<IActionResult> RecalcularClassificacao(int? id)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecalcularClassificacao(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var campeonato = await _context.Campeonatos
                 .FirstOrDefaultAsync(c => c.Id == id);
 
@@ -383,11 +380,11 @@ namespace FutPlay.Controllers
                 return NotFound();
             }
 
-            await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id.Value);
+            await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id);
 
             TempData["Sucesso"] = "Classificação recalculada com sucesso.";
 
-            return RedirectToAction(nameof(Classificacao), new { id });
+            return RedirectToAction(nameof(Portal), new { id, aba = "classificacao" });
         }
 
         public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", string modo = "rodada", string? dataSelecionada = null, int? rodadaSelecionada = null)
@@ -406,15 +403,6 @@ namespace FutPlay.Controllers
             if (campeonato == null)
             {
                 return NotFound();
-            }
-
-            var abaNormalizada = string.IsNullOrWhiteSpace(aba)
-                   ? "visao-geral"
-                   : aba.Trim().ToLowerInvariant();
-
-            if (abaNormalizada == "classificacao")
-            {
-                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
             }
 
             var classificacoes = await _context.Classificacoes

@@ -205,9 +205,11 @@ namespace FutPlay.Controllers
                 _context.Jogos.Add(jogo);
                 await _context.SaveChangesAsync();
 
+                await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(jogo.CampeonatoId);
+
                 if (AfetaClassificacao(jogo))
                 {
-                    await RecalcularAutomacoesJogoAsync(jogo.CampeonatoId);
+                    await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(jogo.CampeonatoId);
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -280,7 +282,15 @@ namespace FutPlay.Controllers
 
                 foreach (var campeonatoId in campeonatosParaRecalcular)
                 {
-                    await RecalcularAutomacoesJogoAsync(campeonatoId);
+                    await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonatoId);
+                }
+
+                if (AfetaClassificacao(jogoAnterior) || AfetaClassificacao(jogo))
+                {
+                    foreach (var campeonatoId in campeonatosParaRecalcular)
+                    {
+                        await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonatoId);
+                    }
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -350,21 +360,11 @@ namespace FutPlay.Controllers
 
         private static HashSet<int> ObterCampeonatosParaRecalculo(Jogo jogoAnterior, Jogo jogoAtual)
         {
-            var campeonatoIds = new HashSet<int>();
-
-            if (AfetaClassificacao(jogoAnterior) || AfetaClassificacao(jogoAtual))
+            return new HashSet<int>
             {
-                campeonatoIds.Add(jogoAnterior.CampeonatoId);
-                campeonatoIds.Add(jogoAtual.CampeonatoId);
-            }
-
-            return campeonatoIds;
-        }
-
-        private async Task RecalcularAutomacoesJogoAsync(int campeonatoId)
-        {
-            await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonatoId);
-            await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonatoId);
+                jogoAnterior.CampeonatoId,
+                jogoAtual.CampeonatoId
+            };
         }
 
         private static bool EhProximo(Jogo jogo, DateTime hoje)

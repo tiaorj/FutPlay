@@ -4,6 +4,7 @@
 @{
     ViewData["Title"] = "Portal do Campeonato";
 
+    var usuarioAdministrador = User.IsInRole(AppRoles.Administrador);
     var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
     var exibirPorGrupos = Model.ExibirClassificacaoPorGrupos;
     var isPontosCorridos = !exibirPorGrupos;
@@ -166,7 +167,7 @@
         <div class="fp-tv-title-actions">
             <a asp-action="Index">Competições</a>
 
-            @if (User.IsInRole(AppRoles.Administrador) && Model.Campeonato.ApiLeagueId.HasValue)
+            @if (usuarioAdministrador && Model.Campeonato.ApiLeagueId.HasValue)
             {
                 <form asp-controller="Importacoes" asp-action="SincronizarCampeonato" method="post">
                     <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
@@ -463,10 +464,23 @@
                     }                    
                     else
                     {
-                        <div class="fp-tv-table-switch">
-                            <span class="active">Todos</span>
-                            <span>Casa</span>
-                            <span>Fora</span>
+                        <div class="fp-standings-toolbar">
+                            <div class="fp-tv-table-switch">
+                                <span class="active">Todos</span>
+                                <span>Casa</span>
+                                <span>Fora</span>
+                            </div>
+
+                            @if (usuarioAdministrador)
+                            {
+                                <form asp-action="RecalcularClassificacao"
+                                      asp-route-id="@Model.Campeonato.Id"
+                                      method="post"
+                                      asp-antiforgery="true"
+                                      class="fp-admin-recalc-form">
+                                    <button type="submit">Recalcular classificação</button>
+                                </form>
+                            }
                         </div>
 
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
@@ -509,6 +523,19 @@
 
                     @if (Model.AbaClassificacaoAtiva)
                     {
+                        @if (usuarioAdministrador)
+                        {
+                            <div class="fp-standings-toolbar">
+                                <form asp-action="RecalcularClassificacao"
+                                      asp-route-id="@Model.Campeonato.Id"
+                                      method="post"
+                                      asp-antiforgery="true"
+                                      class="fp-admin-recalc-form">
+                                    <button type="submit">Recalcular classificação</button>
+                                </form>
+                            </div>
+                        }
+
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
                             Classificacoes = Model.Classificacoes
@@ -614,7 +641,20 @@
 
                         <div class="fp-cup-summary-heading">
                             <h2>Classificação</h2>
-                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">Visão completa</a>
+                            <div class="fp-cup-summary-actions">
+                                @if (usuarioAdministrador)
+                                {
+                                    <form asp-action="RecalcularClassificacao"
+                                          asp-route-id="@Model.Campeonato.Id"
+                                          method="post"
+                                          asp-antiforgery="true"
+                                          class="fp-admin-recalc-form">
+                                        <button type="submit">Recalcular classificação</button>
+                                    </form>
+                                }
+
+                                <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">Visão completa</a>
+                            </div>
                         </div>
 
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel

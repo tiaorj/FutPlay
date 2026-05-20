@@ -184,6 +184,34 @@
     color: #fff;
 }
 
+.fp-standings-toolbar {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 12px 18px 8px;
+}
+
+.fp-standings-toolbar .fp-tv-table-switch {
+    margin: 0;
+}
+
+.fp-admin-recalc-form {
+    margin: 0;
+}
+
+.fp-admin-recalc-form button {
+    background: var(--tv-blue);
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 900;
+    padding: 9px 12px;
+    white-space: nowrap;
+}
+
 .fp-tv-roundbar {
     align-items: center;
     border-bottom: 1px solid var(--tv-border);
@@ -445,6 +473,14 @@
     font-size: .86rem;
     font-weight: 900;
     text-decoration: none;
+}
+
+.fp-cup-summary-actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
 }
 
 .fp-group-pill-row {
@@ -724,5 +760,10 @@
 
     .fp-tv-segmented span {
         min-width: max-content;
+    }
+
+    .fp-standings-toolbar,
+    .fp-cup-summary-actions {
+        justify-content: flex-start;
     }
 }

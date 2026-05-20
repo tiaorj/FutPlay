@@ -112,3 +112,83 @@ else if (Model.AgruparPorGrupo)
         </div>
     }
 }
+else
+{
+    <div class="table-responsive">
+        <table class="table fp-standing-table align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Time</th>
+                    <th>J</th>
+                    <th>V</th>
+                    <th>E</th>
+                    <th>D</th>
+                    <th>SG</th>
+                    <th>GP:GC</th>
+                    <th>Ultimos 5</th>
+                    <th>PTS</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model.Classificacoes.OrderBy(c => c.Posicao))
+                {
+                    var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
+                        ? resultados
+                        : new List<string>();
+
+                    <tr>
+                        <td>
+                            <span class="fp-standing-position">@item.Posicao</span>
+                        </td>
+
+                        <td>
+                            <div class="fp-standing-team">
+                                <span class="fp-mini-crest">
+                                    @if (!string.IsNullOrWhiteSpace(item.Time?.EscudoUrl))
+                                    {
+                                        <img src="@item.Time.EscudoUrl" alt="@item.Time.Nome" />
+                                    }
+                                    else
+                                    {
+                                        <span>@(item.Time?.Sigla ?? "FC")</span>
+                                    }
+                                </span>
+
+                                <strong>@item.Time?.Nome</strong>
+                            </div>
+                        </td>
+
+                        <td>@item.Jogos</td>
+                        <td>@item.Vitorias</td>
+                        <td>@item.Empates</td>
+                        <td>@item.Derrotas</td>
+                        <td>@item.SaldoGols</td>
+                        <td>@item.GolsPro:@item.GolsContra</td>
+
+                        <td>
+                            <div class="fp-form-dots">
+                                @foreach (var resultado in forma)
+                                {
+                                    var dotClass = resultado == "V"
+                                        ? "win"
+                                        : resultado == "E" ? "draw" : "loss";
+
+                                    <span class="fp-form-dot @dotClass" title="@resultado"></span>
+                                }
+
+                                @for (int i = forma.Count; i < 5; i++)
+                                {
+                                    <span class="fp-form-dot empty"></span>
+                                }
+                            </div>
+                        </td>
+
+                        <td class="fp-standing-points">@item.Pontos</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
