@@ -3,7 +3,7 @@ namespace FutPlay.Models
     public static class CampeonatoFormato
     {
         public const string PontosCorridos = "PontosCorridos";
-        public const string GruposEMataMata = "GruposEMataMata";
+        public const string GruposEMataMata = "Grupos";
 
         public static bool EhValido(string? formato)
         {

@@ -5,19 +5,18 @@
     ViewData["Title"] = "Portal do Campeonato";
 
     var usuarioAdministrador = User.IsInRole(AppRoles.Administrador);
-    var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
     var exibirPorGrupos = Model.ExibirClassificacaoPorGrupos;
     var isPontosCorridos = !exibirPorGrupos;
-    var gruposClassificacao = Model.Classificacoes
-        .GroupBy(c => exibirPorGrupos ? c.Grupo : null)
-        .OrderBy(g => string.IsNullOrWhiteSpace(g.Key) ? "Z" : g.Key)
-        .ToList();
-    var totalGruposClassificacao = exibirPorGrupos
-        ? gruposClassificacao.Count
-        : Model.Classificacoes.Any() ? 1 : 0;
+    var totalTimes = exibirPorGrupos && Model.CampeonatoTimes.Any()
+        ? Model.CampeonatoTimes.Select(ct => ct.TimeId).Distinct().Count()
+        : Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
+    var grupoPorTimeId = Model.CampeonatoTimes
+        .Where(ct => ct.Grupo != null && !string.IsNullOrWhiteSpace(ct.Grupo.Nome))
+        .GroupBy(ct => ct.TimeId)
+        .ToDictionary(g => g.Key, g => g.First().Grupo?.Nome ?? string.Empty);
     var jogosPorDia = Model.JogosDaRodada
         .OrderBy(j => j.DataJogo)
-        .GroupBy(j => j.DataJogo.ToString("dd/MM/yyyy"))
+        .GroupBy(j => Model.Modo == "grupo" ? GrupoDoJogo(j) : j.DataJogo.ToString("dd/MM/yyyy"))
         .ToList();
     var jogosDestaque = Model.JogosDaRodada
         .OrderBy(j => j.DataJogo)
@@ -55,7 +54,38 @@
 
     string NomeGrupo(string? grupo)
     {
-        return string.IsNullOrWhiteSpace(grupo) ? "Geral" : $"Grupo {grupo}";
+        if (string.IsNullOrWhiteSpace(grupo))
+        {
+            return "Geral";
+        }
+
+        var texto = grupo.Trim();
+
+        return texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase)
+            ? texto
+            : $"Grupo {texto}";
+    }
+
+    string GrupoDoJogo(FutPlay.Models.Jogo jogo)
+    {
+        if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+        {
+            return NomeGrupo(jogo.Grupo);
+        }
+
+        grupoPorTimeId.TryGetValue(jogo.TimeCasaId, out var grupoCasa);
+        grupoPorTimeId.TryGetValue(jogo.TimeVisitanteId, out var grupoVisitante);
+
+        if (!string.IsNullOrWhiteSpace(grupoCasa) &&
+            (string.IsNullOrWhiteSpace(grupoVisitante) ||
+             string.Equals(grupoCasa, grupoVisitante, StringComparison.OrdinalIgnoreCase)))
+        {
+            return NomeGrupo(grupoCasa);
+        }
+
+        return !string.IsNullOrWhiteSpace(grupoVisitante)
+            ? NomeGrupo(grupoVisitante)
+            : "Sem grupo";
     }
 
     bool EhFaseEliminatoria(FutPlay.Models.Jogo jogo)
@@ -243,7 +273,7 @@
                        asp-route-id="@Model.Campeonato.Id"
                        asp-route-aba="@Model.Aba"
                        asp-route-modo="rodada"
-                       class="@(Model.Modo != "data" ? "active" : "")">Por rodada</a>
+                       class="@(Model.Modo == "rodada" ? "active" : "")">Por rodada</a>
                     @if (exibirPorGrupos)
                     {
                         <a asp-action="Portal"
@@ -257,7 +287,7 @@
                 </div>
 
                 <div class="fp-tv-roundbar">
-                    @if (Model.RodadaAnterior.HasValue && Model.Modo != "data")
+                    @if (Model.RodadaAnterior.HasValue && Model.Modo == "rodada")
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
@@ -295,6 +325,23 @@
                             </select>
                         </form>
                     }
+                    else if (Model.Modo == "grupo")
+                    {
+                        <form asp-action="Portal" method="get">
+                            <input type="hidden" name="id" value="@Model.Campeonato.Id" />
+                            <input type="hidden" name="aba" value="@Model.Aba" />
+                            <input type="hidden" name="modo" value="grupo" />
+                            <select name="grupoSelecionado" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="" selected="@(string.IsNullOrWhiteSpace(Model.GrupoSelecionado))">Todos os grupos</option>
+                                @foreach (var grupo in Model.Grupos)
+                                {
+                                    <option value="@grupo.Nome" selected="@(string.Equals(Model.GrupoSelecionado, grupo.Nome, StringComparison.OrdinalIgnoreCase))">
+                                        @NomeGrupo(grupo.Nome)
+                                    </option>
+                                }
+                            </select>
+                        </form>
+                    }
                     else
                     {
                         <form asp-action="Portal" method="get">
@@ -319,7 +366,7 @@
                         </form>
                     }
 
-                    @if (Model.ProximaRodada.HasValue && Model.Modo != "data")
+                    @if (Model.ProximaRodada.HasValue && Model.Modo == "rodada")
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
@@ -486,6 +533,9 @@
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
                             Classificacoes = Model.Classificacoes,
+                            Grupos = Model.Grupos,
+                            CampeonatoTimes = Model.CampeonatoTimes,
+                            GruposPorTimeId = grupoPorTimeId,
                             UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
                             AgruparPorGrupo = false,
                             EmptyMessage = "Nenhuma classificação disponível para esta competição."
@@ -539,12 +589,14 @@
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
                             Classificacoes = Model.Classificacoes
-                            .OrderBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Z" : c.Grupo)
-                            .ThenBy(c => c.Posicao)
+                            .OrderBy(c => c.Posicao)
                             .ToList(),
-                                UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
-                                AgruparPorGrupo = true,
-                                EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                            Grupos = Model.Grupos,
+                            CampeonatoTimes = Model.CampeonatoTimes,
+                            GruposPorTimeId = grupoPorTimeId,
+                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                            AgruparPorGrupo = true,
+                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
                         })
                     }
                     else if (Model.AbaFaseEliminatoriaAtiva)
@@ -600,7 +652,7 @@
                             {
                                 <article class="fp-cup-match-card">
                                     <header>
-                                        <span>@NomeGrupo(jogo.Grupo), @rodadaTitulo</span>
+                                        <span>@GrupoDoJogo(jogo), @rodadaTitulo</span>
                                         <small>@(string.IsNullOrWhiteSpace(jogo.Fase) ? "Sede a definir" : jogo.Fase)</small>
                                     </header>
 
@@ -660,13 +712,15 @@
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
                             Classificacoes = Model.Classificacoes
-                            .OrderBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Z" : c.Grupo)
-                            .ThenBy(c => c.Posicao)
+                            .OrderBy(c => c.Posicao)
                             .ToList(),
-                                UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
-                                AgruparPorGrupo = true,
-                                EmptyMessage = "Nenhuma classificação disponível para esta competição."
-                                })
+                            Grupos = Model.Grupos,
+                            CampeonatoTimes = Model.CampeonatoTimes,
+                            GruposPorTimeId = grupoPorTimeId,
+                            UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
+                            AgruparPorGrupo = true,
+                            EmptyMessage = "Nenhuma classificação disponível para esta competição."
+                        })
                     }
                 </section>
             }

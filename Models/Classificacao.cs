@@ -39,9 +39,6 @@ namespace FutPlay.Models
 
         public int SaldoGols { get; set; }
 
-        [StringLength(20)]
-        public string? Grupo { get; set; }
-
         public bool Ativo { get; set; } = true;
     }
 }

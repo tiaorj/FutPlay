@@ -3,14 +3,17 @@
 @{
     ViewData["Title"] = "Classificação";
 
-    var totalTimes = Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
-    var grupos = Model.Classificacoes
-        .GroupBy(c => c.Grupo)
-        .ToList();
     var exibirPorGrupos = Model.ExibirPorGrupos;
+    var totalTimes = exibirPorGrupos && Model.CampeonatoTimes.Any()
+        ? Model.CampeonatoTimes.Select(ct => ct.TimeId).Distinct().Count()
+        : Model.Classificacoes.Select(c => c.TimeId).Distinct().Count();
     var totalGrupos = exibirPorGrupos
-        ? grupos.Count
+        ? Model.Grupos.Count
         : Model.Classificacoes.Any() ? 1 : 0;
+    var grupoPorTimeId = Model.CampeonatoTimes
+        .Where(ct => ct.Grupo != null && !string.IsNullOrWhiteSpace(ct.Grupo.Nome))
+        .GroupBy(ct => ct.TimeId)
+        .ToDictionary(g => g.Key, g => g.First().Grupo?.Nome ?? string.Empty);
 }
 
 <div class="container fp-score-home">
@@ -133,6 +136,9 @@
                 @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                 {
                     Classificacoes = Model.Classificacoes,
+                    Grupos = Model.Grupos,
+                    CampeonatoTimes = Model.CampeonatoTimes,
+                    GruposPorTimeId = grupoPorTimeId,
                     UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
                     AgruparPorGrupo = exibirPorGrupos,
                     EmptyMessage = "Nenhuma classificação cadastrada para este campeonato ainda."

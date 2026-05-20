@@ -358,14 +358,32 @@ namespace FutPlay.Controllers
             var classificacoes = await _context.Classificacoes
                 .Include(c => c.Time)
                 .Where(c => c.CampeonatoId == id && c.Ativo)
-                .OrderBy(c => c.Grupo)
-                .ThenBy(c => c.Posicao)
+                .OrderBy(c => c.Posicao)
                 .ToListAsync();
+
+            var grupos = campeonato.UsaClassificacaoPorGrupos
+                ? await _context.Grupos
+                    .Where(g => g.CampeonatoId == id && g.Ativo)
+                    .OrderBy(g => g.Nome)
+                    .ToListAsync()
+                : new List<Grupo>();
+
+            var campeonatoTimes = campeonato.UsaClassificacaoPorGrupos
+                ? await _context.CampeonatoTimes
+                    .Include(ct => ct.Time)
+                    .Include(ct => ct.Grupo)
+                    .Where(ct => ct.CampeonatoId == id && ct.Ativo)
+                    .OrderBy(ct => ct.Grupo != null ? ct.Grupo.Nome : string.Empty)
+                    .ThenBy(ct => ct.Time != null ? ct.Time.Nome : string.Empty)
+                    .ToListAsync()
+                : new List<CampeonatoTime>();
 
             var viewModel = new ClassificacaoCampeonatoViewModel
             {
                 Campeonato = campeonato,
                 Classificacoes = classificacoes,
+                Grupos = grupos,
+                CampeonatoTimes = campeonatoTimes,
                 UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value)
             };
 
@@ -392,7 +410,7 @@ namespace FutPlay.Controllers
             return RedirectToAction(nameof(Portal), new { id, aba = "classificacao" });
         }
 
-        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", string modo = "rodada", string? dataSelecionada = null, int? rodadaSelecionada = null)
+        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", string modo = "rodada", string? dataSelecionada = null, int? rodadaSelecionada = null, string? grupoSelecionado = null)
         {
             if (id == null)
             {
@@ -415,12 +433,33 @@ namespace FutPlay.Controllers
                 await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id.Value);
             }
 
+            modo = NormalizarModoPortal(modo, campeonato.UsaClassificacaoPorGrupos);
+            grupoSelecionado = string.IsNullOrWhiteSpace(grupoSelecionado)
+                ? null
+                : grupoSelecionado.Trim();
+
             var classificacoes = await _context.Classificacoes
                 .Include(c => c.Time)
                 .Where(c => c.CampeonatoId == id && c.Ativo)
-                .OrderBy(c => c.Grupo)
-                .ThenBy(c => c.Posicao)
+                .OrderBy(c => c.Posicao)
                 .ToListAsync();
+
+            var grupos = campeonato.UsaClassificacaoPorGrupos
+                ? await _context.Grupos
+                    .Where(g => g.CampeonatoId == id && g.Ativo)
+                    .OrderBy(g => g.Nome)
+                    .ToListAsync()
+                : new List<Grupo>();
+
+            var campeonatoTimes = campeonato.UsaClassificacaoPorGrupos
+                ? await _context.CampeonatoTimes
+                    .Include(ct => ct.Time)
+                    .Include(ct => ct.Grupo)
+                    .Where(ct => ct.CampeonatoId == id && ct.Ativo)
+                    .OrderBy(ct => ct.Grupo != null ? ct.Grupo.Nome : string.Empty)
+                    .ThenBy(ct => ct.Time != null ? ct.Time.Nome : string.Empty)
+                    .ToListAsync()
+                : new List<CampeonatoTime>();
 
             var jogosCampeonato = await _context.Jogos
                 .Include(j => j.TimeCasa)
@@ -430,6 +469,33 @@ namespace FutPlay.Controllers
                     j.Ativo)
                 .OrderBy(j => j.DataJogo)
                 .ToListAsync();
+
+            var gruposPorTime = campeonatoTimes
+                .Where(ct => ct.Grupo != null && !string.IsNullOrWhiteSpace(ct.Grupo.Nome))
+                .GroupBy(ct => ct.TimeId)
+                .ToDictionary(g => g.Key, g => g.First().Grupo!.Nome.Trim());
+
+            string? ObterGrupoJogo(Jogo jogo)
+            {
+                if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                {
+                    return jogo.Grupo.Trim();
+                }
+
+                gruposPorTime.TryGetValue(jogo.TimeCasaId, out var grupoCasa);
+                gruposPorTime.TryGetValue(jogo.TimeVisitanteId, out var grupoVisitante);
+
+                if (!string.IsNullOrWhiteSpace(grupoCasa) &&
+                    (string.IsNullOrWhiteSpace(grupoVisitante) ||
+                     string.Equals(grupoCasa, grupoVisitante, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return grupoCasa;
+                }
+
+                return !string.IsNullOrWhiteSpace(grupoVisitante)
+                    ? grupoVisitante
+                    : null;
+            }
 
             // Rodadas: mantive compatibilidade, usando o parâmetro 'rodadaSelecionada' (query string 'rodadaSelecionada')
             var rodadas = ObterRodadas(
@@ -465,6 +531,18 @@ namespace FutPlay.Controllers
                     jogosDaRodada = jogosCampeonato;
                 }
             }
+            else if (string.Equals(modo, "grupo", StringComparison.OrdinalIgnoreCase))
+            {
+                jogosDaRodada = string.IsNullOrWhiteSpace(grupoSelecionado)
+                    ? jogosCampeonato
+                        .OrderBy(j => ObterGrupoJogo(j) ?? "ZZZ")
+                        .ThenBy(j => j.DataJogo)
+                        .ToList()
+                    : jogosCampeonato
+                        .Where(j => string.Equals(ObterGrupoJogo(j), grupoSelecionado, StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(j => j.DataJogo)
+                        .ToList();
+            }
             else // modo=rodada (comportamento anterior)
             {
                 jogosDaRodada = rodadaSelecionadaOut.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionadaOut.Value)
@@ -486,6 +564,8 @@ namespace FutPlay.Controllers
             {
                 Campeonato = campeonato,
                 Classificacoes = classificacoes,
+                Grupos = grupos,
+                CampeonatoTimes = campeonatoTimes,
                 Jogos = jogosCampeonato,
                 JogosDaRodada = jogosDaRodada,
                 ProximosJogos = proximosJogos,
@@ -503,6 +583,7 @@ namespace FutPlay.Controllers
                 // novas props
                 Datas = datas,
                 Modo = modo,
+                GrupoSelecionado = grupoSelecionado,
                 DataSelecionada = dataSelecionada
             };
 
@@ -689,6 +770,16 @@ namespace FutPlay.Controllers
                 "midia" => "midia",
                 "visao" => "visao-geral",
                 _ => "visao-geral"
+            };
+        }
+
+        private static string NormalizarModoPortal(string? modo, bool permiteGrupo)
+        {
+            return modo?.ToLowerInvariant() switch
+            {
+                "data" => "data",
+                "grupo" when permiteGrupo => "grupo",
+                _ => "rodada"
             };
         }
     }

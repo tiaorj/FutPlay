@@ -5,7 +5,7 @@
     {
         if (string.IsNullOrWhiteSpace(grupo) || string.Equals(grupo, "Sem grupo", StringComparison.OrdinalIgnoreCase))
         {
-            return "Classificacao";
+            return "Classificação";
         }
 
         var texto = grupo.Trim();
@@ -17,13 +17,44 @@
     string OrdemGrupo(string? grupo)
     {
         var titulo = TituloGrupo(grupo);
-        return string.Equals(titulo, "Classificacao", StringComparison.OrdinalIgnoreCase)
+        return string.Equals(titulo, "Classificação", StringComparison.OrdinalIgnoreCase)
             ? "ZZZ"
             : titulo;
     }
+
+    Classificacao ObterLinhaClassificacao(
+        CampeonatoTime campeonatoTime,
+        Dictionary<int, Classificacao> classificacoesPorTime)
+    {
+        if (classificacoesPorTime.TryGetValue(campeonatoTime.TimeId, out var classificacao))
+        {
+            return classificacao;
+        }
+
+        return new Classificacao
+        {
+            CampeonatoId = campeonatoTime.CampeonatoId,
+            TimeId = campeonatoTime.TimeId,
+            Time = campeonatoTime.Time,
+            Posicao = 0,
+            Pontos = 0,
+            Jogos = 0,
+            Vitorias = 0,
+            Empates = 0,
+            Derrotas = 0,
+            GolsPro = 0,
+            GolsContra = 0,
+            SaldoGols = 0,
+            Ativo = true
+        };
+    }
+
+    var classificacoes = Model.Classificacoes ?? new List<Classificacao>();
+    var campeonatoTimes = Model.CampeonatoTimes ?? new List<CampeonatoTime>();
 }
 
-@if (Model.Classificacoes == null || !Model.Classificacoes.Any())
+@if (!classificacoes.Any() &&
+     (!Model.AgruparPorGrupo || !campeonatoTimes.Any()))
 {
     <div class="fp-empty-mini">
         @Model.EmptyMessage
@@ -31,10 +62,42 @@
 }
 else if (Model.AgruparPorGrupo)
 {
-    var grupos = Model.Classificacoes
-        .GroupBy(c => string.IsNullOrWhiteSpace(c.Grupo) ? "Sem grupo" : c.Grupo.Trim())
-        .OrderBy(g => OrdemGrupo(g.Key))
-        .ToList();
+    var classificacoesPorTime = classificacoes
+        .GroupBy(c => c.TimeId)
+        .ToDictionary(g => g.Key, g => g.First());
+
+    var grupos = new List<(string Key, List<Classificacao> Linhas)>();
+
+    if (campeonatoTimes.Any())
+    {
+        grupos = campeonatoTimes
+            .Where(ct => ct.Ativo)
+            .GroupBy(ct => string.IsNullOrWhiteSpace(ct.Grupo?.Nome) ? "Sem grupo" : ct.Grupo!.Nome.Trim())
+            .Select(g => (
+                Key: g.Key,
+                Linhas: g
+                    .Select(ct => ObterLinhaClassificacao(ct, classificacoesPorTime))
+                    .OrderBy(c => c.Posicao <= 0 ? int.MaxValue : c.Posicao)
+                    .ThenBy(c => c.Time?.Nome)
+                    .ToList()))
+            .OrderBy(g => OrdemGrupo(g.Key))
+            .ToList();
+    }
+    else
+    {
+        grupos = classificacoes
+            .GroupBy(c => Model.GruposPorTimeId.TryGetValue(c.TimeId, out var grupoTime) && !string.IsNullOrWhiteSpace(grupoTime)
+                ? grupoTime.Trim()
+                : "Sem grupo")
+            .Select(g => (
+                Key: g.Key,
+                Linhas: g
+                    .OrderBy(c => c.Posicao <= 0 ? int.MaxValue : c.Posicao)
+                    .ThenBy(c => c.Time?.Nome)
+                    .ToList()))
+            .OrderBy(g => OrdemGrupo(g.Key))
+            .ToList();
+    }
 
     foreach (var grupo in grupos)
     {
@@ -46,7 +109,7 @@ else if (Model.AgruparPorGrupo)
                     <span class="fp-group-trophy" aria-hidden="true">&#127942;</span>
                     @TituloGrupo(grupo.Key)
                 </span>
-                <small>@grupo.Count() time(s)</small>
+                <small>@grupo.Linhas.Count time(s)</small>
             </div>
 
             <div class="table-responsive">
@@ -67,15 +130,16 @@ else if (Model.AgruparPorGrupo)
                     </thead>
 
                     <tbody>
-                        @foreach (var item in grupo.OrderBy(c => c.Posicao))
+                        @foreach (var item in grupo.Linhas)
                         {
+                            var posicao = item.Posicao > 0 ? item.Posicao : grupo.Linhas.IndexOf(item) + 1;
                             var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
                                 ? resultados
                                 : new List<string>();
 
                             <tr>
                                 <td>
-                                    <span class="fp-standing-position">@item.Posicao</span>
+                                    <span class="fp-standing-position">@posicao</span>
                                 </td>
 
                                 <td>
@@ -149,7 +213,7 @@ else
             </thead>
 
             <tbody>
-                @foreach (var item in Model.Classificacoes.OrderBy(c => c.Posicao))
+                @foreach (var item in classificacoes.OrderBy(c => c.Posicao))
                 {
                     var forma = Model.UltimosResultadosPorTime.TryGetValue(item.TimeId, out var resultados)
                         ? resultados

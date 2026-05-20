@@ -18,6 +18,8 @@ namespace FutPlay.Data
         public DbSet<LigaParticipante> LigaParticipantes { get; set; }
         public DbSet<Palpite> Palpites { get; set; }
         public DbSet<Classificacao> Classificacoes { get; set; }
+        public DbSet<Grupo> Grupos { get; set; }
+        public DbSet<CampeonatoTime> CampeonatoTimes { get; set; }
         public DbSet<LigaConvite> LigaConvites { get; set; }
         public DbSet<TimeFavorito> TimeFavoritos { get; set; }
         public DbSet<CampeonatoFavorito> CampeonatoFavoritos { get; set; }
@@ -33,6 +35,8 @@ namespace FutPlay.Data
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
             modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
+            modelBuilder.Entity<Grupo>().ToTable("FutPlay_Grupos");
+            modelBuilder.Entity<CampeonatoTime>().ToTable("FutPlay_CampeonatoTimes");
             modelBuilder.Entity<LigaConvite>().ToTable("FutPlay_LigaConvites");
             modelBuilder.Entity<TimeFavorito>().ToTable("FutPlay_TimeFavoritos");
             modelBuilder.Entity<CampeonatoFavorito>().ToTable("FutPlay_CampeonatoFavoritos");
@@ -50,6 +54,17 @@ namespace FutPlay.Data
 
             modelBuilder.Entity<CampeonatoFavorito>()
                 .HasIndex(f => f.CampeonatoId);
+
+            modelBuilder.Entity<Grupo>()
+                .HasIndex(g => g.CampeonatoId);
+
+            modelBuilder.Entity<CampeonatoTime>()
+                .HasIndex(ct => new { ct.CampeonatoId, ct.TimeId })
+                .IsUnique()
+                .HasDatabaseName("UX_FutPlay_CampeonatoTimes_Campeonato_Time");
+
+            modelBuilder.Entity<CampeonatoTime>()
+                .HasIndex(ct => ct.GrupoId);
 
             modelBuilder.Entity<LigaConvite>()
                 .HasIndex(c => c.LigaId);
@@ -120,6 +135,30 @@ namespace FutPlay.Data
                 .HasOne(c => c.Time)
                 .WithMany()
                 .HasForeignKey(c => c.TimeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<Grupo>()
+                .HasOne(g => g.Campeonato)
+                .WithMany()
+                .HasForeignKey(g => g.CampeonatoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CampeonatoTime>()
+                .HasOne(ct => ct.Campeonato)
+                .WithMany()
+                .HasForeignKey(ct => ct.CampeonatoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CampeonatoTime>()
+                .HasOne(ct => ct.Time)
+                .WithMany()
+                .HasForeignKey(ct => ct.TimeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<CampeonatoTime>()
+                .HasOne(ct => ct.Grupo)
+                .WithMany(g => g.CampeonatoTimes)
+                .HasForeignKey(ct => ct.GrupoId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<Jogo>()

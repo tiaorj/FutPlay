@@ -9,6 +9,10 @@ namespace FutPlay.ViewModels
 
         public List<Classificacao> Classificacoes { get; set; } = new();
 
+        public List<Grupo> Grupos { get; set; } = new();
+
+        public List<CampeonatoTime> CampeonatoTimes { get; set; } = new();
+
         public List<Jogo> JogosDaRodada { get; set; } = new();
 
         public List<Jogo> Jogos { get; set; } = new();
@@ -22,6 +26,9 @@ namespace FutPlay.ViewModels
         // usa o DataFiltroViewModel definido em ViewModels/DataFiltroViewModel.cs
         public List<DataFiltroViewModel> Datas { get; set; } = new();
         public string? Modo { get; set; } = "rodada";
+
+        public string? GrupoSelecionado { get; set; }
+
         public string? DataSelecionada { get; set; }
 
         public Dictionary<int, List<string>> UltimosResultadosPorTime { get; set; } = new();
