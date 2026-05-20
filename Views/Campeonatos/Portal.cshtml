@@ -14,6 +14,32 @@
         .Where(ct => ct.Grupo != null && !string.IsNullOrWhiteSpace(ct.Grupo.Nome))
         .GroupBy(ct => ct.TimeId)
         .ToDictionary(g => g.Key, g => g.First().Grupo?.Nome ?? string.Empty);
+    var gruposAtivosVisaoGeral = Model.Grupos
+        .Where(g => g.Ativo)
+        .OrderBy(g => NomeGrupo(g.Nome))
+        .ToList();
+    var grupoVisaoGeralSelecionado = gruposAtivosVisaoGeral.FirstOrDefault(g =>
+        string.Equals(ChaveGrupo(g.Nome), ChaveGrupo(Model.GrupoSelecionado), StringComparison.OrdinalIgnoreCase))
+        ?? gruposAtivosVisaoGeral.FirstOrDefault();
+    var campeonatoTimesGrupoVisaoGeral = grupoVisaoGeralSelecionado == null
+        ? new List<CampeonatoTime>()
+        : Model.CampeonatoTimes
+            .Where(ct => ct.Ativo &&
+                (ct.GrupoId == grupoVisaoGeralSelecionado.Id ||
+                 string.Equals(ChaveGrupo(ct.Grupo?.Nome), ChaveGrupo(grupoVisaoGeralSelecionado.Nome), StringComparison.OrdinalIgnoreCase)))
+            .ToList();
+    var timeIdsGrupoVisaoGeral = campeonatoTimesGrupoVisaoGeral
+        .Select(ct => ct.TimeId)
+        .ToHashSet();
+    var classificacoesGrupoVisaoGeral = grupoVisaoGeralSelecionado == null
+        ? new List<Classificacao>()
+        : (timeIdsGrupoVisaoGeral.Any()
+            ? Model.Classificacoes.Where(c => timeIdsGrupoVisaoGeral.Contains(c.TimeId))
+            : Model.Classificacoes.Where(c =>
+                grupoPorTimeId.TryGetValue(c.TimeId, out var grupoTime) &&
+                string.Equals(ChaveGrupo(grupoTime), ChaveGrupo(grupoVisaoGeralSelecionado.Nome), StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(c => c.Posicao)
+            .ToList();
     var jogosPorDia = Model.JogosDaRodada
         .OrderBy(j => j.DataJogo)
         .GroupBy(j => Model.Modo == "grupo" ? GrupoDoJogo(j) : j.DataJogo.ToString("dd/MM/yyyy"))
@@ -64,6 +90,20 @@
         return texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase)
             ? texto
             : $"Grupo {texto}";
+    }
+
+    string ChaveGrupo(string? grupo)
+    {
+        if (string.IsNullOrWhiteSpace(grupo))
+        {
+            return string.Empty;
+        }
+
+        var texto = grupo.Trim();
+
+        return texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase)
+            ? texto.Substring("Grupo ".Length).Trim()
+            : texto;
     }
 
     string GrupoDoJogo(FutPlay.Models.Jogo jogo)
@@ -546,7 +586,7 @@
             else
             {
                 <section class="fp-tv-card fp-cup-panel">
-                    <nav class="fp-tv-tabs">
+                    <nav class="fp-tv-tabs compact">
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="visao-geral"
@@ -610,8 +650,12 @@
 
                         @if (!fasesEliminatorias.Any())
                         {
-                            <div class="fp-empty-mini m-3">
-                                A fase eliminatória aparecerá aqui quando os jogos de mata-mata forem cadastrados.
+                            <div class="fp-stage-empty-card">
+                                <div class="fp-stage-empty-icon" aria-hidden="true">&#127942;</div>
+                                <div>
+                                    <h2>Mata-mata em breve</h2>
+                                    <p>A fase eliminatória aparecerá aqui quando os jogos de mata-mata forem cadastrados.</p>
+                                </div>
                             </div>
                         }
                         else
@@ -709,13 +753,33 @@
                             </div>
                         </div>
 
+                        @if (gruposAtivosVisaoGeral.Any())
+                        {
+                            <div class="fp-group-pill-row" aria-label="Grupos da classificação">
+                                @foreach (var grupo in gruposAtivosVisaoGeral)
+                                {
+                                    var grupoAtivo = grupoVisaoGeralSelecionado != null && grupo.Id == grupoVisaoGeralSelecionado.Id;
+
+                                    <a asp-action="Portal"
+                                       asp-route-id="@Model.Campeonato.Id"
+                                       asp-route-aba="visao-geral"
+                                       asp-route-modo="@Model.Modo"
+                                       asp-route-rodadaSelecionada="@Model.RodadaSelecionada"
+                                       asp-route-grupoSelecionado="@grupo.Nome"
+                                       class="@(grupoAtivo ? "active" : "")">
+                                        @NomeGrupo(grupo.Nome)
+                                    </a>
+                                }
+                            </div>
+                        }
+
                         @await Html.PartialAsync("_ClassificacaoTabela", new FutPlay.ViewModels.ClassificacaoTabelaViewModel
                         {
-                            Classificacoes = Model.Classificacoes
-                            .OrderBy(c => c.Posicao)
-                            .ToList(),
-                            Grupos = Model.Grupos,
-                            CampeonatoTimes = Model.CampeonatoTimes,
+                            Classificacoes = classificacoesGrupoVisaoGeral,
+                            Grupos = grupoVisaoGeralSelecionado == null
+                                ? new List<Grupo>()
+                                : new List<Grupo> { grupoVisaoGeralSelecionado },
+                            CampeonatoTimes = campeonatoTimesGrupoVisaoGeral,
                             GruposPorTimeId = grupoPorTimeId,
                             UltimosResultadosPorTime = Model.UltimosResultadosPorTime,
                             AgruparPorGrupo = true,

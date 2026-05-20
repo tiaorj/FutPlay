@@ -3,8 +3,11 @@
 .fp-competition-tv-page {
     --tv-blue: #3348ff;
     --tv-border: #dfe4ec;
+    --tv-dark: #20232c;
+    --tv-green: #16a34a;
     --tv-muted: #8b95a3;
     --tv-panel: #ffffff;
+    --tv-shadow: 0 10px 24px rgba(15, 23, 42, .06);
     --tv-soft: #f1f4f8;
     --tv-text: #07111f;
     margin-top: 18px;
@@ -101,6 +104,7 @@
     background: var(--tv-panel);
     border: 1px solid var(--tv-border);
     border-radius: 8px;
+    box-shadow: var(--tv-shadow);
     overflow: hidden;
 }
 
@@ -165,6 +169,7 @@
     padding: 4px;
 }
 
+.fp-tv-segmented a,
 .fp-tv-segmented span,
 .fp-tv-table-switch span {
     border-radius: 999px;
@@ -173,14 +178,25 @@
     font-size: .83rem;
     font-weight: 900;
     justify-content: center;
+    line-height: 1;
     min-width: 86px;
-    padding: 7px 12px;
+    padding: 8px 13px;
+    text-decoration: none;
+    transition: background-color .15s ease, box-shadow .15s ease, color .15s ease, transform .15s ease;
     white-space: nowrap;
 }
 
+.fp-tv-segmented a:hover {
+    background: #e6ecff;
+    color: #1d4ed8;
+    text-decoration: none;
+}
+
+.fp-tv-segmented a.active,
 .fp-tv-segmented span.active,
 .fp-tv-table-switch span.active {
-    background: #20232c;
+    background: linear-gradient(135deg, var(--tv-blue), var(--tv-green));
+    box-shadow: 0 3px 9px rgba(51, 72, 255, .22);
     color: #fff;
 }
 
@@ -394,18 +410,32 @@
 .fp-cup-match-grid {
     border-bottom: 1px solid var(--tv-border);
     display: grid;
-    gap: 8px;
+    gap: 12px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     padding: 16px;
 }
 
 .fp-cup-match-card {
-    background: var(--tv-soft);
+    background: linear-gradient(180deg, #ffffff 0%, #f6f8fc 100%);
+    border: 1px solid #e4e9f2;
     border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
     display: grid;
     gap: 12px;
     min-height: 100px;
+    overflow: hidden;
     padding: 12px;
+    position: relative;
+}
+
+.fp-cup-match-card::before {
+    background: linear-gradient(90deg, var(--tv-blue), var(--tv-green));
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 .fp-cup-match-card header,
@@ -422,7 +452,22 @@
     font-size: .72rem;
 }
 
+.fp-cup-match-card header span,
 .fp-cup-match-card header small {
+    background: #eef4ff;
+    border-radius: 999px;
+    color: #334155;
+    font-weight: 900;
+    min-width: 0;
+    overflow: hidden;
+    padding: 5px 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-cup-match-card header small {
+    background: #effaf3;
+    color: #166534;
     text-align: right;
 }
 
@@ -500,10 +545,17 @@
     font-weight: 900;
     padding: 8px 14px;
     text-decoration: none;
+    transition: background-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+
+.fp-group-pill-row a:hover {
+    background: #e6ecff;
+    color: #1d4ed8;
 }
 
 .fp-group-pill-row a.active {
-    background: #20232c;
+    background: linear-gradient(135deg, var(--tv-blue), var(--tv-green));
+    box-shadow: 0 3px 9px rgba(51, 72, 255, .2);
     color: #fff;
 }
 
@@ -672,6 +724,48 @@
     padding: 12px 14px;
 }
 
+.fp-stage-empty-card {
+    align-items: center;
+    background: linear-gradient(135deg, #f8fbff 0%, #f2fbf5 100%);
+    border: 1px dashed #b7c7e6;
+    border-radius: 8px;
+    display: flex;
+    gap: 14px;
+    margin: 18px;
+    padding: 18px;
+}
+
+.fp-stage-empty-icon {
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #dbeafe;
+    border-radius: 999px;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, .06);
+    color: #ca8a04;
+    display: inline-flex;
+    flex: 0 0 44px;
+    font-size: 1.35rem;
+    height: 44px;
+    justify-content: center;
+    width: 44px;
+}
+
+.fp-stage-empty-card h2 {
+    color: var(--tv-text);
+    font-size: 1rem;
+    font-weight: 950;
+    margin: 0 0 4px;
+    padding: 0;
+    text-align: left;
+}
+
+.fp-stage-empty-card p {
+    color: #526173;
+    font-size: .9rem;
+    font-weight: 700;
+    margin: 0;
+}
+
 .fp-bracket-toolbar span,
 .fp-bracket-toolbar b,
 .fp-bracket-toolbar a {
@@ -790,6 +884,7 @@
         overflow-x: auto;
     }
 
+    .fp-tv-segmented a,
     .fp-tv-segmented span {
         min-width: max-content;
     }
@@ -797,5 +892,10 @@
     .fp-standings-toolbar,
     .fp-cup-summary-actions {
         justify-content: flex-start;
+    }
+
+    .fp-stage-empty-card {
+        align-items: flex-start;
+        margin: 14px;
     }
 }
