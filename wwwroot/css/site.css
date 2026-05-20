@@ -8003,3 +8003,397 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================================================
+   Meu Pitaco FC - identidade visual global
+   ========================================================= */
+
+:root {
+    --fp-brand-blue: #2637b8;
+    --fp-brand-blue-strong: #1d4ed8;
+    --fp-brand-green: #16a34a;
+    --fp-brand-green-dark: #047857;
+    --fp-brand-ink: #101827;
+    --fp-brand-muted: #627184;
+    --fp-brand-line: #dde6f0;
+    --fp-brand-soft: #f5f8fc;
+    --fp-brand-soft-green: #f1fbf5;
+    --fp-brand-shadow: 0 10px 26px rgba(15, 23, 42, .065);
+    --fp-brand-shadow-hover: 0 16px 34px rgba(15, 23, 42, .11);
+}
+
+.futplay-main {
+    background:
+        radial-gradient(circle at top right, rgba(38, 55, 184, .07), transparent 280px),
+        radial-gradient(circle at 5% 20%, rgba(22, 163, 74, .06), transparent 260px);
+}
+
+.card,
+.fp-home-card,
+.futplay-panel,
+.futplay-page-hero,
+.futplay-section-block,
+.futplay-table-card,
+.futplay-entity-card,
+.futplay-match-card,
+.futplay-league-card,
+.futplay-home-side-card,
+.futplay-league-create-card,
+.futplay-league-join-card,
+.futplay-league-invite-card,
+.futplay-auth-card,
+.futplay-rules-card,
+.futplay-team-card,
+.futplay-competition-card,
+.fp-game-competition-card,
+.fp-bet-league-row,
+.fp-bet-best-card,
+.fp-bet-participant-card,
+.fp-bet-next-match,
+.fp-bet-save-card,
+.fp-bet-leader-card,
+.fp-bet-podium-card,
+.fp-auth-card {
+    border-color: var(--fp-brand-line);
+    border-radius: 12px;
+    box-shadow: var(--fp-brand-shadow);
+}
+
+.card,
+.fp-home-card,
+.futplay-section-block,
+.futplay-entity-card,
+.futplay-match-card,
+.futplay-league-card,
+.futplay-home-side-card,
+.futplay-league-create-card,
+.futplay-league-join-card,
+.futplay-auth-card,
+.futplay-rules-card,
+.futplay-team-card,
+.futplay-competition-card,
+.fp-game-competition-card,
+.fp-bet-league-row,
+.fp-bet-pick-row,
+.fp-bet-best-card,
+.fp-bet-save-card,
+.fp-bet-leader-card,
+.fp-bet-podium-card,
+.fp-auth-card {
+    overflow: hidden;
+    position: relative;
+}
+
+.card::before,
+.fp-home-card::before,
+.futplay-section-block::before,
+.futplay-entity-card::before,
+.futplay-match-card::before,
+.futplay-league-card::before,
+.futplay-home-side-card::before,
+.futplay-league-create-card::before,
+.futplay-league-join-card::before,
+.futplay-team-card::before,
+.futplay-competition-card::before,
+.fp-game-competition-card::before,
+.fp-bet-league-row::before,
+.fp-bet-pick-row::before,
+.fp-bet-save-card::before,
+.fp-bet-leader-card::before,
+.fp-bet-podium-card::before {
+    background: linear-gradient(90deg, var(--fp-brand-blue), var(--fp-brand-green));
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.card:hover,
+.fp-home-card:hover,
+.futplay-entity-card:hover,
+.futplay-match-card:hover,
+.futplay-league-card:hover,
+.futplay-home-side-card:hover,
+.futplay-team-card:hover,
+.futplay-competition-card:hover,
+.fp-game-competition-card:hover,
+.fp-bet-league-row:hover,
+.fp-bet-pick-row:hover,
+.fp-bet-podium-card:hover {
+    box-shadow: var(--fp-brand-shadow-hover);
+}
+
+.card-header,
+.fp-card-header-link,
+.futplay-section-header,
+.futplay-league-card-head,
+.fp-selected-competition-bar,
+.fp-round-toolbar {
+    background: linear-gradient(180deg, #ffffff 0%, var(--fp-brand-soft) 100%);
+    border-color: var(--fp-brand-line);
+}
+
+.fp-card-header-link h2,
+.futplay-section-title,
+.futplay-page-title,
+.futplay-league-card-title h2,
+.fp-bet-header-info h1 {
+    color: var(--fp-brand-ink);
+}
+
+.futplay-subtitle,
+.futplay-card-kicker,
+.fp-card-header-link small,
+.fp-bet-header-info p,
+.fp-bet-league-info small {
+    color: var(--fp-brand-muted);
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 850;
+    transition: box-shadow .15s ease, transform .15s ease, background-color .15s ease, color .15s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn-primary,
+.btn-success {
+    background: linear-gradient(135deg, var(--fp-brand-blue), var(--fp-brand-green));
+    border-color: transparent;
+    box-shadow: 0 6px 14px rgba(38, 55, 184, .18);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-success:hover,
+.btn-success:focus {
+    background: linear-gradient(135deg, #1e2f9d, var(--fp-brand-green-dark));
+    border-color: transparent;
+    box-shadow: 0 8px 18px rgba(38, 55, 184, .24);
+}
+
+.btn-outline-primary,
+.btn-outline-success {
+    background: #ffffff;
+    border-color: #c8d6ee;
+    color: var(--fp-brand-blue-strong);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+    background: #e9efff;
+    border-color: var(--fp-brand-blue-strong);
+    color: var(--fp-brand-blue-strong);
+}
+
+.btn-outline-secondary {
+    background: #ffffff;
+    border-color: #d7dee8;
+    color: #475569;
+}
+
+.btn-outline-secondary:hover,
+.btn-outline-secondary:focus {
+    background: #f1f5f9;
+    border-color: #b7c3d4;
+    color: #111827;
+}
+
+.btn-warning {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #111827;
+}
+
+.form-control,
+.form-select {
+    border-color: #d8e1ec;
+    border-radius: 10px;
+    color: var(--fp-brand-ink);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--fp-brand-blue-strong);
+    box-shadow: 0 0 0 .2rem rgba(38, 55, 184, .12);
+}
+
+.form-label {
+    color: #334155;
+    font-weight: 800;
+}
+
+.table:not(.fp-standing-table) {
+    --bs-table-bg: transparent;
+}
+
+.table:not(.fp-standing-table) thead th {
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    border-color: var(--fp-brand-line);
+    color: #526173;
+    font-weight: 900;
+    letter-spacing: .01em;
+}
+
+.table:not(.fp-standing-table) tbody td {
+    border-color: #edf2f7;
+}
+
+.table:not(.fp-standing-table) tbody tr {
+    transition: background-color .15s ease;
+}
+
+.table:not(.fp-standing-table) tbody tr:hover {
+    background: #f8fbff;
+}
+
+.badge,
+.futplay-status,
+.fp-bet-league-badges span,
+.fp-bet-pick-status > span,
+.fp-bet-hit-rate,
+.fp-champ-actions a,
+.fp-round-nav,
+.futplay-nav-pill {
+    border-radius: 999px;
+}
+
+.badge.bg-success,
+.futplay-status-done,
+.fp-bet-league-badges span.active,
+.fp-bet-league-badges span.owner,
+.fp-bet-pick-status > span.done {
+    background: #e8f7ef !important;
+    color: var(--fp-brand-green-dark) !important;
+}
+
+.badge.bg-primary,
+.badge.bg-info,
+.futplay-status-live,
+.fp-bet-league-badges span.available,
+.fp-bet-pick-status > span.pending {
+    background: #e9efff !important;
+    color: var(--fp-brand-blue-strong) !important;
+}
+
+.fp-champ-actions a,
+.fp-round-nav,
+.fp-bet-header-actions a,
+.fp-bet-league-actions a,
+.fp-invite-actions .btn {
+    border-radius: 999px;
+    text-decoration: none;
+}
+
+.fp-champ-actions a.active,
+.fp-round-nav:hover,
+.fp-bet-header-actions a:hover,
+.fp-bet-league-actions a.primary,
+.fp-bet-league-actions a:hover {
+    background: linear-gradient(135deg, var(--fp-brand-blue), var(--fp-brand-green));
+    border-color: transparent;
+    box-shadow: 0 6px 14px rgba(38, 55, 184, .18);
+    color: #ffffff;
+}
+
+.fp-bet-pick-row.pending {
+    box-shadow: inset 3px 0 0 var(--fp-brand-blue-strong), var(--fp-brand-shadow);
+}
+
+.fp-bet-pick-row.done {
+    box-shadow: inset 3px 0 0 var(--fp-brand-green), var(--fp-brand-shadow);
+}
+
+.fp-bet-podium-card.first {
+    border-color: rgba(245, 158, 11, .36);
+    background: linear-gradient(180deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.alert {
+    border: 1px solid var(--fp-brand-line);
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .05);
+}
+
+.alert-success {
+    background: var(--fp-brand-soft-green);
+    border-left: 4px solid var(--fp-brand-green);
+    color: #14532d;
+}
+
+.alert-danger {
+    background: #fff5f5;
+    border-left: 4px solid #dc2626;
+    color: #7f1d1d;
+}
+
+.alert-info {
+    background: #f2f7ff;
+    border-left: 4px solid var(--fp-brand-blue-strong);
+    color: #1e3a8a;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    color: #713f12;
+}
+
+.futplay-empty,
+.futplay-section-empty,
+.fp-empty-mini {
+    background: linear-gradient(135deg, #f8fbff 0%, #f3fbf6 100%);
+    border: 1px dashed #b8c7dc;
+    border-radius: 12px;
+    color: var(--fp-brand-muted);
+}
+
+.futplay-logo,
+.futplay-logo-sm,
+.futplay-logo-lg,
+.futplay-portal-logo,
+.futplay-table-crest,
+.futplay-match-crest,
+.fp-competition-app-logo,
+.fp-bet-league-logo,
+.fp-auth-crest {
+    box-shadow: 0 4px 10px rgba(15, 23, 42, .06);
+}
+
+@media (max-width: 768px) {
+    .card,
+    .fp-home-card,
+    .futplay-panel,
+    .futplay-page-hero,
+    .futplay-section-block,
+    .futplay-table-card,
+    .futplay-entity-card,
+    .futplay-match-card,
+    .futplay-league-card,
+    .futplay-home-side-card,
+    .futplay-league-create-card,
+    .futplay-league-join-card,
+    .futplay-league-invite-card,
+    .futplay-auth-card,
+    .futplay-rules-card,
+    .futplay-team-card,
+    .futplay-competition-card,
+    .fp-game-competition-card,
+    .fp-bet-league-row,
+    .fp-bet-best-card,
+    .fp-bet-participant-card,
+    .fp-bet-next-match,
+    .fp-bet-save-card,
+    .fp-bet-leader-card,
+    .fp-bet-podium-card,
+    .fp-auth-card {
+        border-radius: 10px;
+    }
+}
