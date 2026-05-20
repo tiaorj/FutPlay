@@ -42,9 +42,13 @@ namespace FutPlay.ViewModels
 
         public string TimeCasa { get; set; } = string.Empty;
 
+        public string? TimeCasaSigla { get; set; }
+
         public string? TimeCasaEscudoUrl { get; set; }
 
         public string TimeVisitante { get; set; } = string.Empty;
+
+        public string? TimeVisitanteSigla { get; set; }
 
         public string? TimeVisitanteEscudoUrl { get; set; }
 

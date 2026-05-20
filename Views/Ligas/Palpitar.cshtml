@@ -12,9 +12,31 @@
     var rodadaTitulo = Model.RodadaSelecionada.HasValue
         ? $"Rodada {Model.RodadaSelecionada}"
         : "Todos os jogos";
+
+    string NomeCurto(string? sigla, string? nome, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(sigla))
+        {
+            return sigla.Trim().ToUpperInvariant();
+        }
+
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            return nome.Trim().Substring(0, Math.Min(3, nome.Trim().Length)).ToUpperInvariant();
+        }
+
+        return fallback;
+    }
+
+    string FormatarHorario(DateTime data)
+    {
+        return data.TimeOfDay == TimeSpan.Zero
+            ? "Horário a definir"
+            : data.ToString("HH:mm");
+    }
 }
 
-<div class="container fp-score-home">
+<div class="container fp-score-home fp-bolao-page">
 
     <form asp-action="Palpitar" method="post" onsubmit="normalizarPlacaresAntesSalvar()">
         <input type="hidden" asp-for="LigaId" />
@@ -55,56 +77,9 @@
                 }
             </div>
         </section>
-        <section class="futplay-rules-card mb-3">
-            <div class="futplay-rules-title">
-                <span>🧮</span>
-                <div>
-                    <strong>Regras de pontuação</strong>
-                    <small>Veja como seus palpites viram pontos no ranking</small>
-                </div>
-            </div>
+        <div class="row g-3 fp-picks-layout">
 
-            <div class="futplay-points-grid">
-                <div class="futplay-points-item highlight">
-                    <strong>10 pts</strong>
-                    <span>Placar exato</span>
-                </div>
-
-                <div class="futplay-points-item">
-                    <strong>5 pts</strong>
-                    <span>Acertar o vencedor ou empate</span>
-                </div>
-
-                <div class="futplay-points-item">
-                    <strong>+2 pts</strong>
-                    <span>Acertar os gols do time da casa</span>
-                </div>
-
-                <div class="futplay-points-item">
-                    <strong>+2 pts</strong>
-                    <span>Acertar os gols do visitante</span>
-                </div>
-
-                <div class="futplay-points-item">
-                    <strong>0 pts</strong>
-                    <span>Errar o resultado e os gols</span>
-                </div>
-            </div>
-
-            <div class="futplay-points-example mt-3">
-                <strong>Exemplo:</strong>
-                se o resultado for <b>Brasil 2 x 1 Argentina</b>,
-                o palpite <b>Brasil 2 x 0 Argentina</b> vale <b>7 pontos</b>:
-                5 pelo vencedor + 2 pelos gols do Brasil.
-
-                <p class="futplay-points-note mt-2 mb-0">
-                    No placar exato, vale a pontuação máxima de 10 pontos, sem somar bônus adicionais.
-                </p>
-            </div>
-        </section>
-        <div class="row g-3">
-
-            <aside class="col-xl-3 col-lg-4">
+            <aside class="col-xl-3 col-lg-4 order-2 order-lg-1 fp-picks-sidebar">
                 
                 <section class="fp-home-card">
                     <div class="fp-card-header-link">
@@ -190,7 +165,7 @@
 
                 @if (jogoDestaque != null)
                 {
-                    <section class="fp-home-card mt-3">
+                    <section class="fp-home-card mt-3 fp-bet-next-card fp-mobile-hidden">
                         <div class="fp-card-header-link">
                             <h2>Próximo jogo</h2>
                         </div>
@@ -199,18 +174,69 @@
                             <strong>@jogoDestaque.TimeCasa</strong>
                             <b>x</b>
                             <strong>@jogoDestaque.TimeVisitante</strong>
-                            <span>@jogoDestaque.DataJogo.ToString("dd/MM HH:mm")</span>
+                            <span>@jogoDestaque.DataJogo.ToString("dd/MM") · @FormatarHorario(jogoDestaque.DataJogo)</span>
                         </div>
                     </section>
                 }
+
+                <details class="futplay-rules-card fp-bet-rules-card mt-3" open>
+                    <summary>
+                        <span>Regras de pontuação</span>
+                        <small>Como seus palpites viram pontos</small>
+                    </summary>
+
+                    <div class="futplay-points-grid fp-bet-rules-grid">
+                        <div class="futplay-points-item highlight">
+                            <strong>10 pts</strong>
+                            <span>Placar exato</span>
+                        </div>
+
+                        <div class="futplay-points-item">
+                            <strong>5 pts</strong>
+                            <span>Acertar vencedor ou empate</span>
+                        </div>
+
+                        <div class="futplay-points-item">
+                            <strong>+2 pts</strong>
+                            <span>Gols do mandante</span>
+                        </div>
+
+                        <div class="futplay-points-item">
+                            <strong>+2 pts</strong>
+                            <span>Gols do visitante</span>
+                        </div>
+
+                        <div class="futplay-points-item">
+                            <strong>0 pts</strong>
+                            <span>Errou resultado e gols</span>
+                        </div>
+                    </div>
+
+                    <div class="futplay-points-example mt-3 fp-desktop-only">
+                        <strong>Exemplo:</strong>
+                        se o resultado for <b>Brasil 2 x 1 Argentina</b>,
+                        o palpite <b>Brasil 2 x 0 Argentina</b> vale <b>7 pontos</b>:
+                        5 pelo vencedor + 2 pelos gols do Brasil.
+
+                        <p class="futplay-points-note mt-2 mb-0">
+                            No placar exato, vale a pontuação máxima de 10 pontos, sem somar bônus adicionais.
+                        </p>
+                    </div>
+                </details>
             </aside>
 
-            <main class="col-xl-6 col-lg-8">
+            <main class="col-xl-6 col-lg-8 order-1 order-lg-2">
                 <section class="fp-score-board">
                     <div class="fp-score-board-tabs">
                         <a class="active" href="#">Palpites</a>
                         <a asp-action="Ranking" asp-route-id="@Model.LigaId">Ranking</a>
                         <a asp-controller="MinhasLigas" asp-action="Index">Meu bolão</a>
+                    </div>
+
+                    <div class="fp-pick-round-summary">
+                        <span>Rodada selecionada</span>
+                        <strong>@rodadaTitulo</strong>
+                        <small>@totalJogos jogo(s) · @pendentes pendente(s)</small>
                     </div>
 
                     @if (Model.Rodadas.Any())
@@ -263,8 +289,7 @@
                     }
 
                     <div class="fp-score-filter-row">
-                        <span class="fp-score-filter active">@rodadaTitulo (@totalJogos)</span>
-                        <span class="fp-score-filter">@Model.TotalJogosCampeonato jogo(s) no campeonato</span>
+                        <span class="fp-score-filter active">Todos (@totalJogos)</span>
                         <span class="fp-score-filter">Pendentes (@pendentes)</span>
                         <span class="fp-score-filter">Palpitados (@palpitados)</span>
                         <span class="fp-score-filter">Bloqueados (@bloqueados)</span>
@@ -288,13 +313,9 @@
                             {
                                 var jogo = Model.Jogos[i];
 
-                                var casaMarca = string.IsNullOrWhiteSpace(jogo.TimeCasa)
-                                ? "CAS"
-                                : jogo.TimeCasa.Substring(0, Math.Min(3, jogo.TimeCasa.Length)).ToUpperInvariant();
+                                var casaMarca = NomeCurto(jogo.TimeCasaSigla, jogo.TimeCasa, "CAS");
 
-                                var visitanteMarca = string.IsNullOrWhiteSpace(jogo.TimeVisitante)
-                                ? "VIS"
-                                : jogo.TimeVisitante.Substring(0, Math.Min(3, jogo.TimeVisitante.Length)).ToUpperInvariant();
+                                var visitanteMarca = NomeCurto(jogo.TimeVisitanteSigla, jogo.TimeVisitante, "VIS");
 
                                 var statusClass = jogo.Bloqueado
                                 ? "locked"
@@ -308,10 +329,18 @@
                                 ? "Palpitado"
                                 : "Pendente";
 
+                                var metaRodada = jogo.Rodada.HasValue
+                                    ? $"Rodada {jogo.Rodada}"
+                                    : rodadaTitulo;
+
+                                var horarioJogo = FormatarHorario(jogo.DataJogo);
+
                                 <article class="fp-bet-pick-row @statusClass">
                                     <input type="hidden" asp-for="Jogos[i].JogoId" />
                                     <input type="hidden" asp-for="Jogos[i].TimeCasa" />
+                                    <input type="hidden" asp-for="Jogos[i].TimeCasaSigla" />
                                     <input type="hidden" asp-for="Jogos[i].TimeVisitante" />
+                                    <input type="hidden" asp-for="Jogos[i].TimeVisitanteSigla" />
                                     <input type="hidden" asp-for="Jogos[i].DataJogo" />
                                     <input type="hidden" asp-for="Jogos[i].Fase" />
                                     <input type="hidden" asp-for="Jogos[i].Grupo" />
@@ -319,13 +348,14 @@
                                     <input type="hidden" asp-for="Jogos[i].JaPalpitado" />
                                     <input type="hidden" asp-for="Jogos[i].Bloqueado" />
 
-                                    <div class="fp-bet-pick-time">
-                                        <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
-                                        <span>@jogo.DataJogo.ToString("dd/MM")</span>
+                                    <div class="fp-bet-pick-meta">
+                                        <strong>@jogo.DataJogo.ToString("dd/MM")</strong>
+                                        <span>@metaRodada</span>
+                                        <small>@horarioJogo</small>
                                     </div>
 
-                                    <div class="fp-bet-pick-match">
-                                        <div class="fp-score-club">
+                                    <div class="fp-bet-pick-main">
+                                        <div class="fp-pick-team fp-pick-team-home">
                                             <span class="fp-mini-crest">
                                                 @if (!string.IsNullOrWhiteSpace(jogo.TimeCasaEscudoUrl))
                                                 {
@@ -337,10 +367,36 @@
                                                 }
                                             </span>
 
-                                            <span>@jogo.TimeCasa</span>
+                                            <span class="fp-pick-team-name-full">@jogo.TimeCasa</span>
+                                            <span class="fp-pick-team-name-short">@casaMarca</span>
                                         </div>
 
-                                        <div class="fp-score-club">
+                                        <div class="fp-bet-pick-score">
+                                            <input asp-for="Jogos[i].GolsCasaPalpite"
+                                                   class="form-control js-gols-casa"
+                                                   type="number"
+                                                   min="0"
+                                                   max="99"
+                                                   inputmode="numeric"
+                                                   placeholder="0"
+                                                   readonly="@jogo.Bloqueado" />
+
+                                            <span>x</span>
+
+                                            <input asp-for="Jogos[i].GolsVisitantePalpite"
+                                                   class="form-control js-gols-visitante"
+                                                   type="number"
+                                                   min="0"
+                                                   max="99"
+                                                   inputmode="numeric"
+                                                   placeholder="0"
+                                                   readonly="@jogo.Bloqueado" />
+                                        </div>
+
+                                        <div class="fp-pick-team fp-pick-team-away">
+                                            <span class="fp-pick-team-name-full">@jogo.TimeVisitante</span>
+                                            <span class="fp-pick-team-name-short">@visitanteMarca</span>
+
                                             <span class="fp-mini-crest">
                                                 @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitanteEscudoUrl))
                                                 {
@@ -351,39 +407,15 @@
                                                     @visitanteMarca
                                                 }
                                             </span>
-
-                                            <span>@jogo.TimeVisitante</span>
                                         </div>
-
-                                        <small>
-                                            @(string.IsNullOrWhiteSpace(jogo.Fase) ? "Fase não informada" : jogo.Fase)
-                                            @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
-                                            {
-                                                <span> · Grupo @jogo.Grupo</span>
-                                            }
-                                        </small>
                                     </div>
 
-                                    <div class="fp-bet-pick-score">
-                                        <input asp-for="Jogos[i].GolsCasaPalpite"
-                                               class="form-control js-gols-casa"
-                                               type="number"
-                                               min="0"
-                                               max="99"
-                                               inputmode="numeric"
-                                               placeholder="0"
-                                               readonly="@jogo.Bloqueado" />
-
-                                        <span>x</span>
-
-                                        <input asp-for="Jogos[i].GolsVisitantePalpite"
-                                               class="form-control js-gols-visitante"
-                                               type="number"
-                                               min="0"
-                                               max="99"
-                                               inputmode="numeric"
-                                               placeholder="0"
-                                               readonly="@jogo.Bloqueado" />
+                                    <div class="fp-bet-pick-details">
+                                        <span>@(string.IsNullOrWhiteSpace(jogo.Fase) ? "Fase não informada" : jogo.Fase)</span>
+                                        @if (!string.IsNullOrWhiteSpace(jogo.Grupo))
+                                        {
+                                            <span>Grupo @jogo.Grupo</span>
+                                        }
                                     </div>
 
                                     <div class="fp-bet-pick-status">
@@ -427,7 +459,7 @@
                 </section>
             </main>
 
-            <aside class="col-xl-3 d-none d-xl-block">
+            <aside class="col-xl-3 d-none d-xl-block order-xl-3">
                 <section class="fp-side-ad">
                     <span>Publicidade</span>
                     <strong>@AppBrand.Name</strong>
@@ -471,6 +503,14 @@
     }
 
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const regras = document.querySelector(".fp-bet-rules-card");
+
+            if (regras && window.matchMedia("(max-width: 768px)").matches) {
+                regras.removeAttribute("open");
+            }
+        });
+
         function carregarParticipante(participanteId) {
             if (participanteId) {
                 const url = montarUrlPalpitar();

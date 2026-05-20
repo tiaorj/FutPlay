@@ -407,8 +407,10 @@ namespace FutPlay.Controllers
                 {
                     JogoId = jogo.Id,
                     TimeCasa = jogo.TimeCasa?.Nome ?? "",
+                    TimeCasaSigla = jogo.TimeCasa?.Sigla,
                     TimeCasaEscudoUrl = jogo.TimeCasa?.EscudoUrl,
                     TimeVisitante = jogo.TimeVisitante?.Nome ?? "",
+                    TimeVisitanteSigla = jogo.TimeVisitante?.Sigla,
                     TimeVisitanteEscudoUrl = jogo.TimeVisitante?.EscudoUrl,
                     DataJogo = jogo.DataJogo,
                     Fase = jogo.Fase,

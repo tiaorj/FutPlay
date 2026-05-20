@@ -1,0 +1,553 @@
+/* Meu Pitaco FC - tela de palpites do bolao */
+
+.fp-bolao-page {
+    --fp-pick-blue: #2637b8;
+    --fp-pick-green: #16a34a;
+    --fp-pick-ink: #101827;
+    --fp-pick-muted: #657386;
+    --fp-pick-line: #dde6f0;
+    --fp-pick-soft: #f5f8fc;
+    --fp-pick-shadow: 0 10px 26px rgba(15, 23, 42, .07);
+}
+
+.fp-bolao-page .fp-bet-header {
+    border-radius: 12px;
+    box-shadow: var(--fp-pick-shadow);
+}
+
+.fp-bolao-page .fp-score-board {
+    border-color: var(--fp-pick-line);
+    border-radius: 12px;
+    box-shadow: var(--fp-pick-shadow);
+}
+
+.fp-bolao-page .fp-score-board-tabs {
+    background: #fff;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 14px;
+}
+
+.fp-bolao-page .fp-score-board-tabs a {
+    align-items: center;
+    background: var(--fp-pick-soft);
+    border: 0;
+    border-radius: 999px;
+    color: var(--fp-pick-muted);
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: .83rem;
+    font-weight: 900;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 14px;
+    text-decoration: none;
+}
+
+.fp-bolao-page .fp-score-board-tabs a.active {
+    background: linear-gradient(135deg, var(--fp-pick-blue), var(--fp-pick-green));
+    box-shadow: 0 4px 12px rgba(38, 55, 184, .2);
+    color: #fff;
+}
+
+.fp-pick-round-summary {
+    align-items: center;
+    background: linear-gradient(180deg, #fff 0%, #f7faff 100%);
+    border-bottom: 1px solid var(--fp-pick-line);
+    display: grid;
+    gap: 2px 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 12px 14px;
+}
+
+.fp-pick-round-summary span {
+    color: var(--fp-pick-muted);
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.fp-pick-round-summary strong {
+    color: var(--fp-pick-ink);
+    font-size: 1rem;
+    font-weight: 950;
+}
+
+.fp-pick-round-summary small {
+    align-self: center;
+    background: #edf4ff;
+    border-radius: 999px;
+    color: #1d4ed8;
+    font-size: .75rem;
+    font-weight: 900;
+    grid-row: 1 / span 2;
+    padding: 6px 10px;
+}
+
+.fp-bolao-page .fp-round-toolbar {
+    border-bottom-color: var(--fp-pick-line);
+    grid-template-columns: 88px minmax(0, 1fr) 88px;
+    padding: 10px 14px;
+}
+
+.fp-bolao-page .fp-round-nav {
+    min-height: 34px;
+    padding: 7px 12px;
+}
+
+.fp-bolao-page .fp-score-filter-row {
+    background: #fff;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 12px 14px 8px;
+    scrollbar-width: thin;
+}
+
+.fp-bolao-page .fp-score-filter {
+    flex: 0 0 auto;
+    font-size: .78rem;
+    padding: 7px 12px;
+    white-space: nowrap;
+}
+
+.fp-bolao-page .fp-score-filter.active {
+    background: #20232c;
+    color: #fff;
+}
+
+.fp-bolao-page .fp-match-list-title {
+    padding: 10px 14px;
+}
+
+.fp-bolao-page .fp-bet-pick-list {
+    display: grid;
+    gap: 10px;
+    padding: 0 12px 12px;
+}
+
+.fp-bolao-page .fp-bet-pick-row {
+    border: 1px solid var(--fp-pick-line);
+    border-radius: 12px;
+    display: grid;
+    gap: 8px 12px;
+    grid-template-areas:
+        "meta main status"
+        "meta details validation";
+    grid-template-columns: 86px minmax(0, 1fr) auto;
+    padding: 12px 14px;
+}
+
+.fp-bolao-page .fp-bet-pick-meta {
+    align-self: center;
+    color: var(--fp-pick-muted);
+    display: grid;
+    gap: 2px;
+    grid-area: meta;
+    text-align: center;
+}
+
+.fp-bolao-page .fp-bet-pick-meta strong {
+    color: var(--fp-pick-ink);
+    font-size: .85rem;
+    font-weight: 950;
+}
+
+.fp-bolao-page .fp-bet-pick-meta span,
+.fp-bolao-page .fp-bet-pick-meta small {
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.fp-bolao-page .fp-bet-pick-main {
+    align-items: center;
+    display: grid;
+    gap: 12px;
+    grid-area: main;
+    grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+    min-width: 0;
+}
+
+.fp-bolao-page .fp-pick-team {
+    align-items: center;
+    color: var(--fp-pick-ink);
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.fp-bolao-page .fp-pick-team-away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.fp-bolao-page .fp-pick-team-name-full,
+.fp-bolao-page .fp-pick-team-name-short {
+    font-weight: 950;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-bolao-page .fp-pick-team-name-short {
+    display: none;
+}
+
+.fp-bolao-page .fp-bet-pick-score {
+    align-items: center;
+    display: flex;
+    gap: 7px;
+    grid-column: auto;
+    justify-content: center;
+}
+
+.fp-bolao-page .fp-bet-pick-score input {
+    border-radius: 10px;
+    font-size: 1rem;
+    height: 38px;
+    width: 48px;
+}
+
+.fp-bolao-page .fp-bet-pick-score span {
+    color: var(--fp-pick-muted);
+    font-weight: 950;
+}
+
+.fp-bolao-page .fp-bet-pick-details {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    grid-area: details;
+}
+
+.fp-bolao-page .fp-bet-pick-details span {
+    background: var(--fp-pick-soft);
+    border-radius: 999px;
+    color: var(--fp-pick-muted);
+    font-size: .72rem;
+    font-weight: 900;
+    padding: 4px 8px;
+}
+
+.fp-bolao-page .fp-bet-pick-status {
+    grid-column: auto;
+    grid-area: status;
+}
+
+.fp-bolao-page .fp-bet-pick-status > span {
+    font-size: .68rem;
+    letter-spacing: .02em;
+    padding: 5px 8px;
+    text-transform: uppercase;
+}
+
+.fp-bolao-page .fp-bet-pick-status small {
+    color: var(--fp-pick-muted);
+    font-size: .7rem;
+    font-weight: 800;
+}
+
+.fp-bolao-page .fp-bet-pick-validation {
+    grid-column: auto;
+    grid-area: validation;
+    min-height: 0;
+    padding-left: 0;
+}
+
+.fp-bolao-page .fp-bet-save-card {
+    margin: 0 12px 12px;
+}
+
+.fp-bet-rules-card {
+    padding: 0;
+}
+
+.fp-bet-rules-card summary {
+    align-items: center;
+    cursor: pointer;
+    display: grid;
+    gap: 2px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    list-style: none;
+    padding: 14px;
+}
+
+.fp-bet-rules-card summary::-webkit-details-marker {
+    display: none;
+}
+
+.fp-bet-rules-card summary::after {
+    color: var(--fp-pick-muted);
+    content: "+";
+    font-size: 1.15rem;
+    font-weight: 950;
+}
+
+.fp-bet-rules-card[open] summary::after {
+    content: "-";
+}
+
+.fp-bet-rules-card summary span {
+    color: var(--fp-pick-ink);
+    font-weight: 950;
+}
+
+.fp-bet-rules-card summary small {
+    color: var(--fp-pick-muted);
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.fp-bet-rules-grid {
+    grid-template-columns: 1fr;
+    padding: 0 14px 14px;
+}
+
+.fp-bet-rules-card .futplay-points-example {
+    margin: 0 14px 14px;
+}
+
+.fp-desktop-only {
+    display: block;
+}
+
+.fp-mobile-only {
+    display: none;
+}
+
+@media (max-width: 991px) {
+    .fp-bolao-page .fp-bet-header {
+        grid-template-columns: 44px minmax(0, 1fr);
+        padding: 12px;
+    }
+
+    .fp-bolao-page .fp-bet-header-ball {
+        height: 44px;
+        width: 44px;
+    }
+
+    .fp-bolao-page .fp-bet-header-actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+
+    .fp-bolao-page .fp-bet-pick-row {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "main"
+            "meta"
+            "details"
+            "status"
+            "validation";
+    }
+}
+
+@media (max-width: 768px) {
+    .fp-bolao-page {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .fp-picks-layout {
+        --bs-gutter-y: .75rem;
+    }
+
+    .fp-bolao-page .fp-bet-header {
+        margin-bottom: .75rem !important;
+    }
+
+    .fp-bolao-page .fp-bet-header-info span {
+        font-size: .66rem;
+    }
+
+    .fp-bolao-page .fp-bet-header-info h1 {
+        font-size: 1rem;
+        white-space: nowrap;
+    }
+
+    .fp-bolao-page .fp-bet-header-info p {
+        font-size: .76rem;
+    }
+
+    .fp-bolao-page .fp-bet-header-actions a {
+        min-height: 30px;
+        padding: 6px 10px;
+    }
+
+    .fp-bolao-page .fp-score-board-tabs {
+        padding: 10px;
+    }
+
+    .fp-bolao-page .fp-score-board-tabs a {
+        min-height: 32px;
+        padding: 7px 12px;
+    }
+
+    .fp-pick-round-summary {
+        grid-template-columns: 1fr;
+        padding: 10px 12px;
+    }
+
+    .fp-pick-round-summary small {
+        grid-row: auto;
+        justify-self: start;
+    }
+
+    .fp-bolao-page .fp-round-toolbar {
+        gap: 8px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        padding: 9px 10px;
+    }
+
+    .fp-bolao-page .fp-round-nav {
+        font-size: 0;
+        min-width: 34px;
+        padding: 7px 9px;
+    }
+
+    .fp-bolao-page .fp-round-nav:first-child::after {
+        content: "<";
+        font-size: .86rem;
+    }
+
+    .fp-bolao-page .fp-round-nav:last-child::after {
+        content: ">";
+        font-size: .86rem;
+    }
+
+    .fp-bolao-page .fp-score-filter-row {
+        flex-wrap: nowrap;
+        padding: 10px 10px 6px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-list {
+        gap: 8px;
+        padding: 0 8px 8px;
+    }
+
+    .fp-bolao-page .fp-match-list-title {
+        padding: 9px 8px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-row {
+        gap: 7px;
+        padding: 10px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-main {
+        gap: 7px;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    }
+
+    .fp-bolao-page .fp-mini-crest {
+        height: 24px;
+        width: 24px;
+    }
+
+    .fp-bolao-page .fp-pick-team {
+        gap: 5px;
+    }
+
+    .fp-bolao-page .fp-pick-team-name-full {
+        display: none;
+    }
+
+    .fp-bolao-page .fp-pick-team-name-short {
+        display: inline;
+        font-size: .82rem;
+    }
+
+    .fp-bolao-page .fp-bet-pick-score {
+        gap: 5px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-score input {
+        font-size: .95rem;
+        height: 34px;
+        padding: 4px;
+        width: 38px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-meta {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px 8px;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .fp-bolao-page .fp-bet-pick-meta strong,
+    .fp-bolao-page .fp-bet-pick-meta span,
+    .fp-bolao-page .fp-bet-pick-meta small {
+        display: inline-flex;
+        font-size: .72rem;
+    }
+
+    .fp-bolao-page .fp-bet-pick-details {
+        display: none;
+    }
+
+    .fp-bolao-page .fp-bet-pick-status {
+        align-items: flex-start;
+        min-width: 0;
+    }
+
+    .fp-bolao-page .fp-bet-pick-status > span {
+        font-size: .62rem;
+    }
+
+    .fp-bolao-page .fp-bet-save-card {
+        margin: 0 8px 8px;
+    }
+
+    .fp-picks-sidebar .fp-home-card {
+        margin-top: .75rem !important;
+    }
+
+    .fp-picks-sidebar .fp-card-header-link {
+        padding: 10px 12px;
+    }
+
+    .fp-picks-sidebar .fp-score-stats-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 0 12px 12px;
+    }
+
+    .fp-picks-sidebar .fp-score-stats-list div {
+        border-top: 1px solid #eef2f6;
+        padding: 8px 0;
+    }
+
+    .fp-mobile-hidden {
+        display: none !important;
+    }
+
+    .fp-desktop-only {
+        display: none !important;
+    }
+
+    .fp-bet-rules-card {
+        margin-top: .75rem !important;
+    }
+
+    .fp-bet-rules-card:not([open]) {
+        padding-bottom: 0;
+    }
+}
+
+@media (max-width: 420px) {
+    .fp-bolao-page .fp-bet-pick-main {
+        gap: 5px;
+    }
+
+    .fp-bolao-page .fp-bet-pick-score input {
+        width: 34px;
+    }
+
+    .fp-bolao-page .fp-pick-team-name-short {
+        font-size: .78rem;
+    }
+}
