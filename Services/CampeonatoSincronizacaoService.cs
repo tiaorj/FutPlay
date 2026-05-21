@@ -78,9 +78,24 @@ namespace FutPlay.Services
 
                 resultado.TotalProcessados = fixtures.Count;
 
+                AtualizarFormatoCampeonato(campeonato, fixtures);
+
                 var jogosCampeonato = await _context.Jogos
                     .Where(j => j.CampeonatoId == campeonato.Id)
                     .ToListAsync();
+
+                var gruposPorNome = (await _context.Grupos
+                    .Where(g => g.CampeonatoId == campeonato.Id)
+                    .ToListAsync())
+                    .GroupBy(g => NormalizarChaveGrupo(g.Nome))
+                    .ToDictionary(g => g.Key, g => g.First());
+
+                var campeonatoTimesPorTime = (await _context.CampeonatoTimes
+                    .Include(ct => ct.Grupo)
+                    .Where(ct => ct.CampeonatoId == campeonato.Id)
+                    .ToListAsync())
+                    .GroupBy(ct => ct.TimeId)
+                    .ToDictionary(g => g.Key, g => g.First());
 
                 var jogosPorFixture = jogosCampeonato
                     .Where(j => j.ApiFixtureId.HasValue)
@@ -101,6 +116,10 @@ namespace FutPlay.Services
                             resultado.JogosIgnorados++;
                             continue;
                         }
+
+                        var grupo = ObterOuCriarGrupo(campeonato, fixture.Grupo, gruposPorNome);
+                        VincularTimeAoGrupo(campeonato, timeCasa.Id, grupo, campeonatoTimesPorTime);
+                        VincularTimeAoGrupo(campeonato, timeVisitante.Id, grupo, campeonatoTimesPorTime);
 
                         var jogo = jogosPorFixture.TryGetValue(fixture.ApiFixtureId, out var jogoPorFixture)
                             ? jogoPorFixture
@@ -313,6 +332,20 @@ namespace FutPlay.Services
                 .FirstOrDefaultAsync(c => c.Id == campeonatoId);
         }
 
+        private void AtualizarFormatoCampeonato(Campeonato campeonato, List<ApiFixtureData> fixtures)
+        {
+            var formatoInferido = CampeonatoApiFormatoService.InferirFormato(
+                campeonato.Nome,
+                campeonato.Tipo,
+                fixtures.Select(f => f.Fase));
+
+            if (!string.Equals(campeonato.Formato, formatoInferido, StringComparison.OrdinalIgnoreCase))
+            {
+                campeonato.Formato = formatoInferido;
+                _context.Campeonatos.Update(campeonato);
+            }
+        }
+
         private async Task<Time?> SincronizarTimeAsync(
             ApiFixtureTime timeApi,
             Campeonato campeonato,
@@ -342,6 +375,83 @@ namespace FutPlay.Services
             }
 
             return sincronizacao.Time;
+        }
+
+        private Grupo? ObterOuCriarGrupo(
+            Campeonato campeonato,
+            string? grupoNome,
+            Dictionary<string, Grupo> gruposPorNome)
+        {
+            if (string.IsNullOrWhiteSpace(grupoNome))
+            {
+                return null;
+            }
+
+            var nome = NormalizarNomeGrupo(grupoNome);
+            var chave = NormalizarChaveGrupo(nome);
+
+            if (gruposPorNome.TryGetValue(chave, out var grupoExistente))
+            {
+                if (!grupoExistente.Ativo)
+                {
+                    grupoExistente.Ativo = true;
+                    _context.Grupos.Update(grupoExistente);
+                }
+
+                return grupoExistente;
+            }
+
+            var grupo = new Grupo
+            {
+                CampeonatoId = campeonato.Id,
+                Nome = nome,
+                Ativo = true
+            };
+
+            _context.Grupos.Add(grupo);
+            gruposPorNome[chave] = grupo;
+
+            return grupo;
+        }
+
+        private void VincularTimeAoGrupo(
+            Campeonato campeonato,
+            int timeId,
+            Grupo? grupo,
+            Dictionary<int, CampeonatoTime> campeonatoTimesPorTime)
+        {
+            if (grupo == null)
+            {
+                return;
+            }
+
+            if (campeonatoTimesPorTime.TryGetValue(timeId, out var campeonatoTime))
+            {
+                var grupoAtual = campeonatoTime.GrupoId.HasValue
+                    ? campeonatoTime.GrupoId == grupo.Id
+                    : campeonatoTime.Grupo != null &&
+                      string.Equals(NormalizarChaveGrupo(campeonatoTime.Grupo.Nome), NormalizarChaveGrupo(grupo.Nome), StringComparison.OrdinalIgnoreCase);
+
+                if (!grupoAtual || !campeonatoTime.Ativo)
+                {
+                    campeonatoTime.Grupo = grupo;
+                    campeonatoTime.Ativo = true;
+                    _context.CampeonatoTimes.Update(campeonatoTime);
+                }
+
+                return;
+            }
+
+            var novoVinculo = new CampeonatoTime
+            {
+                CampeonatoId = campeonato.Id,
+                TimeId = timeId,
+                Grupo = grupo,
+                Ativo = true
+            };
+
+            _context.CampeonatoTimes.Add(novoVinculo);
+            campeonatoTimesPorTime[timeId] = novoVinculo;
         }
 
         private async Task RecalcularClassificacaoAsync(
@@ -629,8 +739,32 @@ namespace FutPlay.Services
             var match = Regex.Match(rodada, @"(?:Group|Grupo)\s+([A-Za-z0-9]+)", RegexOptions.IgnoreCase);
 
             return match.Success
-                ? match.Groups[1].Value.ToUpperInvariant()
+                ? NormalizarNomeGrupo(match.Groups[1].Value)
                 : null;
+        }
+
+        private static string NormalizarNomeGrupo(string grupo)
+        {
+            var texto = grupo.Trim();
+
+            if (texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase))
+            {
+                texto = texto.Substring("Grupo ".Length).Trim();
+            }
+
+            if (texto.StartsWith("Group ", StringComparison.OrdinalIgnoreCase))
+            {
+                texto = texto.Substring("Group ".Length).Trim();
+            }
+
+            return texto.ToUpperInvariant();
+        }
+
+        private static string NormalizarChaveGrupo(string? grupo)
+        {
+            return string.IsNullOrWhiteSpace(grupo)
+                ? string.Empty
+                : NormalizarNomeGrupo(grupo);
         }
 
         private static string? ObterString(JsonElement element, string propriedade)

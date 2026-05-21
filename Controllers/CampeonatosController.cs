@@ -410,7 +410,15 @@ namespace FutPlay.Controllers
             return RedirectToAction(nameof(Portal), new { id, aba = "classificacao" });
         }
 
-        public async Task<IActionResult> Portal(int? id, string aba = "visao-geral", string modo = "rodada", string? dataSelecionada = null, int? rodadaSelecionada = null, string? grupoSelecionado = null)
+        public async Task<IActionResult> Portal(
+            int? id,
+            string aba = "visao-geral",
+            string? modo = null,
+            string? dataSelecionada = null,
+            int? rodadaSelecionada = null,
+            string? grupoSelecionado = null,
+            string? faseSelecionada = null,
+            int? timeDestaqueId = null)
         {
             if (id == null)
             {
@@ -433,10 +441,13 @@ namespace FutPlay.Controllers
                 await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(id.Value);
             }
 
-            modo = NormalizarModoPortal(modo, campeonato.UsaClassificacaoPorGrupos);
+            modo = NormalizarModoPortal(modo, campeonato.UsaClassificacaoPorGrupos, !campeonato.UsaClassificacaoPorGrupos);
             grupoSelecionado = string.IsNullOrWhiteSpace(grupoSelecionado)
                 ? null
                 : grupoSelecionado.Trim();
+            faseSelecionada = string.IsNullOrWhiteSpace(faseSelecionada)
+                ? null
+                : faseSelecionada.Trim();
 
             var classificacoes = await _context.Classificacoes
                 .Include(c => c.Time)
@@ -518,6 +529,69 @@ namespace FutPlay.Controllers
                 .OrderBy(d => d.Data)
                 .ToList();
 
+            var fases = jogosCampeonato
+                .Select(j => NomeFasePortal(j.Fase))
+                .Where(f => !string.IsNullOrWhiteSpace(f))
+                .GroupBy(f => f)
+                .Select(g => new FaseFiltroViewModel
+                {
+                    Nome = g.Key,
+                    TotalJogos = jogosCampeonato.Count(j => string.Equals(NomeFasePortal(j.Fase), g.Key, StringComparison.OrdinalIgnoreCase))
+                })
+                .OrderBy(f => OrdemFasePortal(f.Nome))
+                .ThenBy(f => f.Nome)
+                .ToList();
+
+            if (string.Equals(modo, "fase", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(faseSelecionada) && fases.Any())
+                {
+                    faseSelecionada = fases.Last().Nome;
+                }
+
+                if (!string.IsNullOrWhiteSpace(faseSelecionada) &&
+                    !fases.Any(f => string.Equals(f.Nome, faseSelecionada, StringComparison.OrdinalIgnoreCase)))
+                {
+                    faseSelecionada = fases.LastOrDefault()?.Nome;
+                }
+            }
+
+            foreach (var fase in fases)
+            {
+                fase.Selecionada = string.Equals(fase.Nome, faseSelecionada, StringComparison.OrdinalIgnoreCase);
+            }
+
+            var fasesOrdenadas = fases.Select(f => f.Nome).ToList();
+            string? faseAnterior = null;
+            string? proximaFase = null;
+
+            if (!string.IsNullOrWhiteSpace(faseSelecionada))
+            {
+                var faseIndex = fasesOrdenadas.FindIndex(f => string.Equals(f, faseSelecionada, StringComparison.OrdinalIgnoreCase));
+
+                if (faseIndex > 0)
+                {
+                    faseAnterior = fasesOrdenadas[faseIndex - 1];
+                }
+
+                if (faseIndex >= 0 && faseIndex < fasesOrdenadas.Count - 1)
+                {
+                    proximaFase = fasesOrdenadas[faseIndex + 1];
+                }
+            }
+
+            var seriesChaveamento = MontarSeriesChaveamento(jogosCampeonato);
+            var faseChaveamentoSelecionada = faseSelecionada ?? fases.LastOrDefault()?.Nome;
+            var chaveamentoFases = MontarFasesChaveamento(seriesChaveamento, faseChaveamentoSelecionada);
+            var serieJogoLabels = seriesChaveamento
+                .SelectMany(serie => serie.Jogos.Select(jogo => new
+                {
+                    jogo.JogoId,
+                    Label = $"{serie.TimeANome} x {serie.TimeBNome} - {jogo.Ordem}"
+                }))
+                .GroupBy(item => item.JogoId)
+                .ToDictionary(g => g.Key, g => g.First().Label);
+
             // Lógica para escolher quais jogos exibir
             List<Jogo> jogosDaRodada;
             if (string.Equals(modo, "data", StringComparison.OrdinalIgnoreCase))
@@ -540,6 +614,18 @@ namespace FutPlay.Controllers
                         .ToList()
                     : jogosCampeonato
                         .Where(j => string.Equals(ObterGrupoJogo(j), grupoSelecionado, StringComparison.OrdinalIgnoreCase))
+                        .OrderBy(j => j.DataJogo)
+                        .ToList();
+            }
+            else if (string.Equals(modo, "fase", StringComparison.OrdinalIgnoreCase))
+            {
+                jogosDaRodada = string.IsNullOrWhiteSpace(faseSelecionada)
+                    ? jogosCampeonato
+                        .OrderBy(j => OrdemFasePortal(NomeFasePortal(j.Fase)))
+                        .ThenBy(j => j.DataJogo)
+                        .ToList()
+                    : jogosCampeonato
+                        .Where(j => string.Equals(NomeFasePortal(j.Fase), faseSelecionada, StringComparison.OrdinalIgnoreCase))
                         .OrderBy(j => j.DataJogo)
                         .ToList();
             }
@@ -582,12 +668,203 @@ namespace FutPlay.Controllers
                 UltimosResultadosPorTime = await ObterUltimosResultadosPorTimeAsync(id.Value),
                 // novas props
                 Datas = datas,
+                Fases = fases,
+                ChaveamentoFases = chaveamentoFases,
+                SerieJogoLabels = serieJogoLabels,
                 Modo = modo,
                 GrupoSelecionado = grupoSelecionado,
+                FaseSelecionada = faseSelecionada,
+                FaseAnterior = faseAnterior,
+                ProximaFase = proximaFase,
+                TimeDestaqueId = timeDestaqueId,
                 DataSelecionada = dataSelecionada
             };
 
             return View(viewModel);
+        }
+
+        private static bool EhFaseEliminatoria(Jogo jogo)
+        {
+            var faseNormalizada = NomeFasePortal(jogo.Fase);
+            var ordem = OrdemFasePortal(faseNormalizada);
+
+            return ordem >= 2 &&
+                ordem <= 6 &&
+                !faseNormalizada.Contains("grupo", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static List<ChaveamentoSerieViewModel> MontarSeriesChaveamento(List<Jogo> jogos)
+        {
+            return jogos
+                .Where(EhFaseEliminatoria)
+                .GroupBy(j =>
+                {
+                    var timeMenorId = Math.Min(j.TimeCasaId, j.TimeVisitanteId);
+                    var timeMaiorId = Math.Max(j.TimeCasaId, j.TimeVisitanteId);
+
+                    return new
+                    {
+                        Fase = NomeFasePortal(j.Fase),
+                        TimeMenorId = timeMenorId,
+                        TimeMaiorId = timeMaiorId
+                    };
+                })
+                .Select(g => MontarSerieChaveamento(g.Key.Fase, g.OrderBy(j => j.DataJogo).ToList()))
+                .OrderBy(s => OrdemFasePortal(s.Fase))
+                .ThenBy(s => s.TimeANome)
+                .ThenBy(s => s.TimeBNome)
+                .ToList();
+        }
+
+        private static ChaveamentoSerieViewModel MontarSerieChaveamento(string fase, List<Jogo> jogos)
+        {
+            var primeiroJogo = jogos.First();
+            var timeAId = primeiroJogo.TimeCasaId;
+            var timeBId = primeiroJogo.TimeVisitanteId;
+
+            var jogosDaSerie = jogos
+                .Select((jogo, index) => MontarJogoSerie(jogo, index, timeAId, timeBId))
+                .ToList();
+
+            var jogosComPlacar = jogosDaSerie
+                .Where(j => j.GolsTimeA.HasValue && j.GolsTimeB.HasValue)
+                .ToList();
+
+            int? agregadoA = jogosComPlacar.Any()
+                ? jogosComPlacar.Sum(j => j.GolsTimeA.GetValueOrDefault())
+                : null;
+
+            int? agregadoB = jogosComPlacar.Any()
+                ? jogosComPlacar.Sum(j => j.GolsTimeB.GetValueOrDefault())
+                : null;
+
+            var serieCompleta = jogosDaSerie.Any() &&
+                jogosDaSerie.All(j => j.GolsTimeA.HasValue && j.GolsTimeB.HasValue);
+            int? classificadoId = null;
+
+            if (serieCompleta && agregadoA.HasValue && agregadoB.HasValue && agregadoA != agregadoB)
+            {
+                classificadoId = agregadoA > agregadoB ? timeAId : timeBId;
+            }
+
+            return new ChaveamentoSerieViewModel
+            {
+                Fase = fase,
+                TimeAId = timeAId,
+                TimeANome = primeiroJogo.TimeCasa?.Nome ?? "Mandante",
+                TimeAEscudoUrl = primeiroJogo.TimeCasa?.EscudoUrl,
+                TimeASigla = ObterSiglaTime(primeiroJogo.TimeCasa, "CAS"),
+                TimeBId = timeBId,
+                TimeBNome = primeiroJogo.TimeVisitante?.Nome ?? "Visitante",
+                TimeBEscudoUrl = primeiroJogo.TimeVisitante?.EscudoUrl,
+                TimeBSigla = ObterSiglaTime(primeiroJogo.TimeVisitante, "VIS"),
+                AgregadoTimeA = agregadoA,
+                AgregadoTimeB = agregadoB,
+                ClassificadoTimeId = classificadoId,
+                StatusSerie = classificadoId.HasValue
+                    ? $"Classificado: {(classificadoId == timeAId ? primeiroJogo.TimeCasa?.Nome : primeiroJogo.TimeVisitante?.Nome)}"
+                    : serieCompleta ? "Série indefinida" : "Série em aberto",
+                Jogos = jogosDaSerie
+            };
+        }
+
+        private static ChaveamentoJogoViewModel MontarJogoSerie(
+            Jogo jogo,
+            int index,
+            int timeAId,
+            int timeBId)
+        {
+            var golsTimeA = jogo.TimeCasaId == timeAId ? jogo.GolsCasa : jogo.GolsVisitante;
+            var golsTimeB = jogo.TimeCasaId == timeBId ? jogo.GolsCasa : jogo.GolsVisitante;
+
+            return new ChaveamentoJogoViewModel
+            {
+                JogoId = jogo.Id,
+                DataJogo = jogo.DataJogo,
+                Ordem = index == 0 ? "Ida" : index == 1 ? "Volta" : $"Jogo {index + 1}",
+                MandanteId = jogo.TimeCasaId,
+                MandanteNome = jogo.TimeCasa?.Nome ?? "Mandante",
+                VisitanteId = jogo.TimeVisitanteId,
+                VisitanteNome = jogo.TimeVisitante?.Nome ?? "Visitante",
+                GolsMandante = jogo.GolsCasa,
+                GolsVisitante = jogo.GolsVisitante,
+                GolsTimeA = golsTimeA,
+                GolsTimeB = golsTimeB
+            };
+        }
+
+        private static List<ChaveamentoFaseViewModel> MontarFasesChaveamento(
+            List<ChaveamentoSerieViewModel> series,
+            string? faseSelecionada)
+        {
+            var fases = series
+                .GroupBy(s => s.Fase)
+                .Select(g => new ChaveamentoFaseViewModel
+                {
+                    Nome = g.Key,
+                    Ordem = OrdemFasePortal(g.Key),
+                    Series = g
+                        .OrderBy(s => s.TimeANome)
+                        .ThenBy(s => s.TimeBNome)
+                        .ToList()
+                })
+                .OrderBy(f => f.Ordem)
+                .ThenBy(f => f.Nome)
+                .ToList();
+
+            if (!fases.Any())
+            {
+                return fases;
+            }
+
+            var indiceSelecionado = string.IsNullOrWhiteSpace(faseSelecionada)
+                ? fases.Count - 1
+                : fases.FindIndex(f => string.Equals(f.Nome, faseSelecionada, StringComparison.OrdinalIgnoreCase));
+
+            if (indiceSelecionado < 0)
+            {
+                indiceSelecionado = fases.Count - 1;
+            }
+
+            var indices = new SortedSet<int> { indiceSelecionado };
+
+            if (indiceSelecionado > 0)
+            {
+                indices.Add(indiceSelecionado - 1);
+            }
+
+            if (indiceSelecionado < fases.Count - 1)
+            {
+                indices.Add(indiceSelecionado + 1);
+            }
+
+            return indices
+                .Select(i =>
+                {
+                    var fase = fases[i];
+                    fase.Selecionada = i == indiceSelecionado;
+                    fase.PosicaoCss = i == indiceSelecionado
+                        ? "is-selected"
+                        : i < indiceSelecionado ? "is-before" : "is-after";
+
+                    return fase;
+                })
+                .ToList();
+        }
+
+        private static string ObterSiglaTime(Time? time, string fallback)
+        {
+            if (!string.IsNullOrWhiteSpace(time?.Sigla))
+            {
+                return time.Sigla;
+            }
+
+            if (!string.IsNullOrWhiteSpace(time?.Nome))
+            {
+                return time.Nome.Substring(0, Math.Min(3, time.Nome.Length)).ToUpperInvariant();
+            }
+
+            return fallback;
         }
 
         private static List<RodadaFiltroViewModel> ObterRodadas(
@@ -773,14 +1050,103 @@ namespace FutPlay.Controllers
             };
         }
 
-        private static string NormalizarModoPortal(string? modo, bool permiteGrupo)
+        private static string NormalizarModoPortal(string? modo, bool permiteGrupo, bool preferirFase)
         {
             return modo?.ToLowerInvariant() switch
             {
                 "data" => "data",
                 "grupo" when permiteGrupo => "grupo",
-                _ => "rodada"
+                "fase" => "fase",
+                "fases" => "fase",
+                "mata-mata" => "fase",
+                "rodada" => "rodada",
+                _ => preferirFase ? "fase" : "rodada"
             };
+        }
+
+        private static string NomeFasePortal(string? fase)
+        {
+            if (string.IsNullOrWhiteSpace(fase))
+            {
+                return "Fase a definir";
+            }
+
+            var texto = fase.Trim();
+
+            if (texto.Contains("final", StringComparison.OrdinalIgnoreCase))
+            {
+                if (texto.Contains("semi", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Semifinais";
+                }
+
+                if (texto.Contains("quarter", StringComparison.OrdinalIgnoreCase) ||
+                    texto.Contains("quarta", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Quartas de final";
+                }
+
+                if (texto.Contains("8th", StringComparison.OrdinalIgnoreCase) ||
+                    texto.Contains("oitava", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "Oitavas-de-final";
+                }
+
+                return "Final";
+            }
+
+            if (texto.Contains("Round of 16", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Oitavas-de-final";
+            }
+
+            if (texto.Contains("Group", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("Grupo", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Fase de grupos";
+            }
+
+            return texto;
+        }
+
+        private static int OrdemFasePortal(string? fase)
+        {
+            var texto = fase ?? string.Empty;
+
+            if (texto.Contains("grupo", StringComparison.OrdinalIgnoreCase))
+            {
+                return 1;
+            }
+
+            if (texto.Contains("32", StringComparison.OrdinalIgnoreCase))
+            {
+                return 2;
+            }
+
+            if (texto.Contains("16", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("oitava", StringComparison.OrdinalIgnoreCase))
+            {
+                return 3;
+            }
+
+            if (texto.Contains("quarta", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("quarter", StringComparison.OrdinalIgnoreCase))
+            {
+                return 4;
+            }
+
+            if (texto.Contains("semi", StringComparison.OrdinalIgnoreCase))
+            {
+                return 5;
+            }
+
+            if (texto.Contains("final", StringComparison.OrdinalIgnoreCase))
+            {
+                return 6;
+            }
+
+            return 20;
         }
     }
 }

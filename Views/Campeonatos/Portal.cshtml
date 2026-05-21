@@ -54,14 +54,6 @@
     var rodadaTitulo = Model.RodadaSelecionada.HasValue
         ? $"Rodada {Model.RodadaSelecionada}"
         : "Rodada";
-    var jogosEliminatoria = Model.Jogos
-        .Where(EhFaseEliminatoria)
-        .OrderBy(j => j.DataJogo)
-        .ToList();
-    var fasesEliminatorias = jogosEliminatoria
-        .GroupBy(j => NomeFaseEliminatoria(j.Fase))
-        .OrderBy(g => OrdemFaseEliminatoria(g.Key))
-        .ToList();
 
     string Sigla(FutPlay.Models.Time? time, string fallback)
     {
@@ -126,65 +118,6 @@
         return !string.IsNullOrWhiteSpace(grupoVisitante)
             ? NomeGrupo(grupoVisitante)
             : "Sem grupo";
-    }
-
-    bool EhFaseEliminatoria(FutPlay.Models.Jogo jogo)
-    {
-        var fase = jogo.Fase ?? string.Empty;
-
-        return fase.Contains("final", StringComparison.OrdinalIgnoreCase) ||
-               fase.Contains("oitava", StringComparison.OrdinalIgnoreCase) ||
-               fase.Contains("quarta", StringComparison.OrdinalIgnoreCase) ||
-               fase.Contains("semi", StringComparison.OrdinalIgnoreCase) ||
-               fase.Contains("16", StringComparison.OrdinalIgnoreCase);
-    }
-
-    string NomeFaseEliminatoria(string? fase)
-    {
-        if (string.IsNullOrWhiteSpace(fase))
-        {
-            return "Fase eliminatoria";
-        }
-
-        if (fase.Contains("16", StringComparison.OrdinalIgnoreCase))
-        {
-            return "16Avos-de-final";
-        }
-
-        if (fase.Contains("oitava", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Oitavas-de-Final";
-        }
-
-        if (fase.Contains("quarta", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Quartas de final";
-        }
-
-        if (fase.Contains("semi", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Semifinais";
-        }
-
-        if (fase.Contains("final", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Final";
-        }
-
-        return fase;
-    }
-
-    int OrdemFaseEliminatoria(string fase)
-    {
-        return fase switch
-        {
-            "16Avos-de-final" => 1,
-            "Oitavas-de-Final" => 2,
-            "Quartas de final" => 3,
-            "Semifinais" => 4,
-            "Final" => 5,
-            _ => 9
-        };
     }
 
     // Helper para exibir horário com pt-BR e "Horário a definir" quando 00:00
@@ -314,11 +247,22 @@
                        asp-route-aba="@Model.Aba"
                        asp-route-modo="data"
                        class="@(Model.Modo == "data" ? "active" : "")">Por data</a>
-                    <a asp-action="Portal"
-                       asp-route-id="@Model.Campeonato.Id"
-                       asp-route-aba="@Model.Aba"
-                       asp-route-modo="rodada"
-                       class="@(Model.Modo == "rodada" ? "active" : "")">Por rodada</a>
+                    @if (isPontosCorridos)
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-modo="rodada"
+                           class="@(Model.Modo == "rodada" ? "active" : "")">Por rodada</a>
+                    }
+                    else
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-modo="fase"
+                           class="@(Model.Modo == "fase" ? "active" : "")">Por fase</a>
+                    }
                     @if (exibirPorGrupos)
                     {
                         <a asp-action="Portal"
@@ -332,7 +276,18 @@
                 </div>
 
                 <div class="fp-tv-roundbar">
-                    @if (Model.RodadaAnterior.HasValue && Model.Modo == "rodada")
+                    @if (!string.IsNullOrWhiteSpace(Model.FaseAnterior) && Model.Modo == "fase")
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-modo="fase"
+                           asp-route-faseSelecionada="@Model.FaseAnterior"
+                           aria-label="Fase anterior">
+                            ‹
+                        </a>
+                    }
+                    else if (Model.RodadaAnterior.HasValue && Model.Modo == "rodada")
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
@@ -365,6 +320,29 @@
                                     {
                                         var value = d.Data.ToString("yyyy-MM-dd");
                                         <option value="@value" selected="@(d.Selecionada)">@d.Data.ToString("dd/MM/yyyy") (@d.TotalJogos partidas)</option>
+                                    }
+                                }
+                            </select>
+                        </form>
+                    }
+                    else if (Model.Modo == "fase")
+                    {
+                        <form asp-action="Portal" method="get">
+                            <input type="hidden" name="id" value="@Model.Campeonato.Id" />
+                            <input type="hidden" name="aba" value="@Model.Aba" />
+                            <input type="hidden" name="modo" value="fase" />
+                            <select name="faseSelecionada" class="form-select form-select-sm" onchange="this.form.submit()">
+                                @if (!Model.Fases.Any())
+                                {
+                                    <option value="">Sem fases</option>
+                                }
+                                else
+                                {
+                                    @foreach (var fase in Model.Fases)
+                                    {
+                                        <option value="@fase.Nome" selected="@fase.Selecionada">
+                                            @fase.Nome (@fase.TotalJogos partidas)
+                                        </option>
                                     }
                                 }
                             </select>
@@ -411,7 +389,18 @@
                         </form>
                     }
 
-                    @if (Model.ProximaRodada.HasValue && Model.Modo == "rodada")
+                    @if (!string.IsNullOrWhiteSpace(Model.ProximaFase) && Model.Modo == "fase")
+                    {
+                        <a asp-action="Portal"
+                           asp-route-id="@Model.Campeonato.Id"
+                           asp-route-aba="@Model.Aba"
+                           asp-route-modo="fase"
+                           asp-route-faseSelecionada="@Model.ProximaFase"
+                           aria-label="Próxima fase">
+                            ›
+                        </a>
+                    }
+                    else if (Model.ProximaRodada.HasValue && Model.Modo == "rodada")
                     {
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
@@ -443,6 +432,10 @@
 
                             @foreach (var jogo in grupoDia.OrderBy(j => j.DataJogo))
                             {
+                                var serieLabel = Model.SerieJogoLabels.TryGetValue(jogo.Id, out var label)
+                                    ? label
+                                    : null;
+
                                 <a asp-controller="Jogos"
                                    asp-action="Details"
                                    asp-route-id="@jogo.Id"
@@ -457,6 +450,11 @@
                                     </span>
 
                                     <span class="fp-tv-fixture-teams">
+                                        @if (!string.IsNullOrWhiteSpace(serieLabel))
+                                        {
+                                            <small class="fp-tv-fixture-series">@serieLabel</small>
+                                        }
+
                                         <span>
                                             <span class="fp-tv-crest">
                                                 @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
@@ -610,6 +608,8 @@
                         <a asp-action="Portal"
                            asp-route-id="@Model.Campeonato.Id"
                            asp-route-aba="fase-eliminatoria"
+                           asp-route-modo="fase"
+                           asp-route-faseSelecionada="@Model.FaseSelecionada"
                            class="@(Model.AbaFaseEliminatoriaAtiva ? "active" : "")">
                             Fase eliminatória
                         </a>
@@ -646,14 +646,43 @@
                     }
                     else if (Model.AbaFaseEliminatoriaAtiva)
                     {
+                        var faseChaveamentoAtual = Model.ChaveamentoFases.FirstOrDefault(f => f.Selecionada)?.Nome
+                            ?? Model.FaseSelecionada
+                            ?? "Fase eliminatória";
+
                         <div class="fp-bracket-toolbar">
                             <span>&lt;/&gt;</span>
-                            <b>@(fasesEliminatorias.LastOrDefault()?.Key ?? "Fase eliminatória")</b>
-                            <a asp-action="Portal" asp-route-id="@Model.Campeonato.Id" asp-route-aba="classificacao">‹</a>
-                            <span class="disabled">›</span>
+                            <b>@faseChaveamentoAtual</b>
+                            @if (!string.IsNullOrWhiteSpace(Model.FaseAnterior))
+                            {
+                                <a asp-action="Portal"
+                                   asp-route-id="@Model.Campeonato.Id"
+                                   asp-route-aba="fase-eliminatoria"
+                                   asp-route-modo="fase"
+                                   asp-route-faseSelecionada="@Model.FaseAnterior"
+                                   aria-label="Fase anterior">‹</a>
+                            }
+                            else
+                            {
+                                <span class="disabled">‹</span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(Model.ProximaFase))
+                            {
+                                <a asp-action="Portal"
+                                   asp-route-id="@Model.Campeonato.Id"
+                                   asp-route-aba="fase-eliminatoria"
+                                   asp-route-modo="fase"
+                                   asp-route-faseSelecionada="@Model.ProximaFase"
+                                   aria-label="Próxima fase">›</a>
+                            }
+                            else
+                            {
+                                <span class="disabled">›</span>
+                            }
                         </div>
 
-                        @if (!fasesEliminatorias.Any())
+                        @if (!Model.ChaveamentoFases.Any())
                         {
                             <div class="fp-stage-empty-card">
                                 <div class="fp-stage-empty-icon" aria-hidden="true">&#127942;</div>
@@ -666,27 +695,76 @@
                         else
                         {
                             <div class="fp-bracket-board">
-                                @foreach (var fase in fasesEliminatorias)
+                                @foreach (var fase in Model.ChaveamentoFases)
                                 {
-                                    <section class="fp-bracket-stage">
-                                        <h3>@fase.Key</h3>
+                                    var faseFinal = fase.Nome.Contains("Final", StringComparison.OrdinalIgnoreCase) &&
+                                        !fase.Nome.Contains("Semi", StringComparison.OrdinalIgnoreCase);
 
-                                        @foreach (var jogo in fase.OrderBy(j => j.DataJogo))
+                                    <section class="fp-bracket-stage @fase.PosicaoCss @(faseFinal ? "is-final" : "")">
+                                        <h3>@fase.Nome</h3>
+
+                                        @foreach (var serie in fase.Series)
                                         {
-                                            <article class="fp-bracket-match">
-                                                <span>
-                                                    <b>@Sigla(jogo.TimeCasa, "CAS")</b>
-                                                    <small>
-                                                        @(jogo.GolsCasa.HasValue ? jogo.GolsCasa.ToString() : "-")
-                                                    </small>
+                                            var agregadoTimeA = serie.AgregadoTimeA.HasValue ? serie.AgregadoTimeA.Value.ToString() : "-";
+                                            var agregadoTimeB = serie.AgregadoTimeB.HasValue ? serie.AgregadoTimeB.Value.ToString() : "-";
+
+                                            <article class="fp-bracket-match fp-bracket-series @(serie.TemIdaVolta ? "has-two-legs" : "has-single-leg")"
+                                                     data-team-ids="@($"{serie.TimeAId},{serie.TimeBId}")">
+                                                <div class="fp-series-summary">
+                                                    <span class="fp-bracket-team @(serie.ClassificadoTimeId == serie.TimeAId ? "qualified" : "")"
+                                                          data-team-id="@serie.TimeAId"
+                                                          tabindex="0">
+                                                        <span class="fp-tv-crest">
+                                                            @if (!string.IsNullOrWhiteSpace(serie.TimeAEscudoUrl))
+                                                            {
+                                                                <img src="@serie.TimeAEscudoUrl" alt="@serie.TimeANome" />
+                                                            }
+                                                            else
+                                                            {
+                                                                @serie.TimeASigla
+                                                            }
+                                                        </span>
+                                                        <b>@serie.TimeANome</b>
+                                                    </span>
+                                                    <small>@agregadoTimeA</small>
+
+                                                    <span class="fp-bracket-team @(serie.ClassificadoTimeId == serie.TimeBId ? "qualified" : "")"
+                                                          data-team-id="@serie.TimeBId"
+                                                          tabindex="0">
+                                                        <span class="fp-tv-crest">
+                                                            @if (!string.IsNullOrWhiteSpace(serie.TimeBEscudoUrl))
+                                                            {
+                                                                <img src="@serie.TimeBEscudoUrl" alt="@serie.TimeBNome" />
+                                                            }
+                                                            else
+                                                            {
+                                                                @serie.TimeBSigla
+                                                            }
+                                                        </span>
+                                                        <b>@serie.TimeBNome</b>
+                                                    </span>
+                                                    <small>@agregadoTimeB</small>
+                                                </div>
+
+                                                <div class="fp-series-legs">
+                                                    @foreach (var jogoSerie in serie.Jogos)
+                                                    {
+                                                        var placarJogo = jogoSerie.GolsMandante.HasValue && jogoSerie.GolsVisitante.HasValue
+                                                            ? $"{jogoSerie.GolsMandante} x {jogoSerie.GolsVisitante}"
+                                                            : "- x -";
+
+                                                        <div class="fp-series-leg">
+                                                            <span>@jogoSerie.Ordem <em>@jogoSerie.DataJogo.ToString("dd/MM")</em></span>
+                                                            <b>@jogoSerie.MandanteNome</b>
+                                                            <strong>@placarJogo</strong>
+                                                            <b>@jogoSerie.VisitanteNome</b>
+                                                        </div>
+                                                    }
+                                                </div>
+
+                                                <span class="fp-series-status @(serie.ClassificadoTimeId.HasValue ? "qualified" : "")">
+                                                    @serie.StatusSerie
                                                 </span>
-                                                <span>
-                                                    <b>@Sigla(jogo.TimeVisitante, "VIS")</b>
-                                                    <small>
-                                                        @(jogo.GolsVisitante.HasValue ? jogo.GolsVisitante.ToString() : "-")
-                                                    </small>
-                                                </span>
-                                                <time>@jogo.DataJogo.ToString("d MMM", CultureInfo.GetCultureInfo("pt-BR"))<br />@FormatarHorario(jogo.DataJogo)</time>
                                             </article>
                                         }
                                     </section>
@@ -796,3 +874,52 @@
         </main>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            document.querySelectorAll('.fp-bracket-board').forEach((board) => {
+                const matches = Array.from(board.querySelectorAll('.fp-bracket-match'));
+                const teams = Array.from(board.querySelectorAll('.fp-bracket-team[data-team-id]'));
+
+                const clearPath = () => {
+                    board.classList.remove('is-hovering');
+                    matches.forEach((match) => match.classList.remove('is-path', 'is-dimmed'));
+                    teams.forEach((team) => team.classList.remove('selected'));
+                };
+
+                const highlightTeam = (teamId) => {
+                    if (!teamId) {
+                        clearPath();
+                        return;
+                    }
+
+                    board.classList.add('is-hovering');
+
+                    matches.forEach((match) => {
+                        const teamIds = (match.dataset.teamIds || '').split(',').map((id) => id.trim());
+                        const belongsToPath = teamIds.includes(teamId);
+                        match.classList.toggle('is-path', belongsToPath);
+                        match.classList.toggle('is-dimmed', !belongsToPath);
+                    });
+
+                    teams.forEach((team) => {
+                        team.classList.toggle('selected', team.dataset.teamId === teamId);
+                    });
+                };
+
+                teams.forEach((team) => {
+                    team.addEventListener('mouseenter', () => highlightTeam(team.dataset.teamId));
+                    team.addEventListener('focusin', () => highlightTeam(team.dataset.teamId));
+                });
+
+                board.addEventListener('mouseleave', clearPath);
+                board.addEventListener('focusout', (event) => {
+                    if (!board.contains(event.relatedTarget)) {
+                        clearPath();
+                    }
+                });
+            });
+        })();
+    </script>
+}

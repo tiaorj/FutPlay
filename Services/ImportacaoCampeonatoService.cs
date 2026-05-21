@@ -2,6 +2,8 @@ using FutPlay.Data;
 using FutPlay.Models;
 using FutPlay.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace FutPlay.Services
 {
@@ -10,15 +12,18 @@ namespace FutPlay.Services
         private readonly FootballApiService _footballApiService;
         private readonly AppDbContext _context;
         private readonly ApiSyncLogService _apiSyncLogService;
+        private readonly ILogger<ImportacaoCampeonatoService> _logger;
 
         public ImportacaoCampeonatoService(
             FootballApiService footballApiService,
             AppDbContext context,
-            ApiSyncLogService apiSyncLogService)
+            ApiSyncLogService apiSyncLogService,
+            ILogger<ImportacaoCampeonatoService> logger)
         {
             _footballApiService = footballApiService;
             _context = context;
             _apiSyncLogService = apiSyncLogService;
+            _logger = logger;
         }
 
         public async Task<List<ApiLigaViewModel>> BuscarLigasAsync(string pais, int temporada)
@@ -90,6 +95,7 @@ namespace FutPlay.Services
                 Nome = nome,
                 Ano = temporada,
                 Tipo = string.IsNullOrWhiteSpace(tipo) ? "Liga" : tipo,
+                Formato = CampeonatoApiFormatoService.InferirFormato(nome, tipo),
                 Pais = pais,
                 LogoUrl = logoUrl,
                 Ativo = true,
@@ -98,6 +104,8 @@ namespace FutPlay.Services
 
             _context.Campeonatos.Add(campeonato);
             await _context.SaveChangesAsync();
+
+            await AtualizarMetadadosDaCompeticaoAsync(campeonato);
 
             await _apiSyncLogService.RegistrarAsync(new ApiSyncLog
             {
@@ -175,6 +183,10 @@ namespace FutPlay.Services
                 campeonato.Tipo = tipoValido;
             }
 
+            campeonato.Formato = CampeonatoApiFormatoService.InferirFormato(
+                nomeValido ?? campeonato.Nome,
+                tipoValido ?? campeonato.Tipo);
+
             var logoValido = ObterTextoValido(logoUrl);
             if (!string.IsNullOrWhiteSpace(logoValido))
             {
@@ -193,6 +205,7 @@ namespace FutPlay.Services
 
             _context.Campeonatos.Update(campeonato);
             await _context.SaveChangesAsync();
+            await AtualizarMetadadosDaCompeticaoAsync(campeonato);
 
             await _apiSyncLogService.RegistrarAsync(new ApiSyncLog
             {
@@ -254,6 +267,124 @@ namespace FutPlay.Services
             return string.IsNullOrWhiteSpace(valor)
                 ? null
                 : valor.Trim();
+        }
+
+        private async Task AtualizarMetadadosDaCompeticaoAsync(Campeonato campeonato)
+        {
+            if (!campeonato.ApiLeagueId.HasValue || campeonato.Ano <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                using var resultado = await _footballApiService.BuscarJogosAsync(campeonato.ApiLeagueId.Value, campeonato.Ano);
+                var fases = ExtrairFases(resultado).ToList();
+
+                campeonato.Formato = CampeonatoApiFormatoService.InferirFormato(
+                    campeonato.Nome,
+                    campeonato.Tipo,
+                    fases);
+
+                await CriarGruposDaCompeticaoAsync(campeonato, fases);
+                _context.Campeonatos.Update(campeonato);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Não foi possível atualizar metadados da competição pela API. CampeonatoId: {CampeonatoId}",
+                    campeonato.Id);
+            }
+        }
+
+        private async Task CriarGruposDaCompeticaoAsync(Campeonato campeonato, List<string> fases)
+        {
+            var gruposApi = fases
+                .Select(ExtrairGrupo)
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .Select(g => g!)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (!gruposApi.Any())
+            {
+                return;
+            }
+
+            var gruposExistentes = await _context.Grupos
+                .Where(g => g.CampeonatoId == campeonato.Id)
+                .ToListAsync();
+
+            foreach (var grupoNome in gruposApi)
+            {
+                var jaExiste = gruposExistentes.Any(g =>
+                    string.Equals(NormalizarGrupo(g.Nome), NormalizarGrupo(grupoNome), StringComparison.OrdinalIgnoreCase));
+
+                if (jaExiste)
+                {
+                    continue;
+                }
+
+                _context.Grupos.Add(new Grupo
+                {
+                    CampeonatoId = campeonato.Id,
+                    Nome = NormalizarGrupo(grupoNome),
+                    Ativo = true
+                });
+            }
+        }
+
+        private static IEnumerable<string> ExtrairFases(JsonDocument resultado)
+        {
+            if (!resultado.RootElement.TryGetProperty("response", out var response))
+            {
+                yield break;
+            }
+
+            foreach (var item in response.EnumerateArray())
+            {
+                if (!item.TryGetProperty("league", out var league) ||
+                    !league.TryGetProperty("round", out var roundElement) ||
+                    roundElement.ValueKind == JsonValueKind.Null)
+                {
+                    continue;
+                }
+
+                var fase = roundElement.GetString();
+
+                if (!string.IsNullOrWhiteSpace(fase))
+                {
+                    yield return fase;
+                }
+            }
+        }
+
+        private static string? ExtrairGrupo(string fase)
+        {
+            var match = Regex.Match(fase, @"(?:Group|Grupo)\s+([A-Za-z0-9]+)", RegexOptions.IgnoreCase);
+
+            return match.Success
+                ? NormalizarGrupo(match.Groups[1].Value)
+                : null;
+        }
+
+        private static string NormalizarGrupo(string grupo)
+        {
+            var texto = grupo.Trim();
+
+            if (texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase))
+            {
+                texto = texto.Substring("Grupo ".Length).Trim();
+            }
+
+            if (texto.StartsWith("Group ", StringComparison.OrdinalIgnoreCase))
+            {
+                texto = texto.Substring("Group ".Length).Trim();
+            }
+
+            return texto.ToUpperInvariant();
         }
     }
 

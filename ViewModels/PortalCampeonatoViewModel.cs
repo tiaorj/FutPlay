@@ -25,9 +25,24 @@ namespace FutPlay.ViewModels
 
         // usa o DataFiltroViewModel definido em ViewModels/DataFiltroViewModel.cs
         public List<DataFiltroViewModel> Datas { get; set; } = new();
+
+        public List<FaseFiltroViewModel> Fases { get; set; } = new();
+
+        public List<ChaveamentoFaseViewModel> ChaveamentoFases { get; set; } = new();
+
+        public Dictionary<int, string> SerieJogoLabels { get; set; } = new();
+
         public string? Modo { get; set; } = "rodada";
 
         public string? GrupoSelecionado { get; set; }
+
+        public string? FaseSelecionada { get; set; }
+
+        public string? FaseAnterior { get; set; }
+
+        public string? ProximaFase { get; set; }
+
+        public int? TimeDestaqueId { get; set; }
 
         public string? DataSelecionada { get; set; }
 
