@@ -175,6 +175,11 @@ namespace FutPlay.Controllers
             {
                 ModelState.AddModelError("", "Informe o país para buscar os times.");
             }
+            else if (tipoBusca == "pais-nome" &&
+                (string.IsNullOrWhiteSpace(pais) || string.IsNullOrWhiteSpace(nome)))
+            {
+                ModelState.AddModelError("", "Informe o país e o nome do time.");
+            }
             else if (tipoBusca == "nome" && string.IsNullOrWhiteSpace(nome))
             {
                 ModelState.AddModelError("", "Informe o nome do time.");
@@ -197,6 +202,9 @@ namespace FutPlay.Controllers
             {
                 var times = tipoBusca switch
                 {
+                    "pais-nome" when !string.IsNullOrWhiteSpace(pais) && !string.IsNullOrWhiteSpace(nome) =>
+                        await _importacaoTimesService.BuscarTimesPorPaisENomeAsync(pais, nome),
+
                     "nome" when !string.IsNullOrWhiteSpace(nome) =>
                         await _importacaoTimesService.BuscarTimesPorNomeAsync(nome),
 
@@ -235,6 +243,8 @@ namespace FutPlay.Controllers
             string nome,
             string? pais,
             string? escudoUrl,
+            string? sigla,
+            string? tipo,
             string tipoBusca = "pais",
             string? filtroPais = null,
             string? filtroNome = null,
@@ -244,15 +254,60 @@ namespace FutPlay.Controllers
         {
             try
             {
-                bool importado = await _importacaoTimesService.ImportarTimeAsync(
+                var resultado = await _importacaoTimesService.ImportarTimeAsync(
                     apiTeamId,
                     nome,
                     pais,
-                    escudoUrl);
+                    escudoUrl,
+                    sigla,
+                    tipo);
 
-                TempData["Sucesso"] = importado
-                    ? $"Time {nome} importado com sucesso."
-                    : $"Time {nome} já estava importado.";
+                TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+            }
+            catch (Exception ex)
+            {
+                TempData["Erro"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(ImportarApi), new
+            {
+                tipoBusca,
+                pais = filtroPais,
+                nome = filtroNome,
+                search = filtroSearch,
+                leagueId = filtroLeagueId,
+                temporada = filtroTemporada
+            });
+        }
+
+        [Authorize(Roles = AppRoles.Administrador)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AtualizarTimeApi(
+            int apiTeamId,
+            string nome,
+            string? pais,
+            string? escudoUrl,
+            string? sigla,
+            string? tipo,
+            string tipoBusca = "pais",
+            string? filtroPais = null,
+            string? filtroNome = null,
+            string? filtroSearch = null,
+            int? filtroLeagueId = null,
+            int? filtroTemporada = null)
+        {
+            try
+            {
+                var resultado = await _importacaoTimesService.AtualizarTimeAsync(
+                    apiTeamId,
+                    nome,
+                    pais,
+                    escudoUrl,
+                    sigla,
+                    tipo);
+
+                TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
             }
             catch (Exception ex)
             {
@@ -474,6 +529,7 @@ namespace FutPlay.Controllers
         {
             return tipoBusca?.ToLowerInvariant() switch
             {
+                "pais-nome" => "pais-nome",
                 "nome" => "nome",
                 "search" => "search",
                 "liga" => "liga",

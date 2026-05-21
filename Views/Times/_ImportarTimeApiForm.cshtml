@@ -9,30 +9,32 @@
     var filtroTemporada = ViewData["Temporada"] as string ?? "";
 }
 
-@if (!Model.JaImportado)
-{
-    <form asp-action="ImportarTimeApi" method="post" class="d-inline">
-        @Html.AntiForgeryToken()
+<form asp-action="@(Model.JaImportado ? "AtualizarTimeApi" : "ImportarTimeApi")" method="post" class="d-inline">
+    @Html.AntiForgeryToken()
 
-        <input type="hidden" name="apiTeamId" value="@Model.ApiTeamId" />
-        <input type="hidden" name="nome" value="@Model.Nome" />
-        <input type="hidden" name="pais" value="@Model.Pais" />
-        <input type="hidden" name="escudoUrl" value="@Model.EscudoUrl" />
-        <input type="hidden" name="tipoBusca" value="@tipoBusca" />
-        <input type="hidden" name="filtroPais" value="@filtroPais" />
-        <input type="hidden" name="filtroNome" value="@filtroNome" />
-        <input type="hidden" name="filtroSearch" value="@filtroSearch" />
-        <input type="hidden" name="filtroLeagueId" value="@filtroLeagueId" />
-        <input type="hidden" name="filtroTemporada" value="@filtroTemporada" />
+    <input type="hidden" name="apiTeamId" value="@Model.ApiTeamId" />
+    <input type="hidden" name="nome" value="@Model.Nome" />
+    <input type="hidden" name="pais" value="@Model.Pais" />
+    <input type="hidden" name="escudoUrl" value="@Model.EscudoUrl" />
+    <input type="hidden" name="sigla" value="@Model.Sigla" />
+    <input type="hidden" name="tipo" value="@Model.Tipo" />
+    <input type="hidden" name="tipoBusca" value="@tipoBusca" />
+    <input type="hidden" name="filtroPais" value="@filtroPais" />
+    <input type="hidden" name="filtroNome" value="@filtroNome" />
+    <input type="hidden" name="filtroSearch" value="@filtroSearch" />
+    <input type="hidden" name="filtroLeagueId" value="@filtroLeagueId" />
+    <input type="hidden" name="filtroTemporada" value="@filtroTemporada" />
 
+    @if (Model.JaImportado)
+    {
+        <button type="submit" class="btn btn-sm btn-outline-primary">
+            Atualizar dados
+        </button>
+    }
+    else
+    {
         <button type="submit" class="btn btn-sm btn-primary">
             Importar
         </button>
-    </form>
-}
-else
-{
-    <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
-        Importado
-    </button>
-}
+    }
+</form>
