@@ -23,6 +23,7 @@ namespace FutPlay.Data
         public DbSet<LigaConvite> LigaConvites { get; set; }
         public DbSet<TimeFavorito> TimeFavoritos { get; set; }
         public DbSet<CampeonatoFavorito> CampeonatoFavoritos { get; set; }
+        public DbSet<ApiSyncLog> ApiSyncLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,6 +41,7 @@ namespace FutPlay.Data
             modelBuilder.Entity<LigaConvite>().ToTable("FutPlay_LigaConvites");
             modelBuilder.Entity<TimeFavorito>().ToTable("FutPlay_TimeFavoritos");
             modelBuilder.Entity<CampeonatoFavorito>().ToTable("FutPlay_CampeonatoFavoritos");
+            modelBuilder.Entity<ApiSyncLog>().ToTable("FutPlay_ApiSyncLogs");
 
             modelBuilder.Entity<TimeFavorito>()
                 .HasIndex(f => new { f.UserId, f.TimeId })
@@ -118,6 +120,18 @@ namespace FutPlay.Data
 
             modelBuilder.Entity<Time>()
                 .HasIndex(t => t.ApiTeamId);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.TipoSincronizacao);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.Status);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.CampeonatoId);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.CriadoEm);
 
             modelBuilder.Entity<Classificacao>()
                 .HasIndex(c => c.CampeonatoId);
@@ -238,6 +252,18 @@ namespace FutPlay.Data
                 .WithMany()
                 .HasForeignKey(f => f.CampeonatoId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasOne(l => l.Campeonato)
+                .WithMany()
+                .HasForeignKey(l => l.CampeonatoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasOne(l => l.Time)
+                .WithMany()
+                .HasForeignKey(l => l.TimeId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

@@ -1,8 +1,11 @@
+using FutPlay.Data;
 using FutPlay.Services;
 using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FutPlay.Controllers
 {
@@ -11,23 +14,20 @@ namespace FutPlay.Controllers
     public class ImportacoesController : Controller
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
-        private readonly ImportacaoJogosService _importacaoJogosService;
-        private readonly ImportacaoResultadosService _importacaoResultadosService;
         private readonly CampeonatoSincronizacaoService _campeonatoSincronizacaoService;
         private readonly MockDataService _mockDataService;
+        private readonly AppDbContext _context;
 
         public ImportacoesController(
             ImportacaoCampeonatoService importacaoCampeonatoService,
-            ImportacaoJogosService importacaoJogosService,
-            ImportacaoResultadosService importacaoResultadosService,
             CampeonatoSincronizacaoService campeonatoSincronizacaoService,
-            MockDataService mockDataService)
+            MockDataService mockDataService,
+            AppDbContext context)
         {
             _importacaoCampeonatoService = importacaoCampeonatoService;
-            _importacaoJogosService = importacaoJogosService;
-            _importacaoResultadosService = importacaoResultadosService;
             _campeonatoSincronizacaoService = campeonatoSincronizacaoService;
             _mockDataService = mockDataService;
+            _context = context;
 
         }
 
@@ -68,22 +68,44 @@ namespace FutPlay.Controllers
             string? logoUrl,
             int temporada)
         {
-            bool importado = await _importacaoCampeonatoService.ImportarLigaAsync(
+            var resultado = await _importacaoCampeonatoService.ImportarLigaAsync(
                 apiLeagueId,
                 nome,
                 tipo,
                 pais,
                 logoUrl,
-                temporada
+                temporada,
+                ObterUsuarioId(),
+                ObterUsuarioEmail()
             );
 
-            if (!importado)
-            {
-                TempData["Erro"] = "Este campeonato já foi importado.";
-                return RedirectToAction(nameof(Index));
-            }
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
 
-            TempData["Sucesso"] = $"Campeonato {nome} importado com sucesso.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AtualizarLiga(
+            int apiLeagueId,
+            string nome,
+            string tipo,
+            string pais,
+            string? logoUrl,
+            int temporada)
+        {
+            var resultado = await _importacaoCampeonatoService.AtualizarLigaAsync(
+                apiLeagueId,
+                nome,
+                tipo,
+                pais,
+                logoUrl,
+                temporada,
+                usuarioId: ObterUsuarioId(),
+                usuarioEmail: ObterUsuarioEmail()
+            );
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
 
             return RedirectToAction(nameof(Index));
         }
@@ -92,7 +114,10 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportarJogos(int campeonatoId)
         {
-            var resultado = await _importacaoJogosService.ImportarJogosAsync(campeonatoId);
+            var resultado = await _campeonatoSincronizacaoService.SincronizarJogosCompeticaoAsync(
+                campeonatoId,
+                ObterUsuarioId(),
+                ObterUsuarioEmail());
 
             TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
 
@@ -103,9 +128,17 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AtualizarResultados(int campeonatoId)
         {
-            var resultado = await _importacaoResultadosService.ImportarResultadosAsync(campeonatoId);
+            var resultado = await _campeonatoSincronizacaoService.AtualizarResultadosAsync(
+                campeonatoId,
+                ObterUsuarioId(),
+                ObterUsuarioEmail());
 
             TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            if (resultado.RedirecionarParaPortal && resultado.CampeonatoId.HasValue)
+            {
+                return RedirectToAction("Portal", "Campeonatos", new { id = resultado.CampeonatoId.Value, aba = "jogos" });
+            }
 
             return RedirectToAction("Index", "Campeonatos");
         }
@@ -114,16 +147,91 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SincronizarCampeonato(int campeonatoId)
         {
-            var resultado = await _campeonatoSincronizacaoService.SincronizarCampeonatoAsync(campeonatoId);
+            var resultado = await _campeonatoSincronizacaoService.SincronizarCampeonatoAsync(
+                campeonatoId,
+                ObterUsuarioId(),
+                ObterUsuarioEmail());
 
             TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
 
             if (resultado.RedirecionarParaPortal && resultado.CampeonatoId.HasValue)
             {
-                return RedirectToAction("Portal", "Campeonatos", new { id = resultado.CampeonatoId.Value });
+                return RedirectToAction("Portal", "Campeonatos", new { id = resultado.CampeonatoId.Value, aba = "jogos" });
             }
 
             return RedirectToAction("Index", "Campeonatos");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SincronizarJogos(int campeonatoId)
+        {
+            var resultado = await _campeonatoSincronizacaoService.SincronizarJogosCompeticaoAsync(
+                campeonatoId,
+                ObterUsuarioId(),
+                ObterUsuarioEmail());
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            if (resultado.RedirecionarParaPortal && resultado.CampeonatoId.HasValue)
+            {
+                return RedirectToAction("Portal", "Campeonatos", new { id = resultado.CampeonatoId.Value, aba = "jogos" });
+            }
+
+            return RedirectToAction("Index", "Campeonatos");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Historico(string? tipo, string? status, int? campeonatoId)
+        {
+            var logs = _context.ApiSyncLogs
+                .Include(l => l.Campeonato)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(tipo))
+            {
+                logs = logs.Where(l => l.TipoSincronizacao == tipo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                logs = logs.Where(l => l.Status == status);
+            }
+
+            if (campeonatoId.HasValue)
+            {
+                logs = logs.Where(l => l.CampeonatoId == campeonatoId.Value);
+            }
+
+            ViewBag.Tipo = tipo;
+            ViewBag.Status = status;
+            ViewBag.CampeonatoId = campeonatoId;
+            ViewBag.Tipos = await _context.ApiSyncLogs
+                .AsNoTracking()
+                .Select(l => l.TipoSincronizacao)
+                .Distinct()
+                .OrderBy(t => t)
+                .ToListAsync();
+            ViewBag.Statuses = await _context.ApiSyncLogs
+                .AsNoTracking()
+                .Select(l => l.Status)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+            ViewBag.Campeonatos = await _context.Campeonatos
+                .AsNoTracking()
+                .OrderBy(c => c.Nome)
+                .ThenByDescending(c => c.Ano)
+                .ToListAsync();
+
+            var model = await logs
+                .OrderByDescending(l => l.DataInicio)
+                .ThenByDescending(l => l.Id)
+                .Take(200)
+                .ToListAsync();
+
+            return View(model);
         }
 
         [HttpPost]
@@ -142,6 +250,16 @@ namespace FutPlay.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        private string? ObterUsuarioId()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+
+        private string? ObterUsuarioEmail()
+        {
+            return User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
         }
 
     }

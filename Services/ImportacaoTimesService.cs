@@ -10,13 +10,16 @@ namespace FutPlay.Services
     {
         private readonly FootballApiService _footballApiService;
         private readonly AppDbContext _context;
+        private readonly ApiSyncLogService _apiSyncLogService;
 
         public ImportacaoTimesService(
             FootballApiService footballApiService,
-            AppDbContext context)
+            AppDbContext context,
+            ApiSyncLogService apiSyncLogService)
         {
             _footballApiService = footballApiService;
             _context = context;
+            _apiSyncLogService = apiSyncLogService;
         }
 
         public async Task<List<ApiTimeViewModel>> BuscarTimesAsync(string pais)
@@ -90,6 +93,18 @@ namespace FutPlay.Services
             _context.Times.Add(time);
             await _context.SaveChangesAsync();
 
+            await _apiSyncLogService.RegistrarAsync(new ApiSyncLog
+            {
+                TipoSincronizacao = "Time",
+                TimeId = time.Id,
+                ApiTeamId = apiTeamId,
+                DataInicio = DateTime.UtcNow,
+                Status = "Sucesso",
+                TotalProcessados = 1,
+                TotalCriados = 1,
+                Mensagem = $"Time {time.Nome} importado com sucesso."
+            });
+
             return ImportacaoTimeResultado.Importado(time.Nome);
         }
 
@@ -152,7 +167,113 @@ namespace FutPlay.Services
             _context.Times.Update(time);
             await _context.SaveChangesAsync();
 
+            await _apiSyncLogService.RegistrarAsync(new ApiSyncLog
+            {
+                TipoSincronizacao = "Time",
+                TimeId = time.Id,
+                ApiTeamId = apiTeamId > 0 ? apiTeamId : time.ApiTeamId,
+                DataInicio = DateTime.UtcNow,
+                Status = "Sucesso",
+                TotalProcessados = 1,
+                TotalAtualizados = 1,
+                Mensagem = $"Dados do time {time.Nome} atualizados com sucesso."
+            });
+
             return ImportacaoTimeResultado.Atualizado(time.Nome);
+        }
+
+        public async Task<SincronizacaoTimeResultado> SincronizarTimeApiAsync(
+            int apiTeamId,
+            string nome,
+            string? pais,
+            string? escudoUrl,
+            string? sigla,
+            string? tipo,
+            bool? ativo = null)
+        {
+            var nomeValido = ObterTextoValido(nome);
+
+            if (string.IsNullOrWhiteSpace(nomeValido))
+            {
+                return SincronizacaoTimeResultado.Falha("Time ignorado porque o nome veio vazio da API.");
+            }
+
+            var time = await LocalizarTimeExistenteAsync(apiTeamId, nomeValido, pais);
+
+            if (time == null)
+            {
+                time = new Time
+                {
+                    Nome = nomeValido,
+                    Sigla = ObterSiglaValida(sigla, nomeValido),
+                    Pais = ObterTextoValido(pais),
+                    Tipo = ObterTipoValido(tipo) ?? "Clube",
+                    EscudoUrl = ObterTextoValido(escudoUrl),
+                    Ativo = ativo ?? true,
+                    ApiTeamId = apiTeamId > 0 ? apiTeamId : null
+                };
+
+                _context.Times.Add(time);
+                await _context.SaveChangesAsync();
+
+                return SincronizacaoTimeResultado.TimeCriado(time);
+            }
+
+            var atualizado = false;
+
+            if (apiTeamId > 0 && time.ApiTeamId != apiTeamId)
+            {
+                time.ApiTeamId = apiTeamId;
+                atualizado = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(nomeValido) && time.Nome != nomeValido)
+            {
+                time.Nome = nomeValido;
+                atualizado = true;
+            }
+
+            var paisValido = ObterTextoValido(pais);
+            if (!string.IsNullOrWhiteSpace(paisValido) && time.Pais != paisValido)
+            {
+                time.Pais = paisValido;
+                atualizado = true;
+            }
+
+            var escudoValido = ObterTextoValido(escudoUrl);
+            if (!string.IsNullOrWhiteSpace(escudoValido) && time.EscudoUrl != escudoValido)
+            {
+                time.EscudoUrl = escudoValido;
+                atualizado = true;
+            }
+
+            var siglaValida = ObterSiglaApiValida(sigla);
+            if (!string.IsNullOrWhiteSpace(siglaValida) && time.Sigla != siglaValida)
+            {
+                time.Sigla = siglaValida;
+                atualizado = true;
+            }
+
+            var tipoValido = ObterTipoValido(tipo);
+            if (!string.IsNullOrWhiteSpace(tipoValido) && time.Tipo != tipoValido)
+            {
+                time.Tipo = tipoValido;
+                atualizado = true;
+            }
+
+            if (ativo.HasValue && time.Ativo != ativo.Value)
+            {
+                time.Ativo = ativo.Value;
+                atualizado = true;
+            }
+
+            if (atualizado)
+            {
+                _context.Times.Update(time);
+                await _context.SaveChangesAsync();
+            }
+
+            return SincronizacaoTimeResultado.Existente(time, atualizado);
         }
 
         private async Task<List<ApiTimeViewModel>> MontarTimesAsync(
@@ -341,6 +462,52 @@ namespace FutPlay.Services
         public static ImportacaoTimeResultado Falha(string mensagem)
         {
             return new ImportacaoTimeResultado
+            {
+                Sucesso = false,
+                Mensagem = mensagem
+            };
+        }
+    }
+
+    public class SincronizacaoTimeResultado
+    {
+        public bool Sucesso { get; set; }
+
+        public Time? Time { get; set; }
+
+        public bool Criado { get; set; }
+
+        public bool Atualizado { get; set; }
+
+        public string Mensagem { get; set; } = string.Empty;
+
+        public static SincronizacaoTimeResultado TimeCriado(Time time)
+        {
+            return new SincronizacaoTimeResultado
+            {
+                Sucesso = true,
+                Time = time,
+                Criado = true,
+                Mensagem = $"Time {time.Nome} criado pela sincronização."
+            };
+        }
+
+        public static SincronizacaoTimeResultado Existente(Time time, bool atualizado)
+        {
+            return new SincronizacaoTimeResultado
+            {
+                Sucesso = true,
+                Time = time,
+                Atualizado = atualizado,
+                Mensagem = atualizado
+                    ? $"Dados do time {time.Nome} atualizados pela sincronização."
+                    : $"Time {time.Nome} reutilizado pela sincronização."
+            };
+        }
+
+        public static SincronizacaoTimeResultado Falha(string mensagem)
+        {
+            return new SincronizacaoTimeResultado
             {
                 Sucesso = false,
                 Mensagem = mensagem

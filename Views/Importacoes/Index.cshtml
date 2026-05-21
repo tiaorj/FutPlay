@@ -12,6 +12,11 @@
                 Integração com API de futebol para importar campeonatos para o @AppBrand.Name.
             </p>
         </div>
+        <div class="mt-3 mt-md-0">
+            <a asp-action="Historico" class="btn btn-outline-secondary">
+                Histórico de sincronizações
+            </a>
+        </div>
     </div>
 
     @if (ViewBag.Erro != null)
@@ -177,7 +182,18 @@
                                     }
                                     else
                                     {
-                                        <span class="text-muted small">Já importado</span>
+                                        <form asp-action="AtualizarLiga" method="post">
+                                            <input type="hidden" name="apiLeagueId" value="@liga.ApiLeagueId" />
+                                            <input type="hidden" name="nome" value="@liga.Nome" />
+                                            <input type="hidden" name="tipo" value="@liga.Tipo" />
+                                            <input type="hidden" name="pais" value="@liga.Pais" />
+                                            <input type="hidden" name="temporada" value="@liga.Temporada" />
+                                            <input type="hidden" name="logoUrl" value="@liga.LogoUrl" />
+
+                                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                                Atualizar dados
+                                            </button>
+                                        </form>
                                     }
                                 </td>
                             </tr>

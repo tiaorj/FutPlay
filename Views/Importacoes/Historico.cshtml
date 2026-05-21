@@ -1,0 +1,138 @@
+@model List<FutPlay.Models.ApiSyncLog>
+@using FutPlay.Models
+@{
+    ViewData["Title"] = "Histórico de sincronizações";
+    var tipos = ViewBag.Tipos as List<string> ?? new List<string>();
+    var statuses = ViewBag.Statuses as List<string> ?? new List<string>();
+    var campeonatos = ViewBag.Campeonatos as List<Campeonato> ?? new List<Campeonato>();
+    string? tipoAtual = ViewBag.Tipo as string;
+    string? statusAtual = ViewBag.Status as string;
+    int? campeonatoAtual = ViewBag.CampeonatoId as int?;
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="futplay-page-title mb-1">Histórico de sincronizações</h1>
+            <p class="futplay-subtitle mb-0">
+                Acompanhe importações, atualizações e recálculos executados pela administração.
+            </p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Voltar para importações
+        </a>
+    </div>
+
+    <div class="card shadow-sm futplay-section-card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach (var tipo in tipos)
+                        {
+                            <option value="@tipo" selected="@(tipo == tipoAtual)">@tipo</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach (var status in statuses)
+                        {
+                            <option value="@status" selected="@(status == statusAtual)">@status</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Campeonato</label>
+                    <select name="campeonatoId" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach (var campeonato in campeonatos)
+                        {
+                            <option value="@campeonato.Id" selected="@(campeonatoAtual == campeonato.Id)">
+                                @campeonato.Nome @campeonato.Ano
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-success">
+                        Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm futplay-section-card">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                        <th>Campeonato</th>
+                        <th class="text-center">Proc.</th>
+                        <th class="text-center">Criados</th>
+                        <th class="text-center">Atualiz.</th>
+                        <th class="text-center">Ignor.</th>
+                        <th>Mensagem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">
+                                Nenhum registro encontrado.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in Model)
+                        {
+                            var statusClass = log.Status switch
+                            {
+                                "Sucesso" => "bg-success",
+                                "Parcial" => "bg-warning text-dark",
+                                "Erro" => "bg-danger",
+                                _ => "bg-secondary"
+                            };
+
+                            <tr>
+                                <td class="text-nowrap">@log.DataInicio.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>@log.TipoSincronizacao</td>
+                                <td>
+                                    <span class="badge @statusClass">@log.Status</span>
+                                </td>
+                                <td>@(log.Campeonato == null ? "-" : $"{log.Campeonato.Nome} {log.Campeonato.Ano}")</td>
+                                <td class="text-center">@log.TotalProcessados</td>
+                                <td class="text-center">@log.TotalCriados</td>
+                                <td class="text-center">@log.TotalAtualizados</td>
+                                <td class="text-center">@log.TotalIgnorados</td>
+                                <td>
+                                    <div>@log.Mensagem</div>
+                                    @if (!string.IsNullOrWhiteSpace(log.ErroDetalhado))
+                                    {
+                                        <details class="mt-2">
+                                            <summary class="small text-danger">Detalhes do erro</summary>
+                                            <pre class="small bg-light border rounded p-2 mt-2 mb-0 text-wrap">@log.ErroDetalhado</pre>
+                                        </details>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

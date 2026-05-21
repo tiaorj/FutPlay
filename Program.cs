@@ -77,6 +77,7 @@ builder.Services.AddScoped<ClassificacaoService>();
 builder.Services.AddScoped<PontuacaoService>();
 builder.Services.AddScoped<MockDataService>();
 builder.Services.AddScoped<ImportacaoTimesService>();
+builder.Services.AddScoped<ApiSyncLogService>();
 
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("sqlserver");

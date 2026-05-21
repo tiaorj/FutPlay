@@ -239,9 +239,14 @@
 
             @if (usuarioAdministrador && Model.Campeonato.ApiLeagueId.HasValue)
             {
-                <form asp-controller="Importacoes" asp-action="SincronizarCampeonato" method="post">
+                <form asp-controller="Importacoes" asp-action="SincronizarJogos" method="post">
                     <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
-                    <button type="submit">Sincronizar</button>
+                    <button type="submit">Sincronizar jogos</button>
+                </form>
+
+                <form asp-controller="Importacoes" asp-action="AtualizarResultados" method="post">
+                    <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
+                    <button type="submit">Atualizar resultados</button>
                 </form>
             }
         </div>

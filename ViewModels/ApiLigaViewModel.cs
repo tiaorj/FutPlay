@@ -15,5 +15,7 @@
         public string? LogoUrl { get; set; }
 
         public bool JaImportado { get; set; }
+
+        public int? CampeonatoExistenteId { get; set; }
     }
 }
