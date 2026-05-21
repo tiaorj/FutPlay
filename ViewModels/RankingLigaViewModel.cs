@@ -21,6 +21,8 @@ namespace FutPlay.ViewModels
 
         public int TotalPalpites { get; set; }
 
+        public int Acertos { get; set; }
+
         public int PlacaresExatos { get; set; }
     }
 }

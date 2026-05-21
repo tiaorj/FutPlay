@@ -1,0 +1,38 @@
+@model FutPlay.ViewModels.ApiTimeViewModel
+
+@{
+    var tipoBusca = ViewData["TipoBusca"] as string ?? "pais";
+    var filtroPais = ViewData["Pais"] as string ?? "";
+    var filtroNome = ViewData["Nome"] as string ?? "";
+    var filtroSearch = ViewData["Search"] as string ?? "";
+    var filtroLeagueId = ViewData["LeagueId"] as string ?? "";
+    var filtroTemporada = ViewData["Temporada"] as string ?? "";
+}
+
+@if (!Model.JaImportado)
+{
+    <form asp-action="ImportarTimeApi" method="post" class="d-inline">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" name="apiTeamId" value="@Model.ApiTeamId" />
+        <input type="hidden" name="nome" value="@Model.Nome" />
+        <input type="hidden" name="pais" value="@Model.Pais" />
+        <input type="hidden" name="escudoUrl" value="@Model.EscudoUrl" />
+        <input type="hidden" name="tipoBusca" value="@tipoBusca" />
+        <input type="hidden" name="filtroPais" value="@filtroPais" />
+        <input type="hidden" name="filtroNome" value="@filtroNome" />
+        <input type="hidden" name="filtroSearch" value="@filtroSearch" />
+        <input type="hidden" name="filtroLeagueId" value="@filtroLeagueId" />
+        <input type="hidden" name="filtroTemporada" value="@filtroTemporada" />
+
+        <button type="submit" class="btn btn-sm btn-primary">
+            Importar
+        </button>
+    </form>
+}
+else
+{
+    <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+        Importado
+    </button>
+}

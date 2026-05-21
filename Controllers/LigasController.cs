@@ -1137,6 +1137,12 @@ namespace FutPlay.Controllers
 
                 var totalPalpites = palpitesParticipante.Count;
 
+                var acertos = palpitesParticipante.Count(p =>
+                    p.Jogo != null &&
+                    p.Jogo.Status == "Finalizado" &&
+                    p.PontosGanhos > 0
+                );
+
                 var placaresExatos = palpitesParticipante.Count(p =>
                     p.Jogo != null &&
                     p.Jogo.Status == "Finalizado" &&
@@ -1153,6 +1159,7 @@ namespace FutPlay.Controllers
                     Email = participante.Email,
                     PontuacaoTotal = participante.PontuacaoTotal,
                     TotalPalpites = totalPalpites,
+                    Acertos = acertos,
                     PlacaresExatos = placaresExatos
                 });
 

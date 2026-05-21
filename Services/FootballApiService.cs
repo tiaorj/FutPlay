@@ -51,6 +51,20 @@ namespace FutPlay.Services
             return await ConsultarApiAsync(url, "times");
         }
 
+        public async Task<JsonDocument> BuscarTimesPorNomeAsync(string nome)
+        {
+            var url = $"/teams?name={Uri.EscapeDataString(nome)}";
+
+            return await ConsultarApiAsync(url, "times");
+        }
+
+        public async Task<JsonDocument> PesquisarTimesAsync(string termo)
+        {
+            var url = $"/teams?search={Uri.EscapeDataString(termo)}";
+
+            return await ConsultarApiAsync(url, "times");
+        }
+
         public async Task<JsonDocument> BuscarTimesPorLigaAsync(int leagueId, int temporada)
         {
             var url = $"/teams?league={leagueId}&season={temporada}";

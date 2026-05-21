@@ -15,15 +15,18 @@ namespace FutPlay.Controllers
         private readonly AppDbContext _context;
         private readonly ClassificacaoService _classificacaoService;
         private readonly PontuacaoService _pontuacaoService;
+        private readonly ImportacaoResultadosService _importacaoResultadosService;
 
         public JogosController(
             AppDbContext context,
             ClassificacaoService classificacaoService,
-            PontuacaoService pontuacaoService)
+            PontuacaoService pontuacaoService,
+            ImportacaoResultadosService importacaoResultadosService)
         {
             _context = context;
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
+            _importacaoResultadosService = importacaoResultadosService;
         }
 
         public async Task<IActionResult> Index(
@@ -237,7 +240,7 @@ namespace FutPlay.Controllers
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(int? id, string? returnUrl = null)
         {
             if (id == null)
                 return NotFound();
@@ -248,13 +251,14 @@ namespace FutPlay.Controllers
                 return NotFound();
 
             await CarregarCombos();
+            ViewBag.ReturnUrl = ObterReturnUrlSeguro(returnUrl, jogo);
             return View(jogo);
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Jogo jogo)
+        public async Task<IActionResult> Edit(int id, Jogo jogo, string? returnUrl = null)
         {
             if (id != jogo.Id)
                 return NotFound();
@@ -293,11 +297,49 @@ namespace FutPlay.Controllers
                     }
                 }
 
-                return RedirectToAction(nameof(Index));
+                return Redirect(ObterReturnUrlSeguro(returnUrl, jogo));
             }
 
             await CarregarCombos();
+            ViewBag.ReturnUrl = ObterReturnUrlSeguro(returnUrl, jogo);
             return View(jogo);
+        }
+
+        [Authorize(Roles = AppRoles.Administrador)]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ImportarResultados(int? campeonatoId, string? returnUrl = null)
+        {
+            if (!campeonatoId.HasValue)
+            {
+                TempData["Erro"] = "Selecione um campeonato para importar resultados.";
+                return Redirect(ObterReturnUrlSeguro(returnUrl, null, null));
+            }
+
+            var resultado = await _importacaoResultadosService.ImportarResultadosAsync(campeonatoId.Value);
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            return Redirect(ObterReturnUrlSeguro(returnUrl, campeonatoId, null));
+        }
+
+        private string ObterReturnUrlSeguro(string? returnUrl, Jogo jogo)
+        {
+            return ObterReturnUrlSeguro(returnUrl, jogo.CampeonatoId, jogo.Rodada);
+        }
+
+        private string ObterReturnUrlSeguro(string? returnUrl, int? campeonatoId, int? rodada)
+        {
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return returnUrl;
+            }
+
+            return Url.Action(nameof(Index), "Jogos", new
+            {
+                campeonatoId,
+                rodada
+            }) ?? "/Jogos";
         }
 
         private async Task CarregarCombos()

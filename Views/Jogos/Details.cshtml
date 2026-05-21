@@ -5,6 +5,7 @@
     var placar = Model.GolsCasa.HasValue && Model.GolsVisitante.HasValue
         ? $"{Model.GolsCasa} x {Model.GolsVisitante}"
         : "x";
+    var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
 <div class="container futplay-portal-shell">
@@ -57,6 +58,10 @@
             <dl>
                 <dt>Campeonato</dt>
                 <dd>@Model.Campeonato?.Nome</dd>
+                <dt>Data do jogo</dt>
+                <dd>@Model.DataJogo.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt>Status</dt>
+                <dd>@Model.Status</dd>
                 <dt>Fase</dt>
                 <dd>@(string.IsNullOrWhiteSpace(Model.Fase) ? "-" : Model.Fase)</dd>
                 <dt>Grupo</dt>
@@ -71,9 +76,18 @@
             <div class="futplay-detail-actions">
                 @if (User.IsInRole(AppRoles.Administrador))
                 {
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="futplay-detail-primary">Editar jogo</a>
+                    <a asp-action="Edit"
+                       asp-route-id="@Model.Id"
+                       asp-route-returnUrl="@returnUrl"
+                       class="futplay-detail-primary">
+                        Editar jogo
+                    </a>
                 }
-                <a asp-action="Index">Voltar para jogos</a>
+                <a asp-action="Index"
+                   asp-route-campeonatoId="@Model.CampeonatoId"
+                   asp-route-rodada="@Model.Rodada">
+                    Voltar para jogos
+                </a>
                 @if (Model.CampeonatoId > 0)
                 {
                     <a asp-controller="Campeonatos" asp-action="Portal" asp-route-id="@Model.CampeonatoId">

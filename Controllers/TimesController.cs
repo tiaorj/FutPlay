@@ -143,40 +143,84 @@ namespace FutPlay.Controllers
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
-        public IActionResult ImportarApi()
+        public IActionResult ImportarApi(
+            string tipoBusca = "pais",
+            string? pais = "Brazil",
+            string? nome = null,
+            string? search = null,
+            int? leagueId = null,
+            int? temporada = null)
         {
-            ViewBag.Pais = "Brazil";
+            PreencherFiltrosImportacao(tipoBusca, pais, nome, search, leagueId, temporada);
 
             return View(new List<ApiTimeViewModel>());
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
         [HttpPost]
+        [ActionName(nameof(ImportarApi))]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ImportarApi(string pais)
+        public async Task<IActionResult> ImportarApiPost(
+            string tipoBusca,
+            string? pais,
+            string? nome,
+            string? search,
+            int? leagueId,
+            int? temporada)
         {
-            if (string.IsNullOrWhiteSpace(pais))
+            tipoBusca = NormalizarTipoBuscaImportacao(tipoBusca);
+            PreencherFiltrosImportacao(tipoBusca, pais, nome, search, leagueId, temporada);
+
+            if (tipoBusca == "pais" && string.IsNullOrWhiteSpace(pais))
             {
                 ModelState.AddModelError("", "Informe o país para buscar os times.");
+            }
+            else if (tipoBusca == "nome" && string.IsNullOrWhiteSpace(nome))
+            {
+                ModelState.AddModelError("", "Informe o nome do time.");
+            }
+            else if (tipoBusca == "search" && string.IsNullOrWhiteSpace(search))
+            {
+                ModelState.AddModelError("", "Informe o termo de pesquisa.");
+            }
+            else if (tipoBusca == "liga" && (!leagueId.HasValue || !temporada.HasValue))
+            {
+                ModelState.AddModelError("", "Informe a liga e a temporada.");
+            }
+
+            if (!ModelState.IsValid)
+            {
                 return View(new List<ApiTimeViewModel>());
             }
 
             try
             {
-                var times = await _importacaoTimesService.BuscarTimesAsync(pais);
-
-                ViewBag.Pais = pais;
-
-                if (!times.Any())
+                var times = tipoBusca switch
                 {
-                    TempData["Erro"] = "Nenhum time encontrado na API para o país informado.";
+                    "nome" when !string.IsNullOrWhiteSpace(nome) =>
+                        await _importacaoTimesService.BuscarTimesPorNomeAsync(nome),
+
+                    "search" when !string.IsNullOrWhiteSpace(search) =>
+                        await _importacaoTimesService.PesquisarTimesAsync(search),
+
+                    "liga" when leagueId.HasValue && temporada.HasValue =>
+                        await _importacaoTimesService.BuscarTimesPorLigaAsync(leagueId.Value, temporada.Value),
+
+                    "pais" when !string.IsNullOrWhiteSpace(pais) =>
+                        await _importacaoTimesService.BuscarTimesAsync(pais),
+
+                    _ => new List<ApiTimeViewModel>()
+                };
+
+                if (!times.Any() && ModelState.IsValid)
+                {
+                    TempData["Erro"] = "Nenhum time encontrado na API para os filtros informados.";
                 }
 
                 return View(times);
             }
             catch (Exception ex)
             {
-                ViewBag.Pais = pais;
                 TempData["Erro"] = ex.Message;
 
                 return View(new List<ApiTimeViewModel>());
@@ -190,7 +234,13 @@ namespace FutPlay.Controllers
             int apiTeamId,
             string nome,
             string? pais,
-            string? escudoUrl)
+            string? escudoUrl,
+            string tipoBusca = "pais",
+            string? filtroPais = null,
+            string? filtroNome = null,
+            string? filtroSearch = null,
+            int? filtroLeagueId = null,
+            int? filtroTemporada = null)
         {
             try
             {
@@ -200,7 +250,7 @@ namespace FutPlay.Controllers
                     pais,
                     escudoUrl);
 
-                TempData["Mensagem"] = importado
+                TempData["Sucesso"] = importado
                     ? $"Time {nome} importado com sucesso."
                     : $"Time {nome} já estava importado.";
             }
@@ -211,7 +261,12 @@ namespace FutPlay.Controllers
 
             return RedirectToAction(nameof(ImportarApi), new
             {
-                pais                
+                tipoBusca,
+                pais = filtroPais,
+                nome = filtroNome,
+                search = filtroSearch,
+                leagueId = filtroLeagueId,
+                temporada = filtroTemporada
             });
         }
 
@@ -397,6 +452,33 @@ namespace FutPlay.Controllers
             }
 
             return Url.Action(nameof(Index), "Times") ?? "/";
+        }
+
+        private void PreencherFiltrosImportacao(
+            string? tipoBusca,
+            string? pais,
+            string? nome,
+            string? search,
+            int? leagueId,
+            int? temporada)
+        {
+            ViewBag.TipoBusca = NormalizarTipoBuscaImportacao(tipoBusca);
+            ViewBag.Pais = string.IsNullOrWhiteSpace(pais) ? "Brazil" : pais;
+            ViewBag.Nome = nome;
+            ViewBag.Search = search;
+            ViewBag.LeagueId = leagueId;
+            ViewBag.Temporada = temporada ?? DateTime.Today.Year;
+        }
+
+        private static string NormalizarTipoBuscaImportacao(string? tipoBusca)
+        {
+            return tipoBusca?.ToLowerInvariant() switch
+            {
+                "nome" => "nome",
+                "search" => "search",
+                "liga" => "liga",
+                _ => "pais"
+            };
         }
 
         private static string NormalizarFiltro(string? filtro)

@@ -71,6 +71,7 @@ builder.Services.Configure<ApiFootballOptions>(
 builder.Services.AddHttpClient<FootballApiService>();
 builder.Services.AddScoped<ImportacaoCampeonatoService>();
 builder.Services.AddScoped<ImportacaoJogosService>();
+builder.Services.AddScoped<ImportacaoResultadosService>();
 builder.Services.AddScoped<CampeonatoSincronizacaoService>();
 builder.Services.AddScoped<ClassificacaoService>();
 builder.Services.AddScoped<PontuacaoService>();

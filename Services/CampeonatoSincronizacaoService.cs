@@ -179,8 +179,16 @@ namespace FutPlay.Services
 
                     jogo.DataJogo = dataJogo;
                     jogo.Status = status;
-                    jogo.GolsCasa = golsCasa;
-                    jogo.GolsVisitante = golsVisitante;
+
+                    if (golsCasa.HasValue)
+                    {
+                        jogo.GolsCasa = golsCasa.Value;
+                    }
+
+                    if (golsVisitante.HasValue)
+                    {
+                        jogo.GolsVisitante = golsVisitante.Value;
+                    }
 
                     if (!string.IsNullOrWhiteSpace(rodada))
                     {

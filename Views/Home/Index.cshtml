@@ -7,69 +7,168 @@
         ?? Model.UltimosResultados.FirstOrDefault();
 
     var jogosLista = Model.ProximosJogos.Any()
-        ? Model.ProximosJogos.Take(12).ToList()
-        : Model.UltimosResultados.Take(12).ToList();
+        ? Model.ProximosJogos.Take(8).ToList()
+        : Model.UltimosResultados.Take(8).ToList();
 
-    var campeonatoDestaque = Model.CampeonatosAtivos.FirstOrDefault();
+    var rankingDestaque = Model.TopParticipantes.FirstOrDefault();
 }
 
-<div class="container fp-score-home">
+<div class="fp-commercial-home">
+    <section class="fp-commercial-hero">
+        <div class="container">
+            <div class="fp-commercial-hero-content">
+                <span>FutPlay</span>
+                <h1>@AppBrand.Name</h1>
+                <p>@AppBrand.Description Acompanhe jogos, importe resultados e transforme cada rodada em disputa.</p>
 
-    <div class="fp-score-page-title">
-        <h2>Seu bolão de futebol online</h2>
-        <p>
-            Acompanhe jogos, participe de ligas públicas ou privadas e mostre quem entende mais de futebol.
-        </p>
-    </div>
+                <div class="fp-commercial-hero-actions">
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <a asp-controller="MinhasLigas" asp-action="Index" class="btn btn-success">
+                            Minhas ligas
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-success">
+                            Criar conta
+                        </a>
+                    }
 
-    <div class="row g-3">
-
-        <aside class="col-xl-4 col-lg-5">
-            <section class="fp-score-board">
-                <div class="fp-score-board-tabs">
-                    <a class="active" href="#">Todos</a>
-                    <a href="#">Favoritos</a>
-                    <a asp-controller="Campeonatos" asp-action="Index">Competições</a>
+                    <a asp-controller="Ligas" asp-action="Index" class="btn btn-light">
+                        Ver ligas públicas
+                    </a>
                 </div>
 
-                <div class="fp-score-filter-row">
-                    <span class="fp-score-filter active">Ao vivo</span>
-                    <span class="fp-score-filter">Finalizado</span>
-                    <span class="fp-score-filter">Próximos</span>
-                </div>
-
-                <div class="fp-match-list-title">
-                    <span>⚽ Futebol</span>
-                    <small>@jogosLista.Count jogo(s)</small>
-                </div>
-
-                @if (!jogosLista.Any())
-                {
-                    <div class="fp-empty-mini">
-                        Nenhum jogo cadastrado.
+                <div class="fp-commercial-hero-stats">
+                    <div>
+                        <strong>@Model.TotalLigas</strong>
+                        <span>Ligas</span>
                     </div>
-                }
-                else
-                {
-                    <div class="fp-score-match-list">
-                        @foreach (var jogo in jogosLista)
-                        {
-                            var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
-                            ? jogo.TimeCasa.Sigla
-                            : "CAS";
+                    <div>
+                        <strong>@Model.TotalPalpites</strong>
+                        <span>Palpites</span>
+                    </div>
+                    <div>
+                        <strong>@Model.TotalJogosFinalizados</strong>
+                        <span>Resultados</span>
+                    </div>
+                </div>
+            </div>
 
-                            var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
-                            ? jogo.TimeVisitante.Sigla
-                            : "VIS";
+            @if (jogoDestaque != null)
+            {
+                var casaSigla = !string.IsNullOrWhiteSpace(jogoDestaque.TimeCasa?.Sigla)
+                    ? jogoDestaque.TimeCasa.Sigla
+                    : "CAS";
 
-                            <article class="fp-score-match-row">
-                                <div class="fp-score-match-time">
-                                    <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
-                                    <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                </div>
+                var visitanteSigla = !string.IsNullOrWhiteSpace(jogoDestaque.TimeVisitante?.Sigla)
+                    ? jogoDestaque.TimeVisitante.Sigla
+                    : "VIS";
 
-                                <div class="fp-score-match-clubs">
-                                    <div class="fp-score-club">
+                <div class="fp-commercial-hero-match">
+                    <span>@(jogoDestaque.Campeonato?.Nome ?? "Partida em destaque")</span>
+
+                    <div class="fp-commercial-match-teams">
+                        <div>
+                            <span class="fp-mini-crest">
+                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeCasa?.EscudoUrl))
+                                {
+                                    <img src="@jogoDestaque.TimeCasa.EscudoUrl" alt="@jogoDestaque.TimeCasa.Nome" />
+                                }
+                                else
+                                {
+                                    @casaSigla
+                                }
+                            </span>
+                            <strong>@jogoDestaque.TimeCasa?.Nome</strong>
+                        </div>
+
+                        <b>
+                            @(jogoDestaque.GolsCasa.HasValue && jogoDestaque.GolsVisitante.HasValue
+                                ? $"{jogoDestaque.GolsCasa} x {jogoDestaque.GolsVisitante}"
+                                : jogoDestaque.DataJogo.ToString("HH:mm"))
+                        </b>
+
+                        <div>
+                            <span class="fp-mini-crest">
+                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeVisitante?.EscudoUrl))
+                                {
+                                    <img src="@jogoDestaque.TimeVisitante.EscudoUrl" alt="@jogoDestaque.TimeVisitante.Nome" />
+                                }
+                                else
+                                {
+                                    @visitanteSigla
+                                }
+                            </span>
+                            <strong>@jogoDestaque.TimeVisitante?.Nome</strong>
+                        </div>
+                    </div>
+
+                    <small>@jogoDestaque.DataJogo.ToString("dd/MM/yyyy") · @jogoDestaque.Status</small>
+                </div>
+            }
+        </div>
+    </section>
+
+    <div class="container fp-score-home">
+        <section class="fp-commercial-feature-grid">
+            <article class="fp-commercial-feature">
+                <span>01</span>
+                <h2>Ligas públicas e privadas</h2>
+                <p>Crie campeonatos de palpites, convide participantes e acompanhe o ranking em tempo real.</p>
+            </article>
+
+            <article class="fp-commercial-feature">
+                <span>02</span>
+                <h2>Jogos sempre organizados</h2>
+                <p>Filtre por competição, rodada, favoritos e status para chegar rápido na partida certa.</p>
+            </article>
+
+            <article class="fp-commercial-feature">
+                <span>03</span>
+                <h2>Resultados integrados</h2>
+                <p>Atualize placares pela API-Football e recalcule classificação e pontuação dos palpites.</p>
+            </article>
+        </section>
+
+        <div class="row g-3">
+            <main class="col-xl-8 col-lg-7">
+                <section class="fp-home-card">
+                    <div class="fp-card-header-link">
+                        <h2>@(Model.ProximosJogos.Any() ? "Próximos jogos" : "Últimos resultados")</h2>
+                        <a asp-controller="Jogos" asp-action="Index">Ver todos</a>
+                    </div>
+
+                    @if (!jogosLista.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhum jogo cadastrado.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-commercial-match-list">
+                            @foreach (var jogo in jogosLista)
+                            {
+                                var casaSigla = !string.IsNullOrWhiteSpace(jogo.TimeCasa?.Sigla)
+                                    ? jogo.TimeCasa.Sigla
+                                    : "CAS";
+
+                                var visitanteSigla = !string.IsNullOrWhiteSpace(jogo.TimeVisitante?.Sigla)
+                                    ? jogo.TimeVisitante.Sigla
+                                    : "VIS";
+
+                                <a asp-controller="Jogos"
+                                   asp-action="Details"
+                                   asp-route-id="@jogo.Id"
+                                   class="fp-commercial-match-row">
+                                    <div class="fp-commercial-match-date">
+                                        <strong>@jogo.DataJogo.ToString("HH:mm")</strong>
+                                        <span>@jogo.DataJogo.ToString("dd/MM")</span>
+                                    </div>
+
+                                    <div class="fp-commercial-match-clubs">
                                         <span class="fp-mini-crest">
                                             @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
                                             {
@@ -81,10 +180,14 @@
                                             }
                                         </span>
 
-                                        <span>@jogo.TimeCasa?.Nome</span>
-                                    </div>
+                                        <strong>@jogo.TimeCasa?.Nome</strong>
+                                        <b>
+                                            @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
+                                                ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
+                                                : "x")
+                                        </b>
+                                        <strong>@jogo.TimeVisitante?.Nome</strong>
 
-                                    <div class="fp-score-club">
                                         <span class="fp-mini-crest">
                                             @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
                                             {
@@ -95,253 +198,129 @@
                                                 @visitanteSigla
                                             }
                                         </span>
-
-                                        <span>@jogo.TimeVisitante?.Nome</span>
                                     </div>
-                                </div>
 
-                                <div class="fp-score-match-score">
-                                    @if (jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue)
-                                    {
-                                        <strong>@jogo.GolsCasa</strong>
-                                        <strong>@jogo.GolsVisitante</strong>
-                                    }
-                                    else
-                                    {
-                                        <strong>-</strong>
-                                        <strong>-</strong>
-                                    }
-                                </div>
-
-                                <div class="fp-score-match-star">
-                                    ☆
-                                </div>
-                            </article>
-                        }
-                    </div>
-                }
-            </section>
-        </aside>
-
-        <main class="col-xl-5 col-lg-7">
-            @if (jogoDestaque != null)
-            {
-                <section class="fp-feature-match">
-                    <div class="fp-feature-league">
-                        <div>
-                            <span>Partida em destaque</span>
-                            <strong>@(jogoDestaque.Campeonato?.Nome ?? jogoDestaque.Fase ?? "Meu Pitaco FC")</strong>
-                        </div>
-
-                        <small>@jogoDestaque.Status</small>
-                    </div>
-
-                    <div class="fp-feature-match-body">
-                        <div class="fp-feature-team">
-                            <div class="fp-feature-crest">
-                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeCasa?.EscudoUrl))
-                                {
-                                    <img src="@jogoDestaque.TimeCasa.EscudoUrl" alt="@jogoDestaque.TimeCasa.Nome" />
-                                }
-                                else
-                                {
-                                    <span>@(jogoDestaque.TimeCasa?.Sigla ?? "CAS")</span>
-                                }
-                            </div>
-
-                            <strong>@jogoDestaque.TimeCasa?.Nome</strong>
-                        </div>
-
-                        <div class="fp-feature-center">
-                            <strong>@jogoDestaque.DataJogo.ToString("HH:mm")</strong>
-                            <span>@jogoDestaque.DataJogo.ToString("dd/MM/yyyy")</span>
-
-                            @if (jogoDestaque.GolsCasa.HasValue && jogoDestaque.GolsVisitante.HasValue)
-                            {
-                                <div class="fp-feature-score">
-                                    @jogoDestaque.GolsCasa x @jogoDestaque.GolsVisitante
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="fp-feature-score">
-                                    x
-                                </div>
+                                    <span class="fp-status scheduled">@jogo.Status</span>
+                                </a>
                             }
                         </div>
-
-                        <div class="fp-feature-team">
-                            <div class="fp-feature-crest">
-                                @if (!string.IsNullOrWhiteSpace(jogoDestaque.TimeVisitante?.EscudoUrl))
-                                {
-                                    <img src="@jogoDestaque.TimeVisitante.EscudoUrl" alt="@jogoDestaque.TimeVisitante.Nome" />
-                                }
-                                else
-                                {
-                                    <span>@(jogoDestaque.TimeVisitante?.Sigla ?? "VIS")</span>
-                                }
-                            </div>
-
-                            <strong>@jogoDestaque.TimeVisitante?.Nome</strong>
-                        </div>
-                    </div>
-
-                    <div class="fp-feature-poll">
-                        <h3>Quem vence?</h3>
-                        <p>Entre no bolão e dê seus palpites.</p>
-
-                        <div class="fp-feature-poll-buttons">
-                            <button type="button">@jogoDestaque.TimeCasa?.Sigla</button>
-                            <button type="button">X</button>
-                            <button type="button">@jogoDestaque.TimeVisitante?.Sigla</button>
-                        </div>
-                    </div>
+                    }
                 </section>
-            }
 
-            <section class="fp-home-card mt-3">
-                <div class="fp-card-header-link">
-                    <h2>Campeonatos em destaque</h2>
-                    <a asp-controller="Campeonatos" asp-action="Index">Ver todos</a>
-                </div>
-
-                @if (!Model.CampeonatosAtivos.Any())
-                {
-                    <div class="fp-empty-mini">
-                        Nenhum campeonato ativo cadastrado.
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Campeonatos em destaque</h2>
+                        <a asp-controller="Campeonatos" asp-action="Index">Ver todos</a>
                     </div>
-                }
-                else
-                {
-                    <div class="fp-competition-mini-grid">
-                        @foreach (var campeonato in Model.CampeonatosAtivos.Take(4))
-                        {
-                            <article class="fp-competition-mini">
-                                <div class="fp-competition-mini-logo">
-                                    @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
-                                    {
-                                        <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
-                                    }
-                                    else
-                                    {
-                                        <span>FP</span>
-                                    }
-                                </div>
 
-                                <div>
-                                    <strong>@campeonato.Nome @campeonato.Ano</strong>
-                                    <span>@campeonato.Tipo</span>
-                                </div>
-
-                                <a asp-controller="Campeonatos"
-                                   asp-action="Portal"
-                                   asp-route-id="@campeonato.Id">
-                                    Abrir
-                                </a>
-                            </article>
-                        }
-                    </div>
-                }
-            </section>
-
-            <section class="fp-home-card mt-3">
-                <div class="fp-card-header-link">
-                    <h2>Últimos resultados</h2>
-                    <a asp-controller="Jogos" asp-action="Index">Ver jogos</a>
-                </div>
-
-                @if (!Model.UltimosResultados.Any())
-                {
-                    <div class="fp-empty-mini">
-                        Nenhum resultado cadastrado.
-                    </div>
-                }
-                else
-                {
-                    <div class="fp-result-list">
-                        @foreach (var jogo in Model.UltimosResultados.Take(6))
-                        {
-                            <article class="fp-result-row">
-                                <span>@jogo.DataJogo.ToString("dd/MM")</span>
-                                <strong>@jogo.TimeCasa?.Nome</strong>
-                                <b>
-                                    @(jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
-                                                                ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
-                                                                : "x")
-                        </b>
-                        <strong>@jogo.TimeVisitante?.Nome</strong>
-                    </article>
+                    @if (!Model.CampeonatosAtivos.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhum campeonato ativo cadastrado.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-competition-mini-grid">
+                            @foreach (var campeonato in Model.CampeonatosAtivos.Take(4))
+                            {
+                                <article class="fp-competition-mini">
+                                    <div class="fp-competition-mini-logo">
+                                        @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
+                                        {
+                                            <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
                                         }
-                    </div>
-                }
-            </section>
-        </main>
+                                        else
+                                        {
+                                            <span>FP</span>
+                                        }
+                                    </div>
 
-        <aside class="col-xl-3 d-none d-xl-block">
-            <section class="fp-side-ad">
-                <span>Publicidade</span>
-                <strong>⚽ Meu Pitaco FC</strong>
-                <p>Espaço reservado para anúncio, destaque ou patrocinador.</p>
-            </section>
+                                    <div>
+                                        <strong>@campeonato.Nome @campeonato.Ano</strong>
+                                        <span>@campeonato.Tipo</span>
+                                    </div>
 
-            <section class="fp-home-card mt-3">
-                <div class="fp-card-header-link">
-                    <h2>Ligas públicas</h2>
-                    <a asp-controller="Ligas" asp-action="Index">Ver</a>
-                </div>
+                                    <a asp-controller="Campeonatos"
+                                       asp-action="Portal"
+                                       asp-route-id="@campeonato.Id">
+                                        Abrir
+                                    </a>
+                                </article>
+                            }
+                        </div>
+                    }
+                </section>
+            </main>
 
-                @if (!Model.LigasPublicas.Any())
-                {
-                    <div class="fp-empty-mini">
-                        Nenhuma liga pública cadastrada.
-                    </div>
-                }
-                else
-                {
-                    <div class="fp-public-league-mini-list">
-                        @foreach (var liga in Model.LigasPublicas.Take(5))
-                        {
-                            <article class="fp-public-league-mini">
-                                <div>
-                                    <strong>@liga.Nome</strong>
-                                    <span>@liga.Campeonato?.Nome</span>
-                                </div>
-
-                                <a asp-controller="Ligas"
-                                   asp-action="Ranking"
-                                   asp-route-id="@liga.Id">
-                                    Ranking
-                                </a>
-                            </article>
-                        }
-                    </div>
-                }
-            </section>
-
-            <section class="fp-home-card mt-3">
-                <h2>Entre no bolão</h2>
-
-                <p class="fp-side-text">
-                    Crie sua conta para participar de ligas, enviar palpites e acompanhar rankings.
-                </p>
-
-                @if (User.Identity != null && User.Identity.IsAuthenticated)
-                {
-                    <a asp-controller="MinhasLigas"
-                       asp-action="Index"
-                       class="btn btn-success w-100">
-                        Minhas Ligas
+            <aside class="col-xl-4 col-lg-5">
+                <section class="fp-commercial-cta-card">
+                    <h2>Pronto para a próxima rodada?</h2>
+                    <p>Entre em uma liga, dê seus palpites e acompanhe cada ponto no ranking.</p>
+                    <a asp-controller="Ligas" asp-action="Index" class="btn btn-success w-100">
+                        Encontrar uma liga
                     </a>
-                }
-                else
-                {
-                    <a asp-area="Identity"
-                       asp-page="/Account/Register"
-                       class="btn btn-success w-100">
-                        Criar Conta
-                    </a>
-                }
-            </section>
-        </aside>
+                </section>
+
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Ligas públicas</h2>
+                        <a asp-controller="Ligas" asp-action="Index">Ver</a>
+                    </div>
+
+                    @if (!Model.LigasPublicas.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhuma liga pública cadastrada.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-public-league-mini-list">
+                            @foreach (var liga in Model.LigasPublicas.Take(5))
+                            {
+                                <article class="fp-public-league-mini">
+                                    <div>
+                                        <strong>@liga.Nome</strong>
+                                        <span>@liga.Campeonato?.Nome</span>
+                                    </div>
+
+                                    <a asp-controller="Ligas"
+                                       asp-action="Ranking"
+                                       asp-route-id="@liga.Id">
+                                        Ranking
+                                    </a>
+                                </article>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Top participante</h2>
+                        <span>@Model.TopParticipantes.Count destaque(s)</span>
+                    </div>
+
+                    @if (rankingDestaque == null)
+                    {
+                        <div class="fp-empty-mini">
+                            O ranking aparece assim que os participantes pontuarem.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-commercial-top-player">
+                            <span>1</span>
+                            <div>
+                                <strong>@rankingDestaque.Nome</strong>
+                                <small>@rankingDestaque.Liga</small>
+                            </div>
+                            <b>@rankingDestaque.Pontos pts</b>
+                        </div>
+                    }
+                </section>
+            </aside>
+        </div>
     </div>
 </div>

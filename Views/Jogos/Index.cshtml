@@ -43,9 +43,23 @@
 
         @if (User.IsInRole(AppRoles.Administrador))
         {
-            <a asp-action="Create" class="fp-score-admin-link">
-                + Novo jogo
-            </a>
+            <div class="fp-score-admin-actions">
+                @if (Model.CampeonatoId.HasValue)
+                {
+                    <form asp-action="ImportarResultados" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="campeonatoId" value="@Model.CampeonatoId" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <button type="submit" class="fp-score-admin-link fp-score-admin-button">
+                            Importar resultados
+                        </button>
+                    </form>
+                }
+
+                <a asp-action="Create" class="fp-score-admin-link">
+                    + Novo jogo
+                </a>
+            </div>
         }
     </div>
 
@@ -473,7 +487,7 @@
 
                                             @if (User.IsInRole(AppRoles.Administrador))
                                             {
-                                                <a asp-action="Edit" asp-route-id="@jogo.Id">
+                                                <a asp-action="Edit" asp-route-id="@jogo.Id" asp-route-returnUrl="@returnUrl">
                                                     Editar
                                                 </a>
                                             }

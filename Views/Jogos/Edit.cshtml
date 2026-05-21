@@ -1,106 +1,158 @@
-﻿@model FutPlay.Models.Jogo
+@model FutPlay.Models.Jogo
 
 @{
     ViewData["Title"] = "Editar Jogo";
+
+    var returnUrl = ViewBag.ReturnUrl as string
+        ?? Url.Action("Index", "Jogos", new { campeonatoId = Model.CampeonatoId, rodada = Model.Rodada })
+        ?? "/Jogos";
 }
 
-<div class="container mt-4">
-    <h1>Editar Jogo</h1>
-
-    <div class="card shadow-sm mt-3">
-        <div class="card-body">
-            <form asp-action="Edit" method="post">
-                <input type="hidden" asp-for="Id" />
-
-                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                <div class="mb-3">
-                    <label asp-for="CampeonatoId" class="form-label"></label>
-                    <select asp-for="CampeonatoId" class="form-select" asp-items="ViewBag.CampeonatoId">
-                        <option value="">Selecione...</option>
-                    </select>
-                    <span asp-validation-for="CampeonatoId" class="text-danger"></span>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="TimeCasaId" class="form-label"></label>
-                        <select asp-for="TimeCasaId" class="form-select" asp-items="ViewBag.TimeCasaId">
-                            <option value="">Selecione...</option>
-                        </select>
-                        <span asp-validation-for="TimeCasaId" class="text-danger"></span>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="TimeVisitanteId" class="form-label"></label>
-                        <select asp-for="TimeVisitanteId" class="form-select" asp-items="ViewBag.TimeVisitanteId">
-                            <option value="">Selecione...</option>
-                        </select>
-                        <span asp-validation-for="TimeVisitanteId" class="text-danger"></span>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="DataJogo" class="form-label"></label>
-                    <input asp-for="DataJogo" class="form-control" type="datetime-local" />
-                    <span asp-validation-for="DataJogo" class="text-danger"></span>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Fase" class="form-label"></label>
-                        <input asp-for="Fase" class="form-control" />
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Grupo" class="form-label"></label>
-                        <input asp-for="Grupo" class="form-control" />
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                        <label asp-for="Rodada" class="form-label"></label>
-                        <input asp-for="Rodada" class="form-control" />
-                    </div>
-                </div>
-
-                <hr />
-
-                <h5>Resultado</h5>
-
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <label asp-for="GolsCasa" class="form-label"></label>
-                        <input asp-for="GolsCasa" class="form-control" />
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <label asp-for="GolsVisitante" class="form-label"></label>
-                        <input asp-for="GolsVisitante" class="form-control" />
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                        <label asp-for="Status" class="form-label"></label>
-                        <select asp-for="Status" class="form-select">
-                            <option value="Agendado">Agendado</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Finalizado">Finalizado</option>
-                            <option value="Cancelado">Cancelado</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-check mb-3">
-                    <input asp-for="Ativo" class="form-check-input" />
-                    <label asp-for="Ativo" class="form-check-label"></label>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success">Salvar Alterações</button>
-                    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-                </div>
-            </form>
+<div class="container fp-score-home fp-admin-edit-page">
+    <section class="fp-bet-header mb-3">
+        <div class="fp-bet-header-info">
+            <span>Administração de jogos</span>
+            <h1>Editar jogo</h1>
+            <p>Atualize data, status, times e resultado da partida.</p>
         </div>
-    </div>
+
+        <div class="fp-bet-header-actions">
+            <a href="@returnUrl">Voltar</a>
+        </div>
+    </section>
+
+    <form asp-action="Edit" method="post" class="fp-admin-edit-form">
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="ApiFixtureId" />
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <section class="fp-home-card h-100">
+                    <div class="fp-card-header-link">
+                        <h2>Dados principais</h2>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="CampeonatoId" class="form-label"></label>
+                            <select asp-for="CampeonatoId" class="form-select" asp-items="ViewBag.CampeonatoId">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <span asp-validation-for="CampeonatoId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Fase" class="form-label"></label>
+                            <input asp-for="Fase" class="form-control" />
+                            <span asp-validation-for="Fase" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Grupo" class="form-label"></label>
+                            <input asp-for="Grupo" class="form-control" />
+                            <span asp-validation-for="Grupo" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Rodada" class="form-label"></label>
+                            <input asp-for="Rodada" class="form-control" />
+                            <span asp-validation-for="Rodada" class="text-danger"></span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-6">
+                <section class="fp-home-card h-100">
+                    <div class="fp-card-header-link">
+                        <h2>Times</h2>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="TimeCasaId" class="form-label"></label>
+                            <select asp-for="TimeCasaId" class="form-select" asp-items="ViewBag.TimeCasaId">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <span asp-validation-for="TimeCasaId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="TimeVisitanteId" class="form-label"></label>
+                            <select asp-for="TimeVisitanteId" class="form-select" asp-items="ViewBag.TimeVisitanteId">
+                                <option value="">Selecione...</option>
+                            </select>
+                            <span asp-validation-for="TimeVisitanteId" class="text-danger"></span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-6">
+                <section class="fp-home-card h-100">
+                    <div class="fp-card-header-link">
+                        <h2>Data e status</h2>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label asp-for="DataJogo" class="form-label"></label>
+                            <input asp-for="DataJogo" class="form-control" type="datetime-local" />
+                            <span asp-validation-for="DataJogo" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Agendado">Agendado</option>
+                                <option value="Em andamento">Em andamento</option>
+                                <option value="Finalizado">Finalizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="form-check form-switch fp-admin-switch">
+                                <input asp-for="Ativo" class="form-check-input" />
+                                <label asp-for="Ativo" class="form-check-label"></label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-lg-6">
+                <section class="fp-home-card h-100">
+                    <div class="fp-card-header-link">
+                        <h2>Resultado</h2>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="GolsCasa" class="form-label"></label>
+                            <input asp-for="GolsCasa" class="form-control" />
+                            <span asp-validation-for="GolsCasa" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="GolsVisitante" class="form-label"></label>
+                            <input asp-for="GolsVisitante" class="form-control" />
+                            <span asp-validation-for="GolsVisitante" class="text-danger"></span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <section class="fp-admin-edit-actions">
+            <a href="@returnUrl" class="btn btn-outline-secondary">Voltar</a>
+            <button type="submit" class="btn btn-success">Salvar alterações</button>
+        </section>
+    </form>
 </div>
 
 @section Scripts {

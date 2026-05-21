@@ -12,17 +12,20 @@ namespace FutPlay.Controllers
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
         private readonly ImportacaoJogosService _importacaoJogosService;
+        private readonly ImportacaoResultadosService _importacaoResultadosService;
         private readonly CampeonatoSincronizacaoService _campeonatoSincronizacaoService;
         private readonly MockDataService _mockDataService;
 
         public ImportacoesController(
             ImportacaoCampeonatoService importacaoCampeonatoService,
             ImportacaoJogosService importacaoJogosService,
+            ImportacaoResultadosService importacaoResultadosService,
             CampeonatoSincronizacaoService campeonatoSincronizacaoService,
             MockDataService mockDataService)
         {
             _importacaoCampeonatoService = importacaoCampeonatoService;
             _importacaoJogosService = importacaoJogosService;
+            _importacaoResultadosService = importacaoResultadosService;
             _campeonatoSincronizacaoService = campeonatoSincronizacaoService;
             _mockDataService = mockDataService;
 
@@ -100,7 +103,7 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AtualizarResultados(int campeonatoId)
         {
-            var resultado = await _campeonatoSincronizacaoService.AtualizarResultadosAsync(campeonatoId);
+            var resultado = await _importacaoResultadosService.ImportarResultadosAsync(campeonatoId);
 
             TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
 

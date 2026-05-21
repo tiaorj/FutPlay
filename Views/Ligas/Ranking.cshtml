@@ -8,6 +8,7 @@
 
     var totalParticipantes = Model.Participantes.Count;
     var totalPalpites = Model.Participantes.Sum(p => p.TotalPalpites);
+    var totalAcertos = Model.Participantes.Sum(p => p.Acertos);
     var totalExatos = Model.Participantes.Sum(p => p.PlacaresExatos);
     var totalPontos = Model.Participantes.Sum(p => p.PontuacaoTotal);
 
@@ -109,13 +110,13 @@
                     </div>
 
                     <div>
-                        <span>Exatos</span>
-                        <strong>@totalExatos</strong>
+                        <span>Acertos</span>
+                        <strong>@totalAcertos</strong>
                     </div>
 
                     <div>
-                        <span>Acerto geral</span>
-                        <strong>@aproveitamentoGeral%</strong>
+                        <span>Exatos</span>
+                        <strong>@totalExatos</strong>
                     </div>
                 </div>
             </section>
@@ -223,6 +224,7 @@
 
                                     <footer>
                                         <span>@item.TotalPalpites palpites</span>
+                                        <span>@item.Acertos acertos</span>
                                         <span>@item.PlacaresExatos exatos</span>
                                         <span>@aproveitamento% acerto</span>
                                     </footer>
@@ -237,13 +239,57 @@
                             <small>@Model.Participantes.Count participante(s)</small>
                         </div>
 
-                        <div class="table-responsive">
+                        <div class="fp-ranking-mobile-cards d-md-none">
+                            @foreach (var item in Model.Participantes)
+                            {
+                                var aproveitamento = item.TotalPalpites == 0
+                                ? 0
+                                : Convert.ToInt32((item.PlacaresExatos * 100.0) / item.TotalPalpites);
+
+                                <article class="fp-ranking-mobile-card @(item.Posicao <= 3 ? "top" : "")">
+                                    <div class="fp-ranking-mobile-head">
+                                        <span class="fp-bet-rank-position">@item.Posicao</span>
+                                        <div>
+                                            <strong>@item.Nome</strong>
+                                            <small>@item.Email</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="fp-ranking-mobile-points">
+                                        <strong>@item.PontuacaoTotal</strong>
+                                        <span>pontos</span>
+                                    </div>
+
+                                    <div class="fp-ranking-mobile-stats">
+                                        <div>
+                                            <span>Palpites</span>
+                                            <strong>@item.TotalPalpites</strong>
+                                        </div>
+                                        <div>
+                                            <span>Acertos</span>
+                                            <strong>@item.Acertos</strong>
+                                        </div>
+                                        <div>
+                                            <span>Exatos</span>
+                                            <strong>@item.PlacaresExatos</strong>
+                                        </div>
+                                        <div>
+                                            <span>Aproveitamento</span>
+                                            <strong>@aproveitamento%</strong>
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+
+                        <div class="table-responsive d-none d-md-block">
                             <table class="table fp-bet-ranking-table align-middle">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Participante</th>
                                         <th>Palpites</th>
+                                        <th>Acertos</th>
                                         <th>Exatos</th>
                                         <th>Acerto</th>
                                         <th>PTS</th>
@@ -270,6 +316,7 @@
                                             </td>
 
                                             <td>@item.TotalPalpites</td>
+                                            <td>@item.Acertos</td>
                                             <td>@item.PlacaresExatos</td>
 
                                             <td>

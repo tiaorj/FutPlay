@@ -20,44 +20,23 @@ namespace FutPlay.Services
 
         public async Task<List<ApiTimeViewModel>> BuscarTimesAsync(string pais)
         {
-            var times = new List<ApiTimeViewModel>();
-
             using var resultado = await _footballApiService.BuscarTimesAsync(pais);
 
-            if (resultado.RootElement.TryGetProperty("response", out var response))
-            {
-                foreach (var item in response.EnumerateArray())
-                {
-                    var team = item.GetProperty("team");
+            return await MontarTimesAsync(resultado, pais);
+        }
 
-                    int apiTeamId = team.GetProperty("id").GetInt32();
-                    string nome = team.GetProperty("name").GetString() ?? string.Empty;
+        public async Task<List<ApiTimeViewModel>> BuscarTimesPorNomeAsync(string nome)
+        {
+            using var resultado = await _footballApiService.BuscarTimesPorNomeAsync(nome);
 
-                    string? paisApi = team.TryGetProperty("country", out var countryElement)
-                        ? countryElement.GetString()
-                        : pais;
+            return await MontarTimesAsync(resultado);
+        }
 
-                    string? logo = team.TryGetProperty("logo", out var logoElement)
-                        ? logoElement.GetString()
-                        : null;
+        public async Task<List<ApiTimeViewModel>> PesquisarTimesAsync(string termo)
+        {
+            using var resultado = await _footballApiService.PesquisarTimesAsync(termo);
 
-                    bool jaImportado = await _context.Times
-                        .AnyAsync(t => t.ApiTeamId == apiTeamId || t.Nome == nome);
-
-                    times.Add(new ApiTimeViewModel
-                    {
-                        ApiTeamId = apiTeamId,
-                        Nome = nome,
-                        Pais = paisApi,
-                        EscudoUrl = logo,
-                        JaImportado = jaImportado
-                    });
-                }
-            }
-
-            return times
-                .OrderBy(t => t.Nome)
-                .ToList();
+            return await MontarTimesAsync(resultado);
         }
 
         public async Task<bool> ImportarTimeAsync(
@@ -93,9 +72,16 @@ namespace FutPlay.Services
 
         public async Task<List<ApiTimeViewModel>> BuscarTimesPorLigaAsync(int leagueId, int temporada)
         {
-            var times = new List<ApiTimeViewModel>();
-
             using var resultado = await _footballApiService.BuscarTimesPorLigaAsync(leagueId, temporada);
+
+            return await MontarTimesAsync(resultado);
+        }
+
+        private async Task<List<ApiTimeViewModel>> MontarTimesAsync(
+            System.Text.Json.JsonDocument resultado,
+            string? paisPadrao = null)
+        {
+            var times = new List<ApiTimeViewModel>();
 
             if (resultado.RootElement.TryGetProperty("response", out var response))
             {
@@ -108,7 +94,7 @@ namespace FutPlay.Services
 
                     string? pais = team.TryGetProperty("country", out var countryElement)
                         ? countryElement.GetString()
-                        : null;
+                        : paisPadrao;
 
                     string? logo = team.TryGetProperty("logo", out var logoElement)
                         ? logoElement.GetString()
