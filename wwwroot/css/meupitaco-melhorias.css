@@ -1,0 +1,349 @@
+/* Busca global, detalhes e convites */
+
+.fp-top-search button {
+    align-items: center;
+    background: #0f5b49;
+    border: 0;
+    border-radius: 6px;
+    color: #fff;
+    display: inline-flex;
+    font-weight: 950;
+    height: 30px;
+    justify-content: center;
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 36px;
+}
+
+.fp-top-search .form-control {
+    padding-right: 48px;
+}
+
+.fp-score-board-tabs button {
+    background: transparent;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    color: #8b95c9;
+    font-size: .86rem;
+    font-weight: 800;
+    padding: 0 0 12px;
+}
+
+.fp-score-board-tabs button.active {
+    border-bottom-color: var(--fp-blue);
+    color: var(--fp-blue);
+}
+
+.fp-search-page {
+    padding-bottom: 24px;
+}
+
+.fp-search-hero {
+    align-items: center;
+    background: #101827;
+    border-radius: 8px;
+    color: #fff;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 520px);
+    padding: 22px;
+}
+
+.fp-search-hero span,
+.fp-search-summary span,
+.fp-search-type,
+.fp-bet-real-score span,
+.futplay-detail-stat-grid span,
+.futplay-prediction-split span,
+.futplay-campaign-grid span {
+    color: var(--fp-brand-muted);
+    font-size: .74rem;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.fp-search-hero span {
+    color: #b7f5d1;
+}
+
+.fp-search-hero h1 {
+    font-size: clamp(1.75rem, 4vw, 2.8rem);
+    font-weight: 950;
+    line-height: 1.05;
+    margin: 4px 0 0;
+}
+
+.fp-search-form {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.fp-search-summary {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    margin: 14px 0;
+}
+
+.fp-search-summary strong {
+    color: var(--fp-brand-ink);
+    font-size: 1.15rem;
+    font-weight: 950;
+}
+
+.fp-search-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+}
+
+.fp-search-result-list,
+.fp-search-compact-list {
+    display: grid;
+}
+
+.fp-search-match-result,
+.fp-search-compact-row {
+    align-items: center;
+    border-top: 1px solid #eef2f6;
+    color: inherit;
+    display: grid;
+    gap: 12px;
+    padding: 12px 14px;
+    text-decoration: none;
+}
+
+.fp-search-match-result {
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+}
+
+.fp-search-match-result:hover,
+.fp-search-compact-row:hover,
+.futplay-head-to-head-list a:hover {
+    background: #f8fbff;
+    color: inherit;
+}
+
+.fp-search-date {
+    text-align: center;
+}
+
+.fp-search-date strong,
+.fp-search-date span,
+.fp-search-compact-row strong,
+.fp-search-compact-row small {
+    display: block;
+}
+
+.fp-search-date strong,
+.fp-search-compact-row strong {
+    color: var(--fp-brand-ink);
+    font-weight: 950;
+}
+
+.fp-search-date span,
+.fp-search-compact-row small {
+    color: var(--fp-brand-muted);
+    font-size: .75rem;
+}
+
+.fp-search-match-teams {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 30px minmax(0, 1fr) auto minmax(0, 1fr) 30px;
+    min-width: 0;
+}
+
+.fp-search-match-teams strong {
+    color: var(--fp-brand-ink);
+    font-size: .9rem;
+    font-weight: 900;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-search-match-teams b {
+    color: var(--fp-brand-blue-strong);
+    font-weight: 950;
+}
+
+.fp-search-compact-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+}
+
+.fp-search-type {
+    align-items: center;
+    background: #e9efff;
+    border-radius: 8px;
+    color: var(--fp-brand-blue-strong);
+    display: inline-flex;
+    height: 42px;
+    justify-content: center;
+    text-transform: none;
+}
+
+.fp-inline-action-form {
+    margin: 0;
+}
+
+.fp-inline-action-form button {
+    background: #fff;
+    border: 1px solid #c8d6ee;
+    border-radius: 999px;
+    color: var(--fp-brand-blue-strong);
+    font: inherit;
+    font-weight: 900;
+    padding: .45rem .8rem;
+}
+
+.fp-inline-action-form button:hover {
+    background: #e9efff;
+}
+
+.fp-bet-real-score {
+    align-items: center;
+    background: #f8fbff;
+    border: 1px solid var(--fp-brand-line);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+}
+
+.fp-bet-real-score strong {
+    color: var(--fp-brand-ink);
+    font-weight: 950;
+}
+
+.fp-bet-real-score b,
+.fp-bet-real-score small {
+    margin-left: auto;
+}
+
+.fp-bet-real-score b {
+    color: var(--fp-brand-green-dark);
+    font-weight: 950;
+}
+
+.fp-bet-real-score small {
+    color: var(--fp-brand-muted);
+    font-weight: 800;
+}
+
+.futplay-detail-stat-grid,
+.futplay-prediction-split,
+.futplay-campaign-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.futplay-detail-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.futplay-detail-stat-grid div,
+.futplay-prediction-split div,
+.futplay-campaign-grid div {
+    background: #f8fbff;
+    border: 1px solid #e4e9ee;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.futplay-detail-stat-grid strong,
+.futplay-prediction-split strong,
+.futplay-campaign-grid strong {
+    color: #172231;
+    display: block;
+    font-size: 1.3rem;
+    font-weight: 950;
+    line-height: 1.1;
+    margin-top: 4px;
+}
+
+.futplay-prediction-split {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 10px;
+}
+
+.futplay-campaign-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.futplay-campaign-grid small,
+.futplay-detail-note {
+    color: var(--fp-brand-muted);
+    display: block;
+    font-size: .82rem;
+    margin-top: 6px;
+}
+
+.futplay-head-to-head-list {
+    display: grid;
+    gap: 8px;
+}
+
+.futplay-head-to-head-list a {
+    border: 1px solid #e4e9ee;
+    border-radius: 8px;
+    color: inherit;
+    display: grid;
+    gap: 3px;
+    padding: 10px;
+    text-decoration: none;
+}
+
+.futplay-head-to-head-list span,
+.futplay-head-to-head-list small {
+    color: var(--fp-brand-muted);
+    font-size: .76rem;
+    font-weight: 800;
+}
+
+.futplay-head-to-head-list strong {
+    color: #172231;
+    font-weight: 950;
+}
+
+.fp-invite-email-toggle {
+    background: #f8fbff;
+    border: 1px solid var(--fp-brand-line);
+    border-radius: 8px;
+    padding: 10px 10px 10px 46px;
+}
+
+@media (max-width: 991.98px) {
+    .fp-search-hero,
+    .fp-search-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .fp-search-form,
+    .fp-search-match-result,
+    .fp-search-match-teams,
+    .futplay-prediction-split,
+    .futplay-campaign-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fp-search-date {
+        text-align: left;
+    }
+
+    .fp-search-match-result > .fp-status {
+        width: fit-content;
+    }
+
+    .fp-bet-real-score b,
+    .fp-bet-real-score small {
+        margin-left: 0;
+    }
+}

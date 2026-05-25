@@ -1,53 +1,61 @@
-@model FutPlay.Models.Jogo
+@model FutPlay.ViewModels.JogoDetalhesViewModel
 
 @{
+    var jogo = Model.Jogo;
     ViewData["Title"] = "Detalhes do Jogo";
-    var placar = Model.GolsCasa.HasValue && Model.GolsVisitante.HasValue
-        ? $"{Model.GolsCasa} x {Model.GolsVisitante}"
+
+    var placar = jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
+        ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
         : "x";
+
     var returnUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+
+    string ResultadoCampanha(FutPlay.ViewModels.CampanhaTimeJogoViewModel campanha)
+    {
+        return $"{campanha.Vitorias}V {campanha.Empates}E {campanha.Derrotas}D";
+    }
 }
 
 <div class="container futplay-portal-shell">
     <section class="futplay-detail-match">
         <div class="futplay-detail-match-meta">
-            <span>@Model.Campeonato?.Nome</span>
-            <strong>@Model.DataJogo.ToString("dd/MM/yyyy") · @Model.DataJogo.ToString("HH:mm")</strong>
-            <span>@(string.IsNullOrWhiteSpace(Model.Fase) ? "Fase não informada" : Model.Fase)</span>
+            <span>@jogo.Campeonato?.Nome</span>
+            <strong>@jogo.DataJogo.ToString("dd/MM/yyyy") · @jogo.DataJogo.ToString("HH:mm")</strong>
+            <span>@(string.IsNullOrWhiteSpace(jogo.Fase) ? "Fase não informada" : jogo.Fase)</span>
         </div>
 
         <div class="futplay-detail-scoreboard">
             <div class="futplay-detail-team">
                 <span class="futplay-detail-crest">
-                    @if (!string.IsNullOrWhiteSpace(Model.TimeCasa?.EscudoUrl))
+                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
                     {
-                        <img src="@Model.TimeCasa.EscudoUrl" alt="@Model.TimeCasa.Nome" />
+                        <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
                     }
                     else
                     {
-                        <span>@(Model.TimeCasa?.Sigla ?? "CAS")</span>
+                        <span>@(jogo.TimeCasa?.Sigla ?? "CAS")</span>
                     }
                 </span>
-                <h1>@Model.TimeCasa?.Nome</h1>
+                <h1>@jogo.TimeCasa?.Nome</h1>
             </div>
 
             <div class="futplay-detail-score">
                 <strong>@placar</strong>
-                <span>@Model.Status</span>
+                <span>@jogo.Status</span>
             </div>
 
             <div class="futplay-detail-team futplay-detail-team-away">
                 <span class="futplay-detail-crest">
-                    @if (!string.IsNullOrWhiteSpace(Model.TimeVisitante?.EscudoUrl))
+                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
                     {
-                        <img src="@Model.TimeVisitante.EscudoUrl" alt="@Model.TimeVisitante.Nome" />
+                        <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
                     }
                     else
                     {
-                        <span>@(Model.TimeVisitante?.Sigla ?? "VIS")</span>
+                        <span>@(jogo.TimeVisitante?.Sigla ?? "VIS")</span>
                     }
                 </span>
-                <h1>@Model.TimeVisitante?.Nome</h1>
+                <h1>@jogo.TimeVisitante?.Nome</h1>
             </div>
         </div>
     </section>
@@ -57,18 +65,108 @@
             <h2>Informações da partida</h2>
             <dl>
                 <dt>Campeonato</dt>
-                <dd>@Model.Campeonato?.Nome</dd>
+                <dd>@jogo.Campeonato?.Nome</dd>
                 <dt>Data do jogo</dt>
-                <dd>@Model.DataJogo.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dd>@jogo.DataJogo.ToString("dd/MM/yyyy HH:mm")</dd>
                 <dt>Status</dt>
-                <dd>@Model.Status</dd>
+                <dd>@jogo.Status</dd>
                 <dt>Fase</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Model.Fase) ? "-" : Model.Fase)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(jogo.Fase) ? "-" : jogo.Fase)</dd>
                 <dt>Grupo</dt>
-                <dd>@(string.IsNullOrWhiteSpace(Model.Grupo) ? "-" : Model.Grupo)</dd>
+                <dd>@(string.IsNullOrWhiteSpace(jogo.Grupo) ? "-" : jogo.Grupo)</dd>
                 <dt>Rodada</dt>
-                <dd>@(Model.Rodada.HasValue ? Model.Rodada.ToString() : "-")</dd>
+                <dd>@(jogo.Rodada.HasValue ? jogo.Rodada.ToString() : "-")</dd>
+                <dt>ID API</dt>
+                <dd>@(jogo.ApiFixtureId.HasValue ? jogo.ApiFixtureId.Value.ToString() : "-")</dd>
             </dl>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Estatísticas do jogo</h2>
+            <div class="futplay-detail-stat-grid">
+                <div>
+                    <span>Palpites</span>
+                    <strong>@Model.TotalPalpites</strong>
+                </div>
+
+                <div>
+                    <span>Pontos gerados</span>
+                    <strong>@Model.TotalPontosDistribuidos</strong>
+                </div>
+
+                <div>
+                    <span>Com pontos</span>
+                    <strong>@Model.PalpitesComPontos</strong>
+                </div>
+
+                <div>
+                    <span>Placar exato</span>
+                    <strong>@Model.PalpitesPlacarExato</strong>
+                </div>
+            </div>
+
+            <div class="futplay-prediction-split">
+                <div>
+                    <span>Vitória mandante</span>
+                    <strong>@Model.PalpitesVitoriaCasa</strong>
+                </div>
+
+                <div>
+                    <span>Empate</span>
+                    <strong>@Model.PalpitesEmpate</strong>
+                </div>
+
+                <div>
+                    <span>Vitória visitante</span>
+                    <strong>@Model.PalpitesVitoriaVisitante</strong>
+                </div>
+            </div>
+
+            <p class="futplay-detail-note">
+                Média de @Model.MediaPontos.ToString("0.##") ponto(s) por palpite.
+            </p>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Campanha na competição</h2>
+            <div class="futplay-campaign-grid">
+                <div>
+                    <span>@Model.CampanhaCasa.Nome</span>
+                    <strong>@ResultadoCampanha(Model.CampanhaCasa)</strong>
+                    <small>@Model.CampanhaCasa.Pontos pts · SG @Model.CampanhaCasa.Saldo · @Model.CampanhaCasa.Aproveitamento.ToString("0.#")%</small>
+                </div>
+
+                <div>
+                    <span>@Model.CampanhaVisitante.Nome</span>
+                    <strong>@ResultadoCampanha(Model.CampanhaVisitante)</strong>
+                    <small>@Model.CampanhaVisitante.Pontos pts · SG @Model.CampanhaVisitante.Saldo · @Model.CampanhaVisitante.Aproveitamento.ToString("0.#")%</small>
+                </div>
+            </div>
+        </article>
+
+        <article class="futplay-detail-panel">
+            <h2>Confrontos diretos</h2>
+
+            @if (!Model.ConfrontosDiretos.Any())
+            {
+                <div class="fp-empty-mini">
+                    Nenhum confronto direto finalizado encontrado.
+                </div>
+            }
+            else
+            {
+                <div class="futplay-head-to-head-list">
+                    @foreach (var confronto in Model.ConfrontosDiretos)
+                    {
+                        <a asp-action="Details"
+                           asp-route-id="@confronto.Id">
+                            <span>@confronto.DataJogo.ToString("dd/MM/yyyy")</span>
+                            <strong>@confronto.TimeCasa?.Nome @confronto.GolsCasa x @confronto.GolsVisitante @confronto.TimeVisitante?.Nome</strong>
+                            <small>@confronto.Campeonato?.Nome</small>
+                        </a>
+                    }
+                </div>
+            }
         </article>
 
         <article class="futplay-detail-panel">
@@ -77,20 +175,20 @@
                 @if (User.IsInRole(AppRoles.Administrador))
                 {
                     <a asp-action="Edit"
-                       asp-route-id="@Model.Id"
+                       asp-route-id="@jogo.Id"
                        asp-route-returnUrl="@returnUrl"
                        class="futplay-detail-primary">
                         Editar jogo
                     </a>
                 }
                 <a asp-action="Index"
-                   asp-route-campeonatoId="@Model.CampeonatoId"
-                   asp-route-rodada="@Model.Rodada">
+                   asp-route-campeonatoId="@jogo.CampeonatoId"
+                   asp-route-rodada="@jogo.Rodada">
                     Voltar para jogos
                 </a>
-                @if (Model.CampeonatoId > 0)
+                @if (jogo.CampeonatoId > 0)
                 {
-                    <a asp-controller="Campeonatos" asp-action="Portal" asp-route-id="@Model.CampeonatoId">
+                    <a asp-controller="Campeonatos" asp-action="Portal" asp-route-id="@jogo.CampeonatoId">
                         Ver campeonato
                     </a>
                 }

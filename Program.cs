@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using FutPlay.Models.Api;
+using FutPlay.Settings;
 using Serilog;
 using System.Threading.RateLimiting;
 using System.Globalization;
@@ -68,6 +69,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<ApiFootballOptions>(
     builder.Configuration.GetSection("ApiFootball"));
 
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection("Email"));
+
 builder.Services.AddHttpClient<FootballApiService>();
 builder.Services.AddScoped<ImportacaoCampeonatoService>();
 builder.Services.AddScoped<ImportacaoJogosService>();
@@ -78,6 +82,7 @@ builder.Services.AddScoped<PontuacaoService>();
 builder.Services.AddScoped<MockDataService>();
 builder.Services.AddScoped<ImportacaoTimesService>();
 builder.Services.AddScoped<ApiSyncLogService>();
+builder.Services.AddScoped<ConviteEmailService>();
 
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("sqlserver");

@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/meupitaco-melhorias.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/navigation.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/competition-portal.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/bolao-palpites.css" asp-append-version="true" />
@@ -20,6 +21,7 @@
         var isAdmin = User.IsInRole(AppRoles.Administrador);
         var isParticipante = User.IsInRole(AppRoles.Participante);
         var canUseParticipantArea = isAdmin || isParticipante;
+        var termoPesquisaTopo = Context.Request.Query["termo"].ToString();
     }
 
     <header class="fp-sport-header">
@@ -46,13 +48,20 @@
 
                 <div class="collapse navbar-collapse" id="menuPrincipal">
 
-                    <div class="fp-top-search mx-lg-auto my-3 my-lg-0">
+                    <form asp-controller="Home"
+                          asp-action="Buscar"
+                          method="get"
+                          class="fp-top-search mx-lg-auto my-3 my-lg-0"
+                          role="search">
                         <span>🔎</span>
                         <input type="text"
                                class="form-control"
+                               name="termo"
+                               value="@termoPesquisaTopo"
                                placeholder="Pesquise por partidas, competições, times e ligas"
-                               disabled />
-                    </div>
+                               autocomplete="off" />
+                        <button type="submit" aria-label="Pesquisar">↵</button>
+                    </form>
 
                     <div class="fp-top-login ms-lg-3">
                         <partial name="_LoginPartial" />

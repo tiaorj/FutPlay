@@ -6,6 +6,7 @@
     var returnUrl = ViewBag.ReturnUrl as string
         ?? Url.Action("Index", "Jogos", new { campeonatoId = Model.CampeonatoId, rodada = Model.Rodada })
         ?? "/Jogos";
+    var editUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
 <div class="container fp-score-home fp-admin-edit-page">
@@ -17,6 +18,18 @@
         </div>
 
         <div class="fp-bet-header-actions">
+            @if (Model.CampeonatoId > 0)
+            {
+                <form asp-action="ImportarResultados" method="post" class="fp-inline-action-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="campeonatoId" value="@Model.CampeonatoId" />
+                    <input type="hidden" name="returnUrl" value="@editUrl" />
+                    <button type="submit">
+                        Atualizar pela API
+                    </button>
+                </form>
+            }
+
             <a href="@returnUrl">Voltar</a>
         </div>
     </section>
@@ -129,6 +142,10 @@
                 <section class="fp-home-card h-100">
                     <div class="fp-card-header-link">
                         <h2>Resultado</h2>
+                        @if (Model.ApiFixtureId.HasValue)
+                        {
+                            <span>API #@Model.ApiFixtureId</span>
+                        }
                     </div>
 
                     <div class="row g-3">

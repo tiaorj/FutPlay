@@ -15,12 +15,17 @@ namespace FutPlay.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILogger<LigasController> _logger;
+        private readonly ConviteEmailService _conviteEmailService;
         private const int MinutosBloqueioPalpite = 30;
 
-        public LigasController(AppDbContext context, ILogger<LigasController> logger)
+        public LigasController(
+            AppDbContext context,
+            ILogger<LigasController> logger,
+            ConviteEmailService conviteEmailService)
         {
             _context = context;
             _logger = logger;
+            _conviteEmailService = conviteEmailService;
         }
 
         // Catálogo público de ligas (apenas ligas Ativas e Públicas)
@@ -413,13 +418,18 @@ namespace FutPlay.Controllers
                     TimeVisitanteSigla = jogo.TimeVisitante?.Sigla,
                     TimeVisitanteEscudoUrl = jogo.TimeVisitante?.EscudoUrl,
                     DataJogo = jogo.DataJogo,
+                    StatusJogo = jogo.Status,
                     Fase = jogo.Fase,
                     Grupo = jogo.Grupo,
                     Rodada = jogo.Rodada,
                     GolsCasaPalpite = jogoPostado?.GolsCasaPalpite ?? palpiteExistente?.GolsCasaPalpite,
                     GolsVisitantePalpite = jogoPostado?.GolsVisitantePalpite ?? palpiteExistente?.GolsVisitantePalpite,
+                    GolsCasaReal = jogo.GolsCasa,
+                    GolsVisitanteReal = jogo.GolsVisitante,
+                    PontosGanhos = palpiteExistente?.PontosGanhos ?? 0,
                     JaPalpitado = palpiteExistente != null,
-                    Bloqueado = jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite)
+                    Bloqueado = jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite),
+                    JogoFinalizado = string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase)
                 });
             }
 
@@ -930,7 +940,39 @@ namespace FutPlay.Controllers
             _context.LigaConvites.Add(convite);
             await _context.SaveChangesAsync();
 
-            TempData["Sucesso"] = "Convite criado com sucesso. Copie o link e envie para o convidado.";
+            convite.Liga = liga;
+
+            var linkConvite = Url.Action(
+                action: nameof(AceitarConvite),
+                controller: "Ligas",
+                values: new { token = convite.TokenConvite },
+                protocol: Request.Scheme
+            ) ?? string.Empty;
+
+            if (model.EnviarEmail && !string.IsNullOrWhiteSpace(linkConvite))
+            {
+                var envio = await _conviteEmailService.EnviarConviteAsync(convite, linkConvite);
+
+                if (envio.Sucesso)
+                {
+                    convite.DataEnvio = DateTime.Now;
+                    _context.LigaConvites.Update(convite);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Sucesso"] = "Convite criado e enviado por e-mail.";
+                }
+                else
+                {
+                    TempData["Sucesso"] = "Convite criado com sucesso.";
+                    TempData["Erro"] = envio.Configurado
+                        ? envio.Mensagem
+                        : "SMTP não configurado. Copie o link do convite e envie manualmente.";
+                }
+            }
+            else
+            {
+                TempData["Sucesso"] = "Convite criado com sucesso. Copie o link e envie para o convidado.";
+            }
 
             return RedirectToAction(nameof(Convites), new { id = liga.Id });
         }

@@ -1,0 +1,275 @@
+@model FutPlay.ViewModels.BuscaViewModel
+
+@{
+    ViewData["Title"] = "Buscar";
+
+    string NomeCurto(string? sigla, string? nome, string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(sigla))
+        {
+            return sigla.Trim().ToUpperInvariant();
+        }
+
+        if (!string.IsNullOrWhiteSpace(nome))
+        {
+            var limpo = nome.Trim();
+            return limpo.Substring(0, Math.Min(3, limpo.Length)).ToUpperInvariant();
+        }
+
+        return fallback;
+    }
+
+    string StatusCss(string status)
+    {
+        if (string.Equals(status, "Finalizado", StringComparison.OrdinalIgnoreCase))
+        {
+            return "finished";
+        }
+
+        if (string.Equals(status, "Em andamento", StringComparison.OrdinalIgnoreCase))
+        {
+            return "live";
+        }
+
+        return "scheduled";
+    }
+}
+
+<div class="container fp-score-home fp-search-page">
+    <section class="fp-search-hero">
+        <div>
+            <span>Busca</span>
+            <h1>Encontre jogos, ligas, times e competições</h1>
+        </div>
+
+        <form asp-controller="Home" asp-action="Buscar" method="get" class="fp-search-form">
+            <input name="termo"
+                   value="@Model.Termo"
+                   class="form-control"
+                   placeholder="Digite time, liga, partida ou competição"
+                   autocomplete="off" />
+
+            <button type="submit" class="btn btn-success">
+                Pesquisar
+            </button>
+        </form>
+    </section>
+
+    @if (!Model.PesquisaExecutada)
+    {
+        <section class="fp-empty-mini mt-3">
+            Digite um termo para pesquisar no Meu Pitaco FC.
+        </section>
+    }
+    else if (Model.Termo.Length < 2)
+    {
+        <section class="fp-empty-mini mt-3">
+            Digite pelo menos 2 caracteres para pesquisar.
+        </section>
+    }
+    else if (Model.TotalResultados == 0)
+    {
+        <section class="fp-empty-mini mt-3">
+            Nenhum resultado encontrado para “@Model.Termo”.
+        </section>
+    }
+    else
+    {
+        <section class="fp-search-summary">
+            <span>@Model.TotalResultados resultado(s)</span>
+            <strong>@Model.Termo</strong>
+        </section>
+
+        <div class="fp-search-grid">
+            <main class="fp-search-main">
+                <section class="fp-home-card">
+                    <div class="fp-card-header-link">
+                        <h2>Partidas</h2>
+                        <span>@Model.Jogos.Count resultado(s)</span>
+                    </div>
+
+                    @if (!Model.Jogos.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhuma partida encontrada.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-search-result-list">
+                            @foreach (var jogo in Model.Jogos)
+                            {
+                                var casaMarca = NomeCurto(jogo.TimeCasa?.Sigla, jogo.TimeCasa?.Nome, "CAS");
+                                var visitanteMarca = NomeCurto(jogo.TimeVisitante?.Sigla, jogo.TimeVisitante?.Nome, "VIS");
+                                var placar = jogo.GolsCasa.HasValue && jogo.GolsVisitante.HasValue
+                                    ? $"{jogo.GolsCasa} x {jogo.GolsVisitante}"
+                                    : jogo.DataJogo.ToString("HH:mm");
+
+                                <a asp-controller="Jogos"
+                                   asp-action="Details"
+                                   asp-route-id="@jogo.Id"
+                                   class="fp-search-match-result">
+                                    <div class="fp-search-date">
+                                        <strong>@jogo.DataJogo.ToString("dd/MM")</strong>
+                                        <span>@jogo.DataJogo.ToString("yyyy")</span>
+                                    </div>
+
+                                    <div class="fp-search-match-teams">
+                                        <span class="fp-mini-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeCasa?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeCasa.EscudoUrl" alt="@jogo.TimeCasa.Nome" />
+                                            }
+                                            else
+                                            {
+                                                @casaMarca
+                                            }
+                                        </span>
+
+                                        <strong>@jogo.TimeCasa?.Nome</strong>
+                                        <b>@placar</b>
+                                        <strong>@jogo.TimeVisitante?.Nome</strong>
+
+                                        <span class="fp-mini-crest">
+                                            @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitante?.EscudoUrl))
+                                            {
+                                                <img src="@jogo.TimeVisitante.EscudoUrl" alt="@jogo.TimeVisitante.Nome" />
+                                            }
+                                            else
+                                            {
+                                                @visitanteMarca
+                                            }
+                                        </span>
+                                    </div>
+
+                                    <span class="fp-status @StatusCss(jogo.Status)">@jogo.Status</span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </section>
+            </main>
+
+            <aside class="fp-search-side">
+                <section class="fp-home-card">
+                    <div class="fp-card-header-link">
+                        <h2>Times</h2>
+                        <span>@Model.Times.Count resultado(s)</span>
+                    </div>
+
+                    @if (!Model.Times.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhum time encontrado.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-search-compact-list">
+                            @foreach (var time in Model.Times)
+                            {
+                                var marca = NomeCurto(time.Sigla, time.Nome, "FC");
+
+                                <a asp-controller="Times"
+                                   asp-action="Details"
+                                   asp-route-id="@time.Id"
+                                   class="fp-search-compact-row">
+                                    <span class="fp-mini-crest">
+                                        @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
+                                        {
+                                            <img src="@time.EscudoUrl" alt="@time.Nome" />
+                                        }
+                                        else
+                                        {
+                                            @marca
+                                        }
+                                    </span>
+
+                                    <span>
+                                        <strong>@time.Nome</strong>
+                                        <small>@time.Tipo · @(string.IsNullOrWhiteSpace(time.Pais) ? "País não informado" : time.Pais)</small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Ligas</h2>
+                        <span>@Model.Ligas.Count resultado(s)</span>
+                    </div>
+
+                    @if (!Model.Ligas.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhuma liga encontrada.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-search-compact-list">
+                            @foreach (var liga in Model.Ligas)
+                            {
+                                <a asp-controller="Ligas"
+                                   asp-action="Ranking"
+                                   asp-route-id="@liga.Id"
+                                   class="fp-search-compact-row">
+                                    <span class="fp-search-type">Liga</span>
+
+                                    <span>
+                                        <strong>@liga.Nome</strong>
+                                        <small>@liga.Campeonato?.Nome · @(liga.Publica ? "Pública" : "Privada")</small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </section>
+
+                <section class="fp-home-card mt-3">
+                    <div class="fp-card-header-link">
+                        <h2>Competições</h2>
+                        <span>@Model.Campeonatos.Count resultado(s)</span>
+                    </div>
+
+                    @if (!Model.Campeonatos.Any())
+                    {
+                        <div class="fp-empty-mini">
+                            Nenhuma competição encontrada.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="fp-search-compact-list">
+                            @foreach (var campeonato in Model.Campeonatos)
+                            {
+                                <a asp-controller="Campeonatos"
+                                   asp-action="Portal"
+                                   asp-route-id="@campeonato.Id"
+                                   class="fp-search-compact-row">
+                                    <span class="fp-mini-crest">
+                                        @if (!string.IsNullOrWhiteSpace(campeonato.LogoUrl))
+                                        {
+                                            <img src="@campeonato.LogoUrl" alt="@campeonato.Nome" />
+                                        }
+                                        else
+                                        {
+                                            <span>FP</span>
+                                        }
+                                    </span>
+
+                                    <span>
+                                        <strong>@campeonato.Nome @campeonato.Ano</strong>
+                                        <small>@campeonato.Tipo · @(string.IsNullOrWhiteSpace(campeonato.Pais) ? "País não informado" : campeonato.Pais)</small>
+                                    </span>
+                                </a>
+                            }
+                        </div>
+                    }
+                </section>
+            </aside>
+        </div>
+    }
+</div>

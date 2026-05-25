@@ -236,7 +236,60 @@ namespace FutPlay.Controllers
             if (jogo == null)
                 return NotFound();
 
-            return View(jogo);
+            var palpites = await _context.Palpites
+                .AsNoTracking()
+                .Where(p => p.JogoId == jogo.Id && p.Ativo)
+                .ToListAsync();
+
+            var jogosCampeonato = await _context.Jogos
+                .AsNoTracking()
+                .Where(j =>
+                    j.Ativo &&
+                    j.CampeonatoId == jogo.CampeonatoId &&
+                    j.Status == "Finalizado" &&
+                    j.GolsCasa.HasValue &&
+                    j.GolsVisitante.HasValue)
+                .ToListAsync();
+
+            var confrontosDiretos = await _context.Jogos
+                .AsNoTracking()
+                .Include(j => j.Campeonato)
+                .Include(j => j.TimeCasa)
+                .Include(j => j.TimeVisitante)
+                .Where(j =>
+                    j.Ativo &&
+                    j.Id != jogo.Id &&
+                    j.Status == "Finalizado" &&
+                    j.GolsCasa.HasValue &&
+                    j.GolsVisitante.HasValue &&
+                    ((j.TimeCasaId == jogo.TimeCasaId && j.TimeVisitanteId == jogo.TimeVisitanteId) ||
+                     (j.TimeCasaId == jogo.TimeVisitanteId && j.TimeVisitanteId == jogo.TimeCasaId)))
+                .OrderByDescending(j => j.DataJogo)
+                .Take(5)
+                .ToListAsync();
+
+            var viewModel = new JogoDetalhesViewModel
+            {
+                Jogo = jogo,
+                TotalPalpites = palpites.Count,
+                PalpitesVitoriaCasa = palpites.Count(p => p.GolsCasaPalpite > p.GolsVisitantePalpite),
+                PalpitesEmpate = palpites.Count(p => p.GolsCasaPalpite == p.GolsVisitantePalpite),
+                PalpitesVitoriaVisitante = palpites.Count(p => p.GolsCasaPalpite < p.GolsVisitantePalpite),
+                PalpitesComPontos = palpites.Count(p => p.PontosGanhos > 0),
+                PalpitesPlacarExato = ContarPlacaresExatos(palpites, jogo),
+                TotalPontosDistribuidos = palpites.Sum(p => p.PontosGanhos),
+                ConfrontosDiretos = confrontosDiretos,
+                CampanhaCasa = CalcularCampanhaTime(
+                    jogosCampeonato,
+                    jogo.TimeCasaId,
+                    jogo.TimeCasa?.Nome ?? "Mandante"),
+                CampanhaVisitante = CalcularCampanhaTime(
+                    jogosCampeonato,
+                    jogo.TimeVisitanteId,
+                    jogo.TimeVisitante?.Nome ?? "Visitante")
+            };
+
+            return View(viewModel);
         }
 
         [Authorize(Roles = AppRoles.Administrador)]
@@ -398,6 +451,55 @@ namespace FutPlay.Controllers
                    EhFinalizado(jogo) &&
                    jogo.GolsCasa.HasValue &&
                    jogo.GolsVisitante.HasValue;
+        }
+
+        private static int ContarPlacaresExatos(List<Palpite> palpites, Jogo jogo)
+        {
+            if (!AfetaClassificacao(jogo))
+            {
+                return 0;
+            }
+
+            return palpites.Count(p =>
+                p.GolsCasaPalpite == jogo.GolsCasa!.Value &&
+                p.GolsVisitantePalpite == jogo.GolsVisitante!.Value);
+        }
+
+        private static CampanhaTimeJogoViewModel CalcularCampanhaTime(
+            List<Jogo> jogos,
+            int timeId,
+            string nome)
+        {
+            var campanha = new CampanhaTimeJogoViewModel
+            {
+                Nome = nome
+            };
+
+            foreach (var jogo in jogos.Where(j => j.TimeCasaId == timeId || j.TimeVisitanteId == timeId))
+            {
+                var mandante = jogo.TimeCasaId == timeId;
+                var golsPro = mandante ? jogo.GolsCasa!.Value : jogo.GolsVisitante!.Value;
+                var golsContra = mandante ? jogo.GolsVisitante!.Value : jogo.GolsCasa!.Value;
+
+                campanha.Jogos++;
+                campanha.GolsPro += golsPro;
+                campanha.GolsContra += golsContra;
+
+                if (golsPro > golsContra)
+                {
+                    campanha.Vitorias++;
+                }
+                else if (golsPro < golsContra)
+                {
+                    campanha.Derrotas++;
+                }
+                else
+                {
+                    campanha.Empates++;
+                }
+            }
+
+            return campanha;
         }
 
         private static HashSet<int> ObterCampeonatosParaRecalculo(Jogo jogoAnterior, Jogo jogoAtual)

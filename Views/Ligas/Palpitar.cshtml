@@ -7,6 +7,9 @@
     var pendentes = Model.Jogos.Count(j => !j.Bloqueado && !j.JaPalpitado);
     var palpitados = Model.Jogos.Count(j => j.JaPalpitado);
     var bloqueados = Model.Jogos.Count(j => j.Bloqueado);
+    var pontosApurados = Model.Jogos
+        .Where(j => j.JogoFinalizado && j.JaPalpitado)
+        .Sum(j => j.PontosGanhos);
     var jogoDestaque = Model.Jogos.FirstOrDefault(j => !j.Bloqueado) ?? Model.Jogos.FirstOrDefault();
     var percentualConcluido = totalJogos == 0 ? 0 : Convert.ToInt32((palpitados * 100.0) / totalJogos);
     var rodadaTitulo = Model.RodadaSelecionada.HasValue
@@ -139,6 +142,11 @@
                         <div>
                             <span>Conclusão</span>
                             <strong>@percentualConcluido%</strong>
+                        </div>
+
+                        <div>
+                            <span>Pontos apurados</span>
+                            <strong>@pontosApurados</strong>
                         </div>
                     </div>
                 </section>
@@ -342,9 +350,14 @@
                                     <input type="hidden" asp-for="Jogos[i].TimeVisitante" />
                                     <input type="hidden" asp-for="Jogos[i].TimeVisitanteSigla" />
                                     <input type="hidden" asp-for="Jogos[i].DataJogo" />
+                                    <input type="hidden" asp-for="Jogos[i].StatusJogo" />
                                     <input type="hidden" asp-for="Jogos[i].Fase" />
                                     <input type="hidden" asp-for="Jogos[i].Grupo" />
                                     <input type="hidden" asp-for="Jogos[i].Rodada" />
+                                    <input type="hidden" asp-for="Jogos[i].GolsCasaReal" />
+                                    <input type="hidden" asp-for="Jogos[i].GolsVisitanteReal" />
+                                    <input type="hidden" asp-for="Jogos[i].PontosGanhos" />
+                                    <input type="hidden" asp-for="Jogos[i].JogoFinalizado" />
                                     <input type="hidden" asp-for="Jogos[i].JaPalpitado" />
                                     <input type="hidden" asp-for="Jogos[i].Bloqueado" />
 
@@ -416,7 +429,23 @@
                                         {
                                             <span>Grupo @jogo.Grupo</span>
                                         }
-                                    
+
+                                        @if (jogo.JogoFinalizado && jogo.TemResultadoReal)
+                                        {
+                                            <div class="fp-bet-real-score">
+                                                <span>Resultado</span>
+                                                <strong>@jogo.GolsCasaReal x @jogo.GolsVisitanteReal</strong>
+
+                                                @if (jogo.JaPalpitado)
+                                                {
+                                                    <b>@jogo.PontosGanhos pts</b>
+                                                }
+                                                else
+                                                {
+                                                    <small>Sem palpite</small>
+                                                }
+                                            </div>
+                                        }
 
                                         <div class="fp-bet-pick-status">
                                             <span class="@statusClass">@statusText</span>

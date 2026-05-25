@@ -22,5 +22,8 @@ namespace FutPlay.ViewModels
         [EmailAddress(ErrorMessage = "Informe um e-mail válido.")]
         [StringLength(150)]
         public string Email { get; set; } = string.Empty;
+
+        [Display(Name = "Enviar por e-mail agora")]
+        public bool EnviarEmail { get; set; } = true;
     }
 }

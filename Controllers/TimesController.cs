@@ -436,11 +436,21 @@ namespace FutPlay.Controllers
                 UltimosResultados = ultimosResultados,
                 Campeonatos = campeonatos,
                 TotalJogos = jogosDoTime.Count,
+                TotalFinalizados = totalVitorias + totalEmpates + totalDerrotas,
                 TotalVitorias = totalVitorias,
                 TotalEmpates = totalEmpates,
                 TotalDerrotas = totalDerrotas,
                 GolsPro = golsPro,
-                GolsContra = golsContra
+                GolsContra = golsContra,
+                ProximoJogo = proximosJogos.FirstOrDefault(),
+                UltimoResultado = ultimosResultados.FirstOrDefault(),
+                HistoricoResumo = CriarResumoHistorico(
+                    time,
+                    jogosDoTime,
+                    campeonatos.Count,
+                    totalVitorias,
+                    totalEmpates,
+                    totalDerrotas)
             };
 
             return View(viewModel);
@@ -553,6 +563,34 @@ namespace FutPlay.Controllers
         {
             return string.Equals(time.Tipo, "Seleção", StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(time.Tipo, "Selecao", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string CriarResumoHistorico(
+            Time time,
+            List<Jogo> jogos,
+            int totalCampeonatos,
+            int totalVitorias,
+            int totalEmpates,
+            int totalDerrotas)
+        {
+            if (!jogos.Any())
+            {
+                return $"{time.Nome} ainda não tem partidas cadastradas no Meu Pitaco FC.";
+            }
+
+            var primeiroJogo = jogos.OrderBy(j => j.DataJogo).First();
+            var ultimoJogo = jogos.OrderByDescending(j => j.DataJogo).First();
+            var totalFinalizados = totalVitorias + totalEmpates + totalDerrotas;
+            var periodo = primeiroJogo.DataJogo.Year == ultimoJogo.DataJogo.Year
+                ? primeiroJogo.DataJogo.Year.ToString()
+                : $"{primeiroJogo.DataJogo.Year} a {ultimoJogo.DataJogo.Year}";
+
+            if (totalFinalizados == 0)
+            {
+                return $"{time.Nome} aparece em {totalCampeonatos} competição(ões) cadastrada(s), com agenda registrada para {periodo}.";
+            }
+
+            return $"{time.Nome} tem histórico cadastrado entre {periodo}, somando {totalFinalizados} jogo(s) finalizado(s), {totalVitorias} vitória(s), {totalEmpates} empate(s) e {totalDerrotas} derrota(s).";
         }
     }
 }

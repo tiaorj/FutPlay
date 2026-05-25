@@ -158,6 +158,11 @@
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
+                        <div class="form-check form-switch fp-invite-email-toggle">
+                            <input asp-for="EnviarEmail" class="form-check-input" />
+                            <label asp-for="EnviarEmail" class="form-check-label"></label>
+                        </div>
+
                         <button type="submit" class="btn btn-success">
                             Criar convite
                         </button>
@@ -220,10 +225,15 @@
 
                                         <small>@convite.Email</small>
 
-                                        <div class="fp-invite-meta">
-                                            <span>Criado em @convite.DataCriacao.ToString("dd/MM/yyyy HH:mm")</span>
+                                    <div class="fp-invite-meta">
+                                        <span>Criado em @convite.DataCriacao.ToString("dd/MM/yyyy HH:mm")</span>
 
-                                    @if (convite.DataAceite.HasValue)
+                                            @if (convite.DataEnvio.HasValue)
+                                            {
+                                                <span>Enviado em @convite.DataEnvio.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                            }
+
+                                            @if (convite.DataAceite.HasValue)
                                             {
                                                 <span>Aceito em @convite.DataAceite.Value.ToString("dd/MM/yyyy HH:mm")</span>
                                             }

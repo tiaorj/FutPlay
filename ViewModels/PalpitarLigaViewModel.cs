@@ -54,6 +54,8 @@ namespace FutPlay.ViewModels
 
         public DateTime DataJogo { get; set; }
 
+        public string StatusJogo { get; set; } = string.Empty;
+
         public string? Fase { get; set; }
 
         public string? Grupo { get; set; }
@@ -66,8 +68,18 @@ namespace FutPlay.ViewModels
         [Range(0, 50, ErrorMessage = "Informe um valor entre 0 e 50.")]
         public int? GolsVisitantePalpite { get; set; }
 
+        public int? GolsCasaReal { get; set; }
+
+        public int? GolsVisitanteReal { get; set; }
+
+        public int PontosGanhos { get; set; }
+
         public bool JaPalpitado { get; set; }
 
         public bool Bloqueado { get; set; }
+
+        public bool JogoFinalizado { get; set; }
+
+        public bool TemResultadoReal => GolsCasaReal.HasValue && GolsVisitanteReal.HasValue;
     }
 }
