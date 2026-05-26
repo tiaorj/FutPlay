@@ -15,24 +15,28 @@ namespace FutPlay.Controllers
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
         private readonly CampeonatoSincronizacaoService _campeonatoSincronizacaoService;
+        private readonly FootballDataOrgService _footballDataOrgService;
         private readonly MockDataService _mockDataService;
         private readonly AppDbContext _context;
 
         public ImportacoesController(
             ImportacaoCampeonatoService importacaoCampeonatoService,
             CampeonatoSincronizacaoService campeonatoSincronizacaoService,
+            FootballDataOrgService footballDataOrgService,
             MockDataService mockDataService,
             AppDbContext context)
         {
             _importacaoCampeonatoService = importacaoCampeonatoService;
             _campeonatoSincronizacaoService = campeonatoSincronizacaoService;
+            _footballDataOrgService = footballDataOrgService;
             _mockDataService = mockDataService;
             _context = context;
 
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            await CarregarCampeonatosAsync();
             return View(new List<ApiLigaViewModel>());
         }
 
@@ -55,6 +59,7 @@ namespace FutPlay.Controllers
                 ViewBag.Erro = ex.Message;
             }
 
+            await CarregarCampeonatosAsync();
             return View("Index", ligas);
         }
 
@@ -181,6 +186,44 @@ namespace FutPlay.Controllers
             return RedirectToAction("Index", "Campeonatos");
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ListarFootballDataOrgCompeticoes()
+        {
+            try
+            {
+                var competicoes = await _footballDataOrgService.ListarCompeticoesAsync();
+                ViewBag.FootballDataOrgCompeticoes = competicoes;
+                ViewBag.FootballDataOrgTotal = competicoes.Count;
+            }
+            catch (Exception ex)
+            {
+                TempData["Erro"] = ex.Message;
+            }
+
+            await CarregarCampeonatosAsync();
+            return View("Index", new List<ApiLigaViewModel>());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AtualizarResultadosFootballDataOrg(
+            int campeonatoId,
+            string competitionCode,
+            int temporada)
+        {
+            var resultado = await _footballDataOrgService.AtualizarResultadosAsync(
+                campeonatoId,
+                competitionCode,
+                temporada,
+                ObterUsuarioId(),
+                ObterUsuarioEmail());
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            return RedirectToAction("Portal", "Campeonatos", new { id = campeonatoId, aba = "jogos" });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Historico(string? tipo, string? status, int? campeonatoId)
         {
@@ -260,6 +303,16 @@ namespace FutPlay.Controllers
         private string? ObterUsuarioEmail()
         {
             return User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
+        }
+
+        private async Task CarregarCampeonatosAsync()
+        {
+            ViewBag.Campeonatos = await _context.Campeonatos
+                .AsNoTracking()
+                .Where(c => c.Ativo)
+                .OrderByDescending(c => c.Ano)
+                .ThenBy(c => c.Nome)
+                .ToListAsync();
         }
 
     }

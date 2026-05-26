@@ -69,10 +69,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<ApiFootballOptions>(
     builder.Configuration.GetSection("ApiFootball"));
 
+builder.Services.Configure<FootballDataOrgOptions>(
+    builder.Configuration.GetSection("FootballDataOrg"));
+
 builder.Services.Configure<EmailOptions>(
     builder.Configuration.GetSection("Email"));
 
+builder.Services.Configure<AppTimeOptions>(
+    builder.Configuration.GetSection("AppTimeZone"));
+
 builder.Services.AddHttpClient<FootballApiService>();
+builder.Services.AddHttpClient<FootballDataOrgService>();
 builder.Services.AddScoped<ImportacaoCampeonatoService>();
 builder.Services.AddScoped<ImportacaoJogosService>();
 builder.Services.AddScoped<ImportacaoResultadosService>();
@@ -83,6 +90,7 @@ builder.Services.AddScoped<MockDataService>();
 builder.Services.AddScoped<ImportacaoTimesService>();
 builder.Services.AddScoped<ApiSyncLogService>();
 builder.Services.AddScoped<ConviteEmailService>();
+builder.Services.AddSingleton<AppTimeService>();
 
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("sqlserver");

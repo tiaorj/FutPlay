@@ -2,6 +2,8 @@
 @using FutPlay.Settings
 @{
     ViewData["Title"] = "Importações";
+    var campeonatos = ViewBag.Campeonatos as List<Campeonato> ?? new List<Campeonato>();
+    var footballDataOrgCompeticoes = ViewBag.FootballDataOrgCompeticoes as List<FutPlay.ViewModels.FootballDataOrgCompeticaoViewModel> ?? new List<FutPlay.ViewModels.FootballDataOrgCompeticaoViewModel>();
 }
 
 <div class="container mt-4">
@@ -59,6 +61,114 @@
                 Administrar Dados de Teste
             </a>
         </div>
+    </div>
+
+    <div class="card shadow-sm futplay-section-card mb-4">
+        <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between gap-2">
+            <strong>football-data.org (fonte auxiliar gratuita)</strong>
+
+            <form asp-action="ListarFootballDataOrgCompeticoes" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-primary">
+                    Listar competições disponíveis
+                </button>
+            </form>
+        </div>
+
+        <div class="card-body">
+            <p class="text-muted">
+                Use esta integração somente por ação do Admin. Ela atualiza jogos existentes por código da competição no football-data.org,
+                sem substituir a API-Football e sem chamar APIs em telas públicas.
+            </p>
+
+            <form asp-action="AtualizarResultadosFootballDataOrg" method="post" class="row g-3 align-items-end">
+                @Html.AntiForgeryToken()
+
+                <div class="col-lg-5">
+                    <label class="form-label">Campeonato local</label>
+                    <select name="campeonatoId" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        @foreach (var campeonato in campeonatos)
+                        {
+                            <option value="@campeonato.Id">
+                                @campeonato.Nome @campeonato.Ano
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label">Código</label>
+                    <input name="competitionCode"
+                           class="form-control text-uppercase"
+                           placeholder="Ex: PL, CL, WC"
+                           required />
+                </div>
+
+                <div class="col-md-3 col-lg-2">
+                    <label class="form-label">Temporada</label>
+                    <input name="temporada"
+                           type="number"
+                           class="form-control"
+                           value="@DateTime.Now.Year"
+                           min="2000"
+                           max="2100"
+                           required />
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                    <button type="submit" class="btn btn-success w-100">
+                        Atualizar resultados
+                    </button>
+                </div>
+            </form>
+
+            <small class="text-muted d-block mt-3">
+                Se a competição não existir nessa API, mantenha atualização manual ou futura importação por planilha.
+            </small>
+        </div>
+
+        @if (footballDataOrgCompeticoes.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th>Código</th>
+                            <th>Competição</th>
+                            <th>País</th>
+                            <th>Tipo</th>
+                            <th>Temporada atual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var competicao in footballDataOrgCompeticoes)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(competicao.EmblemaUrl))
+                                    {
+                                        <img src="@competicao.EmblemaUrl" alt="@competicao.Nome" style="width: 32px; height: 32px; object-fit: contain;" />
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@(string.IsNullOrWhiteSpace(competicao.Codigo) ? competicao.Id : competicao.Codigo)</strong>
+                                </td>
+                                <td>@competicao.Nome</td>
+                                <td>@competicao.Pais</td>
+                                <td>@competicao.Tipo</td>
+                                <td>@(competicao.TemporadaAtual.HasValue ? competicao.TemporadaAtual.Value.ToString() : "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
     <div class="card shadow-sm futplay-section-card mb-4">

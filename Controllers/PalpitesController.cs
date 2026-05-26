@@ -13,13 +13,17 @@ namespace FutPlay.Controllers
     {
         private readonly AppDbContext _context;
         private readonly PontuacaoService _pontuacaoService;
+        private readonly AppTimeService _appTimeService;
+        private const int MinutosBloqueioPalpite = 5;
 
         public PalpitesController(
             AppDbContext context,
-            PontuacaoService pontuacaoService)
+            PontuacaoService pontuacaoService,
+            AppTimeService appTimeService)
         {
             _context = context;
             _pontuacaoService = pontuacaoService;
+            _appTimeService = appTimeService;
         }
 
         public async Task<IActionResult> Index()
@@ -73,9 +77,9 @@ namespace FutPlay.Controllers
 
             var jogo = await _context.Jogos.FindAsync(palpite.JogoId);
 
-            if (jogo != null && jogo.DataJogo <= DateTime.Now)
+            if (jogo != null && PalpiteBloqueado(jogo))
             {
-                ModelState.AddModelError("", "Não é possível cadastrar palpite após o início do jogo.");
+                ModelState.AddModelError("", "Palpites são bloqueados 5 minutos antes da partida.");
             }
 
             if (ModelState.IsValid)
@@ -136,9 +140,9 @@ namespace FutPlay.Controllers
 
             var jogo = await _context.Jogos.FindAsync(palpite.JogoId);
 
-            if (jogo != null && jogo.DataJogo <= DateTime.Now)
+            if (jogo != null && PalpiteBloqueado(jogo))
             {
-                TempData["Erro"] = "Não é possível editar palpite após o início do jogo.";
+                TempData["Erro"] = "Palpites são bloqueados 5 minutos antes da partida.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -158,9 +162,9 @@ namespace FutPlay.Controllers
 
             var jogo = await _context.Jogos.FindAsync(palpite.JogoId);
 
-            if (jogo != null && jogo.DataJogo <= DateTime.Now)
+            if (jogo != null && PalpiteBloqueado(jogo))
             {
-                ModelState.AddModelError("", "Não é possível editar palpite após o início do jogo.");
+                ModelState.AddModelError("", "Palpites são bloqueados 5 minutos antes da partida.");
             }
 
             if (ModelState.IsValid)
@@ -226,6 +230,14 @@ namespace FutPlay.Controllers
         private bool UsuarioEhAdministrador()
         {
             return User.IsInRole(AppRoles.Administrador);
+        }
+
+        private bool PalpiteBloqueado(Jogo jogo)
+        {
+            var agoraAplicacao = _appTimeService.Agora;
+            var dataJogo = _appTimeService.NormalizarHorarioAplicacao(jogo.DataJogo);
+
+            return agoraAplicacao >= dataJogo.AddMinutes(-MinutosBloqueioPalpite);
         }
 
         private IQueryable<Palpite> AplicarFiltroUsuario(IQueryable<Palpite> query)

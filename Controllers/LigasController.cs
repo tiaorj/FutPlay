@@ -16,16 +16,19 @@ namespace FutPlay.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<LigasController> _logger;
         private readonly ConviteEmailService _conviteEmailService;
-        private const int MinutosBloqueioPalpite = 30;
+        private readonly AppTimeService _appTimeService;
+        private const int MinutosBloqueioPalpite = 5;
 
         public LigasController(
             AppDbContext context,
             ILogger<LigasController> logger,
-            ConviteEmailService conviteEmailService)
+            ConviteEmailService conviteEmailService,
+            AppTimeService appTimeService)
         {
             _context = context;
             _logger = logger;
             _conviteEmailService = conviteEmailService;
+            _appTimeService = appTimeService;
         }
 
         // Catálogo público de ligas (apenas ligas Ativas e Públicas)
@@ -223,6 +226,8 @@ namespace FutPlay.Controllers
             var totalSalvos = 0;
             var totalIgnorados = 0;
 
+            var agoraAplicacao = _appTimeService.Agora;
+
             foreach (var item in model.Jogos)
             {
                 var temCasa = item.GolsCasaPalpite.HasValue;
@@ -248,7 +253,7 @@ namespace FutPlay.Controllers
                     continue;
                 }
 
-                if (jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite))
+                if (PalpiteBloqueado(jogo, agoraAplicacao))
                 {
                     totalIgnorados++;
                     continue;
@@ -396,6 +401,8 @@ namespace FutPlay.Controllers
                 }).ToList()
             };
 
+            var agoraAplicacao = _appTimeService.Agora;
+
             foreach (var jogo in jogosParaExibir)
             {
                 var palpiteExistente = participanteSelecionado > 0
@@ -428,7 +435,7 @@ namespace FutPlay.Controllers
                     GolsVisitanteReal = jogo.GolsVisitante,
                     PontosGanhos = palpiteExistente?.PontosGanhos ?? 0,
                     JaPalpitado = palpiteExistente != null,
-                    Bloqueado = jogo.DataJogo <= DateTime.Now.AddMinutes(MinutosBloqueioPalpite),
+                    Bloqueado = PalpiteBloqueado(jogo, agoraAplicacao),
                     JogoFinalizado = string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase)
                 });
             }
@@ -504,6 +511,13 @@ namespace FutPlay.Controllers
         private bool UsuarioEhAdministrador()
         {
             return User.IsInRole(AppRoles.Administrador);
+        }
+
+        private bool PalpiteBloqueado(Jogo jogo, DateTime agoraAplicacao)
+        {
+            var dataJogo = _appTimeService.NormalizarHorarioAplicacao(jogo.DataJogo);
+
+            return agoraAplicacao >= dataJogo.AddMinutes(-MinutosBloqueioPalpite);
         }
 
         private async Task<LigaParticipante?> ObterParticipanteUsuarioAsync(

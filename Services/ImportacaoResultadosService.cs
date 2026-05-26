@@ -13,6 +13,7 @@ namespace FutPlay.Services
         private readonly AppDbContext _context;
         private readonly ClassificacaoService _classificacaoService;
         private readonly PontuacaoService _pontuacaoService;
+        private readonly AppTimeService _appTimeService;
         private readonly ILogger<ImportacaoResultadosService> _logger;
 
         public ImportacaoResultadosService(
@@ -20,12 +21,14 @@ namespace FutPlay.Services
             AppDbContext context,
             ClassificacaoService classificacaoService,
             PontuacaoService pontuacaoService,
+            AppTimeService appTimeService,
             ILogger<ImportacaoResultadosService> logger)
         {
             _footballApiService = footballApiService;
             _context = context;
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
+            _appTimeService = appTimeService;
             _logger = logger;
         }
 
@@ -123,7 +126,8 @@ namespace FutPlay.Services
                             mudou = true;
                         }
 
-                        DateTime dataJogo = fixture.GetProperty("date").GetDateTime();
+                        DateTime dataJogo = _appTimeService.ConverterUtcParaHorarioAplicacao(
+                            fixture.GetProperty("date").GetDateTime());
 
                         if (jogo.DataJogo != dataJogo)
                         {

@@ -14,6 +14,7 @@ namespace FutPlay.Services
         private readonly ClassificacaoService _classificacaoService;
         private readonly PontuacaoService _pontuacaoService;
         private readonly ApiSyncLogService _apiSyncLogService;
+        private readonly AppTimeService _appTimeService;
         private readonly ILogger<CampeonatoSincronizacaoService> _logger;
 
         public CampeonatoSincronizacaoService(
@@ -23,6 +24,7 @@ namespace FutPlay.Services
             ClassificacaoService classificacaoService,
             PontuacaoService pontuacaoService,
             ApiSyncLogService apiSyncLogService,
+            AppTimeService appTimeService,
             ILogger<CampeonatoSincronizacaoService> logger)
         {
             _footballApiService = footballApiService;
@@ -31,6 +33,7 @@ namespace FutPlay.Services
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
             _apiSyncLogService = apiSyncLogService;
+            _appTimeService = appTimeService;
             _logger = logger;
         }
 
@@ -516,7 +519,7 @@ namespace FutPlay.Services
             });
         }
 
-        private static IEnumerable<ApiFixtureData> ExtrairFixtures(JsonDocument resultado)
+        private IEnumerable<ApiFixtureData> ExtrairFixtures(JsonDocument resultado)
         {
             if (!resultado.RootElement.TryGetProperty("response", out var response))
             {
@@ -529,7 +532,7 @@ namespace FutPlay.Services
             }
         }
 
-        private static ApiFixtureData ExtrairFixture(JsonElement item)
+        private ApiFixtureData ExtrairFixture(JsonElement item)
         {
             var fixture = item.GetProperty("fixture");
             var teams = item.GetProperty("teams");
@@ -544,7 +547,8 @@ namespace FutPlay.Services
             return new ApiFixtureData
             {
                 ApiFixtureId = fixture.GetProperty("id").GetInt32(),
-                DataJogo = fixture.GetProperty("date").GetDateTime(),
+                DataJogo = _appTimeService.ConverterUtcParaHorarioAplicacao(
+                    fixture.GetProperty("date").GetDateTime()),
                 Status = FootballApiStatusMapper.ConverterStatusJogo(statusApi),
                 StatusApi = statusApi,
                 Fase = rodadaTexto,
@@ -570,7 +574,7 @@ namespace FutPlay.Services
             };
         }
 
-        private static Jogo? LocalizarJogoSemFixture(
+        private Jogo? LocalizarJogoSemFixture(
             List<Jogo> jogosCampeonato,
             ApiFixtureData fixture,
             int timeCasaId,
@@ -580,7 +584,7 @@ namespace FutPlay.Services
                 !j.ApiFixtureId.HasValue &&
                 j.TimeCasaId == timeCasaId &&
                 j.TimeVisitanteId == timeVisitanteId &&
-                (j.DataJogo.Date == fixture.DataJogo.Date ||
+                (_appTimeService.NormalizarHorarioAplicacao(j.DataJogo).Date == fixture.DataJogo.Date ||
                  (fixture.Rodada.HasValue && j.Rodada == fixture.Rodada)));
         }
 
