@@ -1,0 +1,420 @@
+@model FutPlay.ViewModels.ComparadorTimesViewModel
+
+@{
+    ViewData["Title"] = "Comparador de Times";
+    var resultado = Model.Resultado;
+
+    string Sigla(string? sigla, string nome)
+    {
+        if (!string.IsNullOrWhiteSpace(sigla))
+        {
+            return sigla;
+        }
+
+        return string.Join("", nome.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])).ToUpperInvariant();
+    }
+
+    string MelhorClasse(double valor, double outro, bool menorMelhor = false)
+    {
+        if (Math.Abs(valor - outro) < 0.01)
+        {
+            return "balanced";
+        }
+
+        return menorMelhor
+            ? valor < outro ? "best" : ""
+            : valor > outro ? "best" : "";
+    }
+
+    string Percentual(double valor)
+    {
+        return $"{valor:0.#}%";
+    }
+}
+
+<div class="fp-team-compare-page">
+    <div class="container futplay-portal-shell">
+        <section class="futplay-page-hero futplay-page-hero-dark mb-4">
+            <div class="futplay-portal-kicker">Estatísticas</div>
+            <h1 class="futplay-page-title">Comparador de Times</h1>
+            <p class="futplay-subtitle mb-0">
+                Compare desempenho, forma recente, ataque, defesa e classificação usando apenas dados locais do Meu Pitaco FC.
+            </p>
+        </section>
+
+        <section class="fp-match-panel fp-compare-filter-panel">
+            <div class="fp-match-panel-header">
+                <div>
+                    <span>Filtros</span>
+                    <h2>Selecione os times</h2>
+                </div>
+            </div>
+
+            <form asp-action="CompararTimes" method="get" class="fp-compare-filter-form">
+                <div>
+                    <label for="timeAId">Time A</label>
+                    <select id="timeAId" name="timeAId" class="form-select">
+                        <option value="">Selecione...</option>
+                        @foreach (var time in Model.Times)
+                        {
+                            <option value="@time.Id" selected="@(Model.TimeAId == time.Id)">
+                                @time.Nome
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label for="timeBId">Time B</label>
+                    <select id="timeBId" name="timeBId" class="form-select">
+                        <option value="">Selecione...</option>
+                        @foreach (var time in Model.Times)
+                        {
+                            <option value="@time.Id" selected="@(Model.TimeBId == time.Id)">
+                                @time.Nome
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label for="campeonatoId">Campeonato</label>
+                    <select id="campeonatoId" name="campeonatoId" class="form-select">
+                        <option value="">Todos os jogos finalizados</option>
+                        @foreach (var campeonato in Model.Campeonatos)
+                        {
+                            <option value="@campeonato.Id" selected="@(Model.CampeonatoId == campeonato.Id)">
+                                @campeonato.Nome @campeonato.Ano
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Comparar
+                </button>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Mensagem))
+            {
+                <div class="alert alert-warning mt-3 mb-0">
+                    @Model.Mensagem
+                </div>
+            }
+        </section>
+
+        @if (resultado == null)
+        {
+            <section class="fp-match-panel mt-3">
+                <div class="fp-empty-mini">
+                    Escolha dois times para visualizar o comparativo estatístico.
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="fp-compare-source">
+                @resultado.FonteDados
+            </section>
+
+            <section class="fp-team-compare-grid">
+                <article class="fp-team-compare-card">
+                    <div class="fp-team-compare-head">
+                        <span class="fp-team-compare-crest">
+                            @if (!string.IsNullOrWhiteSpace(resultado.TimeA.EscudoUrl))
+                            {
+                                <img src="@resultado.TimeA.EscudoUrl" alt="@resultado.TimeA.Nome" />
+                            }
+                            else
+                            {
+                                @Sigla(resultado.TimeA.Sigla, resultado.TimeA.Nome)
+                            }
+                        </span>
+
+                        <div>
+                            <h2>@resultado.TimeA.Nome</h2>
+                            <small>@(resultado.TimeA.Pais ?? "País não informado") · @resultado.TimeA.Tipo</small>
+                        </div>
+                    </div>
+
+                    @if (resultado.TimeA.Classificacao != null)
+                    {
+                        <div class="fp-team-compare-standing">
+                            <span>@resultado.TimeA.Classificacao.Posicao º</span>
+                            <strong>@resultado.TimeA.Classificacao.Pontos pts</strong>
+                            <small>@resultado.TimeA.Classificacao.Jogos jogos · SG @resultado.TimeA.Classificacao.SaldoGols</small>
+                        </div>
+                    }
+                </article>
+
+                <article class="fp-team-compare-card">
+                    <div class="fp-team-compare-head">
+                        <span class="fp-team-compare-crest">
+                            @if (!string.IsNullOrWhiteSpace(resultado.TimeB.EscudoUrl))
+                            {
+                                <img src="@resultado.TimeB.EscudoUrl" alt="@resultado.TimeB.Nome" />
+                            }
+                            else
+                            {
+                                @Sigla(resultado.TimeB.Sigla, resultado.TimeB.Nome)
+                            }
+                        </span>
+
+                        <div>
+                            <h2>@resultado.TimeB.Nome</h2>
+                            <small>@(resultado.TimeB.Pais ?? "País não informado") · @resultado.TimeB.Tipo</small>
+                        </div>
+                    </div>
+
+                    @if (resultado.TimeB.Classificacao != null)
+                    {
+                        <div class="fp-team-compare-standing">
+                            <span>@resultado.TimeB.Classificacao.Posicao º</span>
+                            <strong>@resultado.TimeB.Classificacao.Pontos pts</strong>
+                            <small>@resultado.TimeB.Classificacao.Jogos jogos · SG @resultado.TimeB.Classificacao.SaldoGols</small>
+                        </div>
+                    }
+                </article>
+            </section>
+
+            <section class="fp-match-panel">
+                <div class="fp-match-panel-header">
+                    <div>
+                        <span>Resumo</span>
+                        <h2>Quem chega melhor?</h2>
+                    </div>
+                </div>
+
+                <div class="fp-compare-insights">
+                    <article>
+                        <span>Melhor ataque</span>
+                        <strong>@resultado.Analise.MelhorAtaque</strong>
+                    </article>
+
+                    <article>
+                        <span>Melhor defesa</span>
+                        <strong>@resultado.Analise.MelhorDefesa</strong>
+                    </article>
+
+                    <article>
+                        <span>Melhor fase recente</span>
+                        <strong>@resultado.Analise.MelhorFaseRecente</strong>
+                    </article>
+
+                    <article>
+                        <span>Melhor aproveitamento</span>
+                        <strong>@resultado.Analise.MelhorAproveitamento</strong>
+                    </article>
+                </div>
+
+                <p class="fp-compare-trend">
+                    @resultado.Analise.Tendencia
+                </p>
+            </section>
+
+            <section class="fp-match-panel">
+                <div class="fp-match-panel-header">
+                    <div>
+                        <span>Dados comparados</span>
+                        <h2>Estatísticas lado a lado</h2>
+                    </div>
+                </div>
+
+                <div class="fp-comparison-table fp-team-compare-stats">
+                    <div class="fp-comparison-head">
+                        <strong>@resultado.TimeA.Nome</strong>
+                        <span></span>
+                        <strong>@resultado.TimeB.Nome</strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.Jogos, resultado.TimeB.Estatisticas.Jogos)">
+                            @resultado.TimeA.Estatisticas.Jogos
+                        </strong>
+                        <span>Jogos disputados</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.Jogos, resultado.TimeA.Estatisticas.Jogos)">
+                            @resultado.TimeB.Estatisticas.Jogos
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.Vitorias, resultado.TimeB.Estatisticas.Vitorias)">
+                            @resultado.TimeA.Estatisticas.Vitorias
+                        </strong>
+                        <span>Vitórias</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.Vitorias, resultado.TimeA.Estatisticas.Vitorias)">
+                            @resultado.TimeB.Estatisticas.Vitorias
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong>@resultado.TimeA.Estatisticas.Empates</strong>
+                        <span>Empates</span>
+                        <strong>@resultado.TimeB.Estatisticas.Empates</strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.Derrotas, resultado.TimeB.Estatisticas.Derrotas, menorMelhor: true)">
+                            @resultado.TimeA.Estatisticas.Derrotas
+                        </strong>
+                        <span>Derrotas</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.Derrotas, resultado.TimeA.Estatisticas.Derrotas, menorMelhor: true)">
+                            @resultado.TimeB.Estatisticas.Derrotas
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.GolsMarcados, resultado.TimeB.Estatisticas.GolsMarcados)">
+                            @resultado.TimeA.Estatisticas.GolsMarcados
+                        </strong>
+                        <span>Gols marcados</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.GolsMarcados, resultado.TimeA.Estatisticas.GolsMarcados)">
+                            @resultado.TimeB.Estatisticas.GolsMarcados
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.GolsSofridos, resultado.TimeB.Estatisticas.GolsSofridos, menorMelhor: true)">
+                            @resultado.TimeA.Estatisticas.GolsSofridos
+                        </strong>
+                        <span>Gols sofridos</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.GolsSofridos, resultado.TimeA.Estatisticas.GolsSofridos, menorMelhor: true)">
+                            @resultado.TimeB.Estatisticas.GolsSofridos
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.SaldoGols, resultado.TimeB.Estatisticas.SaldoGols)">
+                            @resultado.TimeA.Estatisticas.SaldoGols
+                        </strong>
+                        <span>Saldo de gols</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.SaldoGols, resultado.TimeA.Estatisticas.SaldoGols)">
+                            @resultado.TimeB.Estatisticas.SaldoGols
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.Aproveitamento, resultado.TimeB.Estatisticas.Aproveitamento)">
+                            @Percentual(resultado.TimeA.Estatisticas.Aproveitamento)
+                        </strong>
+                        <span>Aproveitamento</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.Aproveitamento, resultado.TimeA.Estatisticas.Aproveitamento)">
+                            @Percentual(resultado.TimeB.Estatisticas.Aproveitamento)
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.MediaGolsMarcados, resultado.TimeB.Estatisticas.MediaGolsMarcados)">
+                            @resultado.TimeA.Estatisticas.MediaGolsMarcados.ToString("0.##")
+                        </strong>
+                        <span>Média gols marcados</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.MediaGolsMarcados, resultado.TimeA.Estatisticas.MediaGolsMarcados)">
+                            @resultado.TimeB.Estatisticas.MediaGolsMarcados.ToString("0.##")
+                        </strong>
+                    </div>
+
+                    <div>
+                        <strong class="@MelhorClasse(resultado.TimeA.Estatisticas.MediaGolsSofridos, resultado.TimeB.Estatisticas.MediaGolsSofridos, menorMelhor: true)">
+                            @resultado.TimeA.Estatisticas.MediaGolsSofridos.ToString("0.##")
+                        </strong>
+                        <span>Média gols sofridos</span>
+                        <strong class="@MelhorClasse(resultado.TimeB.Estatisticas.MediaGolsSofridos, resultado.TimeA.Estatisticas.MediaGolsSofridos, menorMelhor: true)">
+                            @resultado.TimeB.Estatisticas.MediaGolsSofridos.ToString("0.##")
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="fp-match-panel">
+                <div class="fp-match-panel-header">
+                    <div>
+                        <span>Forma recente</span>
+                        <h2>Últimos 5 jogos</h2>
+                    </div>
+                </div>
+
+                <div class="fp-recent-games-grid">
+                    <article class="fp-recent-team-card">
+                        <div class="fp-recent-team-head">
+                            <strong>@resultado.TimeA.Nome</strong>
+                            <div class="fp-form-strip">
+                                @foreach (var ultimo in resultado.TimeA.UltimosJogos)
+                                {
+                                    <span class="fp-form-badge @ultimo.BadgeClasse">@ultimo.Resultado</span>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!resultado.TimeA.UltimosJogos.Any())
+                        {
+                            <div class="fp-empty-mini">
+                                Não há jogos finalizados suficientes para este time.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="fp-recent-game-list">
+                                @foreach (var ultimo in resultado.TimeA.UltimosJogos)
+                                {
+                                    <a asp-controller="Jogos"
+                                       asp-action="Details"
+                                       asp-route-id="@ultimo.JogoId"
+                                       class="fp-recent-game-row">
+                                        <span class="fp-form-badge @ultimo.BadgeClasse">@ultimo.Resultado</span>
+                                        <div>
+                                            <strong>@(ultimo.Mandante ? "vs" : "@") @ultimo.Adversario</strong>
+                                            <small>@ultimo.DataJogo.ToString("dd/MM/yyyy") · @ultimo.Campeonato</small>
+                                        </div>
+                                        <b>@ultimo.Placar</b>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </article>
+
+                    <article class="fp-recent-team-card">
+                        <div class="fp-recent-team-head">
+                            <strong>@resultado.TimeB.Nome</strong>
+                            <div class="fp-form-strip">
+                                @foreach (var ultimo in resultado.TimeB.UltimosJogos)
+                                {
+                                    <span class="fp-form-badge @ultimo.BadgeClasse">@ultimo.Resultado</span>
+                                }
+                            </div>
+                        </div>
+
+                        @if (!resultado.TimeB.UltimosJogos.Any())
+                        {
+                            <div class="fp-empty-mini">
+                                Não há jogos finalizados suficientes para este time.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="fp-recent-game-list">
+                                @foreach (var ultimo in resultado.TimeB.UltimosJogos)
+                                {
+                                    <a asp-controller="Jogos"
+                                       asp-action="Details"
+                                       asp-route-id="@ultimo.JogoId"
+                                       class="fp-recent-game-row">
+                                        <span class="fp-form-badge @ultimo.BadgeClasse">@ultimo.Resultado</span>
+                                        <div>
+                                            <strong>@(ultimo.Mandante ? "vs" : "@") @ultimo.Adversario</strong>
+                                            <small>@ultimo.DataJogo.ToString("dd/MM/yyyy") · @ultimo.Campeonato</small>
+                                        </div>
+                                        <b>@ultimo.Placar</b>
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </article>
+                </div>
+            </section>
+
+            <p class="fp-prediction-warning">
+                As análises são estimativas estatísticas para apoio aos palpites. Não garantem resultado e não devem ser tratadas como recomendação financeira ou garantia de ganho.
+            </p>
+        }
+    </div>
+</div>

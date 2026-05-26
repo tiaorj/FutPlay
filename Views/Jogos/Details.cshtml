@@ -34,11 +34,6 @@
             : fallback;
     }
 
-    string ResultadoCampanha(FutPlay.ViewModels.CampanhaTimeJogoViewModel campanha)
-    {
-        return $"{campanha.Vitorias}V {campanha.Empates}E {campanha.Derrotas}D";
-    }
-
     string Percentual(double valor)
     {
         return $"{valor:0.#}%";
@@ -509,6 +504,14 @@
                                 Ir para campeonato
                             </a>
                         }
+
+                        <a asp-controller="Estatisticas"
+                           asp-action="CompararTimes"
+                           asp-route-timeAId="@jogo.TimeCasaId"
+                           asp-route-timeBId="@jogo.TimeVisitanteId"
+                           asp-route-campeonatoId="@jogo.CampeonatoId">
+                            Comparar times
+                        </a>
                     </div>
                 </section>
             </aside>
