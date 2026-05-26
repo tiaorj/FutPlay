@@ -828,7 +828,7 @@ namespace FutPlay.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction("Index", "MinhasLigas");
             }
 
             var liga = await _context.Ligas
@@ -1136,7 +1136,7 @@ namespace FutPlay.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Index));
             }
 
             var liga = await _context.Ligas

@@ -1,7 +1,7 @@
 @model List<FutPlay.ViewModels.MinhaLigaViewModel>
 @using FutPlay.Settings
 @{
-    ViewData["Title"] = "Minhas Ligas";
+    ViewData["Title"] = "Meu Pitaco";
 
     var totalPontos = Model.Sum(l => l.Pontuacao);
     var melhorLiga = Model.OrderByDescending(l => l.Pontuacao).FirstOrDefault();
@@ -13,7 +13,7 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
-        <span>Seus bolões, palpites, rankings e convites</span>
+        <span>Meu Pitaco: suas ligas, palpites, rankings e convites</span>
 
         <a asp-controller="Ligas"
            asp-action="Create"
@@ -129,7 +129,7 @@
                 @if (!Model.Any())
                 {
                     <div class="fp-empty-mini m-3">
-                        Você ainda não participa de nenhuma liga. Crie seu próprio bolão ou entre usando um código de convite.
+                        Você ainda não participa de nenhuma liga. Crie sua primeira liga de palpites ou entre usando um código de convite.
                     </div>
 
                     <div class="d-flex flex-column flex-md-row gap-2 m-3">
@@ -150,7 +150,7 @@
                 {
                     <div class="fp-bet-league-list">
                         <div class="fp-match-list-title">
-                            <span>📊 Meus bolões</span>
+                            <span>📊 Meu Pitaco</span>
                             <small>@Model.Count liga(s)</small>
                         </div>
 
@@ -254,7 +254,7 @@
                 </div>
 
                 <p class="fp-side-text mt-3 mb-0">
-                    Quem cria uma liga pode gerenciar convites e editar informações do bolão.
+                    Quem cria uma liga pode gerenciar convites e editar informações do Meu Pitaco.
                 </p>
             </section>
         </aside>

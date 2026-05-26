@@ -1,14 +1,14 @@
 ﻿@model FutPlay.Models.Liga
 
 @{
-    ViewData["Title"] = "Criar Liga";
+    ViewData["Title"] = "Criar Liga Meu Pitaco";
 }
 
 <div class="container futplay-portal-shell">
 
     <section class="futplay-league-create-hero mb-4">
         <div>
-            <div class="futplay-league-kicker">Novo bolão</div>
+            <div class="futplay-league-kicker">Novo Meu Pitaco</div>
 
             <h1>Criar Liga</h1>
 
@@ -23,7 +23,7 @@
         <div class="futplay-rules-title">
             <span>🏆</span>
             <div>
-                <strong>Como funciona o bolão?</strong>
+                <strong>Como funciona o Meu Pitaco?</strong>
                 <small>Entenda o fluxo antes de criar sua liga</small>
             </div>
         </div>
@@ -63,7 +63,7 @@
                         <label asp-for="Nome" class="form-label fw-semibold"></label>
                         <input asp-for="Nome"
                                class="form-control form-control-lg"
-                               placeholder="Ex: Bolão Família Copa 2026" />
+                               placeholder="Ex: Meu Pitaco Família Copa 2026" />
                         <span asp-validation-for="Nome" class="text-danger"></span>
                     </div>
 
@@ -161,14 +161,14 @@
                     <div>
                         <strong>Liga privada</strong>
                         <p>
-                            Melhor para bolões com amigos, família, trabalho ou grupos fechados.
+                            Melhor para palpites com amigos, família, trabalho ou grupos fechados.
                         </p>
                     </div>
 
                     <div>
                         <strong>Liga pública</strong>
                         <p>
-                            Melhor para criar um bolão aberto, onde qualquer usuário pode participar.
+                            Melhor para criar uma liga aberta de palpites, onde qualquer usuário pode participar.
                         </p>
                     </div>
                 </div>
@@ -201,8 +201,8 @@
                 </p>
 
                 <ul class="futplay-league-name-examples">
-                    <li>Bolão Família Copa 2026</li>
-                    <li>Bolão da Firma</li>
+                    <li>Meu Pitaco Família Copa 2026</li>
+                    <li>Palpites da Firma</li>
                     <li>Amigos do Brasileirão</li>
                     <li>Desafio Libertadores</li>
                 </ul>

@@ -1,7 +1,7 @@
 @model List<FutPlay.ViewModels.LigaCatalogoItemViewModel>
 @using FutPlay.Settings
 @{
-    ViewData["Title"] = "Ligas";
+    ViewData["Title"] = "Meu Pitaco";
 
     var totalLigas = Model.Count;
     var totalParticipando = Model.Count(l => l.UsuarioParticipa);
@@ -11,7 +11,7 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
-        <span>Bolões públicos, rankings e entrada por convite</span>
+        <span>Meu Pitaco: ligas públicas, rankings e entrada por convite</span>
 
         @if (User.Identity != null && User.Identity.IsAuthenticated)
         {
@@ -97,7 +97,7 @@
 
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
-                        <a asp-controller="MinhasLigas" asp-action="Index">Meu bolão</a>
+                        <a asp-controller="MinhasLigas" asp-action="Index">Meu Pitaco</a>
                         <a asp-action="Create">Criar liga</a>
                     }
                     else
@@ -122,7 +122,7 @@
                 {
                     <div class="fp-bet-league-list">
                         <div class="fp-match-list-title">
-                            <span>🎯 Catálogo de bolões</span>
+                            <span>🎯 Catálogo Meu Pitaco</span>
                             <small>@Model.Count liga(s)</small>
                         </div>
 
@@ -161,7 +161,7 @@
                                 </div>
 
                                 <div class="fp-bet-league-actions">
-                                    @if (!User.Identity.IsAuthenticated)
+                                    @if (User.Identity?.IsAuthenticated != true)
                                     {
                                         <a href="/Identity/Account/Login?returnUrl=/Ligas"
                                            class="primary">

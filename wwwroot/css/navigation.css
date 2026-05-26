@@ -7,6 +7,40 @@
     text-decoration: none;
 }
 
+.fp-sports-strip-scroll {
+    min-width: 0;
+}
+
+.fp-sport-menu-dropdown {
+    align-items: stretch;
+    display: flex;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 1060;
+}
+
+.fp-sport-menu-dropdown .fp-sport-tab {
+    color: #fff;
+    min-width: 118px;
+}
+
+.fp-sport-menu-dropdown .dropdown-menu {
+    border: 1px solid #e0e5ec;
+    border-radius: 10px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .22);
+    font-size: .9rem;
+    margin-top: 0;
+    z-index: 2000;
+}
+
+.fp-sport-menu-dropdown .dropdown-item {
+    font-weight: 700;
+}
+
+.fp-sport-menu-dropdown .dropdown-item:active {
+    background: var(--fp-blue);
+}
+
 .fp-round-toolbar {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;

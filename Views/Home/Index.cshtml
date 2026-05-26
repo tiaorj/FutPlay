@@ -1,7 +1,7 @@
 @model FutPlay.ViewModels.DashboardViewModel
 @using FutPlay.Settings
 @{
-    ViewData["Title"] = "Portal de Futebol";
+    ViewData["Title"] = "Portal inteligente de futebol";
 
     var jogoDestaque = Model.ProximosJogos.FirstOrDefault()
         ?? Model.UltimosResultados.FirstOrDefault();
@@ -17,15 +17,15 @@
     <section class="fp-commercial-hero">
         <div class="container">
             <div class="fp-commercial-hero-content">
-                <span>FutPlay</span>
-                <h1>@AppBrand.Name</h1>
-                <p>@AppBrand.Description Acompanhe jogos, importe resultados e transforme cada rodada em disputa.</p>
+                <span>@AppBrand.Name</span>
+                <h1>Seu portal inteligente de futebol</h1>
+                <p>Acompanhe jogos, competições, times, classificações e análises estatísticas. Veja tendências das partidas, compare equipes e participe de palpites com a comunidade.</p>
 
                 <div class="fp-commercial-hero-actions">
                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                     {
                         <a asp-controller="MinhasLigas" asp-action="Index" class="btn btn-success">
-                            Minhas ligas
+                            Abrir Meu Pitaco
                         </a>
                     }
                     else
@@ -43,7 +43,7 @@
                 <div class="fp-commercial-hero-stats">
                     <div>
                         <strong>@Model.TotalLigas</strong>
-                        <span>Ligas</span>
+                        <span>Ligas Meu Pitaco</span>
                     </div>
                     <div>
                         <strong>@Model.TotalPalpites</strong>
@@ -115,20 +115,20 @@
         <section class="fp-commercial-feature-grid">
             <article class="fp-commercial-feature">
                 <span>01</span>
-                <h2>Ligas públicas e privadas</h2>
-                <p>Crie campeonatos de palpites, convide participantes e acompanhe o ranking em tempo real.</p>
+                <h2>Portal inteligente de futebol</h2>
+                <p>Jogos, competições, times, classificações e contexto para acompanhar a rodada em um só lugar.</p>
             </article>
 
             <article class="fp-commercial-feature">
                 <span>02</span>
-                <h2>Jogos sempre organizados</h2>
-                <p>Filtre por competição, rodada, favoritos e status para chegar rápido na partida certa.</p>
+                <h2>Estatísticas e tendências</h2>
+                <p>Compare equipes, acompanhe campanhas e prepare análises antes de cada partida.</p>
             </article>
 
             <article class="fp-commercial-feature">
                 <span>03</span>
-                <h2>Resultados integrados</h2>
-                <p>Atualize placares pela API-Football e recalcule classificação e pontuação dos palpites.</p>
+                <h2>Comunidade e Meu Pitaco</h2>
+                <p>Participe de ligas, envie palpites e dispute rankings com amigos e outros torcedores.</p>
             </article>
         </section>
 
@@ -256,7 +256,7 @@
             <aside class="col-xl-4 col-lg-5">
                 <section class="fp-commercial-cta-card">
                     <h2>Pronto para a próxima rodada?</h2>
-                    <p>Entre em uma liga, dê seus palpites e acompanhe cada ponto no ranking.</p>
+                    <p>Entre no Meu Pitaco, participe de uma liga e acompanhe cada ponto no ranking.</p>
                     <a asp-controller="Ligas" asp-action="Index" class="btn btn-success w-100">
                         Encontrar uma liga
                     </a>
@@ -264,7 +264,7 @@
 
                 <section class="fp-home-card mt-3">
                     <div class="fp-card-header-link">
-                        <h2>Ligas públicas</h2>
+                        <h2>Ligas públicas do Meu Pitaco</h2>
                         <a asp-controller="Ligas" asp-action="Index">Ver</a>
                     </div>
 
@@ -298,7 +298,7 @@
 
                 <section class="fp-home-card mt-3">
                     <div class="fp-card-header-link">
-                        <h2>Top participante</h2>
+                        <h2>Top participante Meu Pitaco</h2>
                         <span>@Model.TopParticipantes.Count destaque(s)</span>
                     </div>
 
