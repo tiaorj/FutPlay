@@ -17,6 +17,7 @@ namespace FutPlay.Data
         public DbSet<Liga> Ligas { get; set; }
         public DbSet<LigaParticipante> LigaParticipantes { get; set; }
         public DbSet<Palpite> Palpites { get; set; }
+        public DbSet<PalpiteComunidade> PalpitesComunidade { get; set; }
         public DbSet<Classificacao> Classificacoes { get; set; }
         public DbSet<Grupo> Grupos { get; set; }
         public DbSet<CampeonatoTime> CampeonatoTimes { get; set; }
@@ -35,6 +36,7 @@ namespace FutPlay.Data
             modelBuilder.Entity<Liga>().ToTable("FutPlay_Ligas");
             modelBuilder.Entity<LigaParticipante>().ToTable("FutPlay_LigaParticipantes");
             modelBuilder.Entity<Palpite>().ToTable("FutPlay_Palpites");
+            modelBuilder.Entity<PalpiteComunidade>().ToTable("FutPlay_PalpitesComunidade");
             modelBuilder.Entity<Classificacao>().ToTable("FutPlay_Classificacoes");
             modelBuilder.Entity<Grupo>().ToTable("FutPlay_Grupos");
             modelBuilder.Entity<CampeonatoTime>().ToTable("FutPlay_CampeonatoTimes");
@@ -98,6 +100,17 @@ namespace FutPlay.Data
 
             modelBuilder.Entity<Palpite>()
                 .HasIndex(p => p.JogoId);
+
+            modelBuilder.Entity<PalpiteComunidade>()
+                .HasIndex(p => new { p.JogoId, p.UsuarioId })
+                .IsUnique()
+                .HasDatabaseName("UX_FutPlay_PalpitesComunidade_Jogo_Usuario");
+
+            modelBuilder.Entity<PalpiteComunidade>()
+                .HasIndex(p => p.UsuarioId);
+
+            modelBuilder.Entity<PalpiteComunidade>()
+                .HasIndex(p => p.ResultadoPrevisto);
 
             modelBuilder.Entity<Jogo>()
                 .HasIndex(j => j.CampeonatoId);
@@ -228,6 +241,18 @@ namespace FutPlay.Data
                 .WithMany()
                 .HasForeignKey(p => p.JogoId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<PalpiteComunidade>()
+                .HasOne(p => p.Jogo)
+                .WithMany()
+                .HasForeignKey(p => p.JogoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<PalpiteComunidade>()
+                .HasOne(p => p.Usuario)
+                .WithMany()
+                .HasForeignKey(p => p.UsuarioId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TimeFavorito>()
                 .HasOne(f => f.Usuario)

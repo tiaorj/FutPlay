@@ -1267,6 +1267,199 @@
     white-space: nowrap;
 }
 
+.fp-community-pick-panel {
+    display: grid;
+    gap: 12px;
+}
+
+.fp-community-total,
+.fp-community-score-leader,
+.fp-community-user-pick,
+.fp-community-result,
+.fp-community-login-callout {
+    background: #f8fbff;
+    border: 1px solid #e7edf5;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.fp-community-total span,
+.fp-community-score-leader span,
+.fp-community-user-pick span,
+.fp-community-result span,
+.fp-community-bar span,
+.fp-community-score-inputs span {
+    color: var(--fp-brand-muted);
+    display: block;
+    font-size: .74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.fp-community-total strong,
+.fp-community-score-leader strong,
+.fp-community-user-pick strong,
+.fp-community-result strong {
+    color: var(--fp-brand-ink);
+    display: block;
+    font-weight: 950;
+    margin-top: 4px;
+}
+
+.fp-community-score-leader strong {
+    color: var(--fp-brand-blue-strong);
+    font-size: 1.45rem;
+    line-height: 1;
+}
+
+.fp-community-score-leader small,
+.fp-community-user-pick small,
+.fp-community-result small {
+    color: var(--fp-brand-muted);
+    display: block;
+    font-size: .82rem;
+    font-weight: 800;
+    margin-top: 4px;
+}
+
+.fp-community-bars {
+    display: grid;
+    gap: 9px;
+}
+
+.fp-community-bar {
+    display: grid;
+    gap: 7px;
+}
+
+.fp-community-bar div {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.fp-community-bar strong {
+    color: var(--fp-brand-ink);
+    font-size: .86rem;
+    font-weight: 950;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-community-bar i {
+    background: linear-gradient(90deg, var(--fp-brand-blue), var(--fp-brand-green));
+    border-radius: 999px;
+    display: block;
+    height: 8px;
+    max-width: 100%;
+}
+
+.fp-community-score-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.fp-community-score-list span {
+    background: #e9efff;
+    border-radius: 999px;
+    color: var(--fp-brand-blue-strong);
+    font-size: .78rem;
+    font-weight: 950;
+    padding: 6px 9px;
+}
+
+.fp-community-score-list b {
+    color: var(--fp-brand-green-dark);
+}
+
+.fp-community-result strong.success,
+.fp-community-result small.success {
+    color: var(--fp-brand-green-dark);
+}
+
+.fp-community-result strong.miss,
+.fp-community-result small.miss {
+    color: #b42318;
+}
+
+.fp-community-form {
+    display: grid;
+    gap: 10px;
+}
+
+.fp-community-options {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fp-community-options label {
+    margin: 0;
+}
+
+.fp-community-options input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.fp-community-options span {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #c8d6ee;
+    border-radius: 8px;
+    color: var(--fp-brand-blue-strong);
+    cursor: pointer;
+    display: flex;
+    font-size: .82rem;
+    font-weight: 950;
+    justify-content: center;
+    min-height: 42px;
+    padding: 8px;
+    text-align: center;
+}
+
+.fp-community-options input:checked + span {
+    background: #101827;
+    border-color: #101827;
+    color: #fff;
+}
+
+.fp-community-score-inputs {
+    align-items: end;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.fp-community-score-inputs label {
+    margin: 0;
+}
+
+.fp-community-score-inputs input {
+    border: 1px solid #c8d6ee;
+    border-radius: 8px;
+    color: var(--fp-brand-ink);
+    font-weight: 950;
+    height: 42px;
+    text-align: center;
+    width: 100%;
+}
+
+.fp-community-score-inputs b {
+    color: var(--fp-brand-muted);
+    font-weight: 950;
+    padding-bottom: 9px;
+}
+
+.fp-community-login-callout {
+    display: grid;
+    gap: 10px;
+}
+
 @media (max-width: 991.98px) {
     .fp-search-hero,
     .fp-search-grid,
@@ -1304,7 +1497,8 @@
     .fp-radar-score-row,
     .fp-radar-probs,
     .fp-radar-compact-list a,
-    .fp-radar-team-grid {
+    .fp-radar-team-grid,
+    .fp-community-options {
         grid-template-columns: 1fr;
     }
 

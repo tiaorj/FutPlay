@@ -41,6 +41,8 @@ namespace FutPlay.ViewModels
         public ClassificacaoPartidaViewModel? ClassificacaoVisitante { get; set; }
 
         public PrevisaoPartidaViewModel Previsao { get; set; } = new();
+
+        public PalpiteComunidadeResumoViewModel PalpiteComunidade { get; set; } = new();
     }
 
     public class CampanhaTimeJogoViewModel

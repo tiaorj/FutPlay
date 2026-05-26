@@ -5,6 +5,7 @@ using FutPlay.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -17,19 +18,22 @@ namespace FutPlay.Controllers
         private readonly PontuacaoService _pontuacaoService;
         private readonly ImportacaoResultadosService _importacaoResultadosService;
         private readonly AnalisePartidaService _analisePartidaService;
+        private readonly PalpiteComunidadeService _palpiteComunidadeService;
 
         public JogosController(
             AppDbContext context,
             ClassificacaoService classificacaoService,
             PontuacaoService pontuacaoService,
             ImportacaoResultadosService importacaoResultadosService,
-            AnalisePartidaService analisePartidaService)
+            AnalisePartidaService analisePartidaService,
+            PalpiteComunidadeService palpiteComunidadeService)
         {
             _context = context;
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
             _importacaoResultadosService = importacaoResultadosService;
             _analisePartidaService = analisePartidaService;
+            _palpiteComunidadeService = palpiteComunidadeService;
         }
 
         public async Task<IActionResult> Index(
@@ -245,6 +249,7 @@ namespace FutPlay.Controllers
                 .ToListAsync();
 
             var analise = await _analisePartidaService.AnalisarAsync(jogo);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var viewModel = new JogoDetalhesViewModel
             {
@@ -264,10 +269,31 @@ namespace FutPlay.Controllers
                 Comparativo = analise.Comparativo,
                 ClassificacaoCasa = analise.ClassificacaoCasa,
                 ClassificacaoVisitante = analise.ClassificacaoVisitante,
-                Previsao = analise.Previsao
+                Previsao = analise.Previsao,
+                PalpiteComunidade = await _palpiteComunidadeService.MontarResumoAsync(jogo, userId)
             };
 
             return View(viewModel);
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting("CriticalActions")]
+        public async Task<IActionResult> SalvarPalpiteComunidade(PalpiteComunidadeViewModel model)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Challenge();
+            }
+
+            var resultado = await _palpiteComunidadeService.SalvarAsync(model, userId);
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            return RedirectToAction(nameof(Details), new { id = model.JogoId });
         }
 
         [Authorize(Roles = AppRoles.Administrador)]

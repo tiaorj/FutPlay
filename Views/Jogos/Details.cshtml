@@ -38,6 +38,19 @@
     {
         return $"{valor:0.#}%";
     }
+
+    var comunidade = Model.PalpiteComunidade;
+    var resultadoSelecionado = comunidade.PalpiteUsuario?.ResultadoPrevisto ?? "Casa";
+
+    string ResultadoClasse(bool? acertou)
+    {
+        if (!acertou.HasValue)
+        {
+            return string.Empty;
+        }
+
+        return acertou.Value ? "success" : "miss";
+    }
 }
 
 <div class="fp-match-center-page">
@@ -380,14 +393,180 @@
                     </dl>
                 </section>
 
-                <section class="fp-match-panel">
+                <section class="fp-match-panel fp-community-pick-panel">
                     <div class="fp-match-panel-header">
                         <div>
-                            <span>Meu Pitaco</span>
-                            <h2>Palpites da comunidade</h2>
+                            <span>Comunidade</span>
+                            <h2>Palpite da comunidade</h2>
                         </div>
                     </div>
 
+                    <div class="fp-community-total">
+                        <span>Participação</span>
+                        <strong>@comunidade.TotalPalpites palpite(s)</strong>
+                    </div>
+
+                    <div class="fp-community-bars">
+                        <div class="fp-community-bar">
+                            <div>
+                                <strong>@NomeTime(jogo.TimeCasa, "Mandante")</strong>
+                                <span>@comunidade.PercentualCasa%</span>
+                            </div>
+                            <i style="width: @comunidade.PercentualCasa%"></i>
+                        </div>
+
+                        <div class="fp-community-bar">
+                            <div>
+                                <strong>Empate</strong>
+                                <span>@comunidade.PercentualEmpate%</span>
+                            </div>
+                            <i style="width: @comunidade.PercentualEmpate%"></i>
+                        </div>
+
+                        <div class="fp-community-bar">
+                            <div>
+                                <strong>@NomeTime(jogo.TimeVisitante, "Visitante")</strong>
+                                <span>@comunidade.PercentualVisitante%</span>
+                            </div>
+                            <i style="width: @comunidade.PercentualVisitante%"></i>
+                        </div>
+                    </div>
+
+                    @if (comunidade.TotalPalpites == 0)
+                    {
+                        <div class="fp-empty-mini">
+                            Seja o primeiro a deixar um palpite para esta partida.
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(comunidade.PlacarMaisEscolhido))
+                    {
+                        <div class="fp-community-score-leader">
+                            <span>Placar mais escolhido</span>
+                            <strong>@comunidade.PlacarMaisEscolhido</strong>
+                            <small>@comunidade.TotalPlacarMaisEscolhido palpite(s)</small>
+                        </div>
+                    }
+
+                    @if (comunidade.PlacaresMaisEscolhidos.Any())
+                    {
+                        <div class="fp-community-score-list">
+                            @foreach (var placar in comunidade.PlacaresMaisEscolhidos)
+                            {
+                                <span>@placar.Placar <b>@placar.Percentual%</b></span>
+                            }
+                        </div>
+                    }
+
+                    @if (comunidade.PalpiteUsuario != null)
+                    {
+                        <div class="fp-community-user-pick">
+                            <span>Seu palpite</span>
+                            <strong>@comunidade.PalpiteUsuario.ResultadoTexto</strong>
+                            @if (!string.IsNullOrWhiteSpace(comunidade.PalpiteUsuario.PlacarTexto))
+                            {
+                                <small>Placar: @comunidade.PalpiteUsuario.PlacarTexto</small>
+                            }
+                        </div>
+                    }
+
+                    @if (comunidade.JogoFinalizado && comunidade.PalpiteUsuario != null)
+                    {
+                        <div class="fp-community-result">
+                            <span>Resultado real: @placarFinal</span>
+                            <strong class="@ResultadoClasse(comunidade.UsuarioAcertouResultado)">
+                                @(comunidade.UsuarioAcertouResultado == true ? "Você acertou o resultado" : "Resultado diferente do seu palpite")
+                            </strong>
+                            @if (comunidade.UsuarioAcertouPlacarExato.HasValue)
+                            {
+                                <small class="@ResultadoClasse(comunidade.UsuarioAcertouPlacarExato)">
+                                    @(comunidade.UsuarioAcertouPlacarExato == true ? "Placar exato acertado" : "Placar exato não acertado")
+                                </small>
+                            }
+                        </div>
+                    }
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        if (comunidade.UsuarioPodePalpitar)
+                        {
+                            <form asp-action="SalvarPalpiteComunidade" method="post" class="fp-community-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="JogoId" value="@jogo.Id" />
+
+                                <div class="fp-community-options">
+                                    <label>
+                                        <input type="radio"
+                                               name="ResultadoPrevisto"
+                                               value="Casa"
+                                               checked="@(resultadoSelecionado == "Casa")" />
+                                        <span>Casa</span>
+                                    </label>
+
+                                    <label>
+                                        <input type="radio"
+                                               name="ResultadoPrevisto"
+                                               value="Empate"
+                                               checked="@(resultadoSelecionado == "Empate")" />
+                                        <span>Empate</span>
+                                    </label>
+
+                                    <label>
+                                        <input type="radio"
+                                               name="ResultadoPrevisto"
+                                               value="Visitante"
+                                               checked="@(resultadoSelecionado == "Visitante")" />
+                                        <span>Visitante</span>
+                                    </label>
+                                </div>
+
+                                <div class="fp-community-score-inputs">
+                                    <label>
+                                        <span>@Sigla(jogo.TimeCasa, "CAS")</span>
+                                        <input type="number"
+                                               name="GolsCasaPalpite"
+                                               min="0"
+                                               max="50"
+                                               value="@comunidade.PalpiteUsuario?.GolsCasaPalpite" />
+                                    </label>
+
+                                    <b>x</b>
+
+                                    <label>
+                                        <span>@Sigla(jogo.TimeVisitante, "VIS")</span>
+                                        <input type="number"
+                                               name="GolsVisitantePalpite"
+                                               min="0"
+                                               max="50"
+                                               value="@comunidade.PalpiteUsuario?.GolsVisitantePalpite" />
+                                    </label>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100">
+                                    Salvar palpite
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <div class="fp-empty-mini">
+                                @comunidade.MensagemBloqueio
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="fp-community-login-callout">
+                            <strong>Entre para deixar seu palpite.</strong>
+                            <a asp-area="Identity"
+                               asp-page="/Account/Login"
+                               asp-route-returnUrl="@returnUrl"
+                               class="btn btn-outline-primary btn-sm">
+                                Fazer login
+                            </a>
+                        </div>
+                    }
+
+                    @*
                     @if (Model.TotalPalpites == 0)
                     {
                         <div class="fp-empty-mini">
@@ -439,6 +618,7 @@
                             Média de @Model.MediaPontos.ToString("0.##") ponto(s) por palpite.
                         </p>
                     }
+                    *@
                 </section>
 
                 <section class="fp-match-panel">
