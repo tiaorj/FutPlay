@@ -1,0 +1,439 @@
+@model FutPlay.ViewModels.RadarRodadaViewModel
+
+@{
+    ViewData["Title"] = "Radar da Rodada";
+
+    string Iniciais(string nome)
+    {
+        return string.Join("", nome.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(p => p[0])).ToUpperInvariant();
+    }
+
+    string DataValor(DateTime? data)
+    {
+        return data.HasValue ? data.Value.ToString("yyyy-MM-dd") : string.Empty;
+    }
+
+    string BadgeClass(FutPlay.ViewModels.RadarJogoItemViewModel jogo)
+    {
+        if (jogo.Decisivo)
+        {
+            return "decisive";
+        }
+
+        if (jogo.Equilibrado)
+        {
+            return "balanced";
+        }
+
+        if (jogo.FavoritoClaro)
+        {
+            return "favorite";
+        }
+
+        if (jogo.TendenciaDeGols)
+        {
+            return "goals";
+        }
+
+        return "neutral";
+    }
+
+    string FormaClasse(string resultado)
+    {
+        return resultado == "V" ? "win" : resultado == "D" ? "loss" : "draw";
+    }
+}
+
+<div class="fp-radar-page">
+    <div class="container futplay-portal-shell">
+        <section class="futplay-page-hero futplay-page-hero-dark mb-4">
+            <div class="futplay-portal-kicker">Estatísticas</div>
+            <h1 class="futplay-page-title">Radar da Rodada</h1>
+            <p class="futplay-subtitle mb-0">
+                Destaques automáticos para entender jogos equilibrados, favoritos pelos números, tendência de gols e times em melhor momento.
+            </p>
+        </section>
+
+        <section class="fp-match-panel fp-radar-filter-panel">
+            <div class="fp-match-panel-header">
+                <div>
+                    <span>@Model.PeriodoResolvido</span>
+                    <h2>@Model.TituloContexto</h2>
+                </div>
+            </div>
+
+            <form asp-action="RadarRodada" method="get" class="fp-radar-filter-form">
+                <div>
+                    <label for="campeonatoId">Campeonato</label>
+                    <select id="campeonatoId" name="campeonatoId" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach (var campeonato in Model.Campeonatos)
+                        {
+                            <option value="@campeonato.Id" selected="@(Model.CampeonatoId == campeonato.Id)">
+                                @campeonato.Nome @campeonato.Ano
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label for="rodada">Rodada</label>
+                    <select id="rodada" name="rodada" class="form-select">
+                        <option value="">Automática</option>
+                        @foreach (var rodada in Model.Rodadas)
+                        {
+                            <option value="@rodada" selected="@(Model.Rodada == rodada)">
+                                @($"{rodada}ª rodada")
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label for="data">Data</label>
+                    <input id="data"
+                           name="data"
+                           class="form-control"
+                           type="date"
+                           value="@DataValor(Model.Data)" />
+                </div>
+
+                <div>
+                    <label for="periodo">Período</label>
+                    <select id="periodo" name="periodo" class="form-select">
+                        <option value="">Automático</option>
+                        <option value="hoje" selected="@(Model.Periodo == "hoje")">Hoje</option>
+                        <option value="proximos" selected="@(Model.Periodo == "proximos")">Próximos jogos</option>
+                        <option value="finalizados" selected="@(Model.Periodo == "finalizados")">Finalizados recentes</option>
+                        <option value="rodada-atual" selected="@(Model.Periodo == "rodada-atual")">Rodada atual</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    Atualizar radar
+                </button>
+            </form>
+        </section>
+
+        <section class="fp-radar-summary-grid">
+            <article>
+                <span>Jogos analisados</span>
+                <strong>@Model.Jogos.Count</strong>
+            </article>
+
+            <article>
+                <span>Equilibrados</span>
+                <strong>@Model.JogosEquilibrados.Count</strong>
+            </article>
+
+            <article>
+                <span>Favoritos</span>
+                <strong>@Model.FavoritosRodada.Count</strong>
+            </article>
+
+            <article>
+                <span>Tendência de gols</span>
+                <strong>@Model.TendenciaGols.Count</strong>
+            </article>
+        </section>
+
+        @if (!Model.Jogos.Any())
+        {
+            <section class="fp-match-panel">
+                <div class="fp-empty-mini">
+                    Nenhum jogo encontrado para os filtros selecionados.
+                </div>
+            </section>
+        }
+        else
+        {
+            <section class="fp-radar-section">
+                <div class="fp-match-panel-header">
+                    <div>
+                        <span>Visão geral</span>
+                        <h2>Destaques da rodada</h2>
+                    </div>
+                </div>
+
+                <div class="fp-radar-card-grid">
+                    @foreach (var jogo in Model.Jogos.Take(8))
+                    {
+                        <article class="fp-radar-game-card">
+                            <div class="fp-radar-game-top">
+                                <span>@jogo.Campeonato</span>
+                                <strong class="@BadgeClass(jogo)">@jogo.BadgePrincipal</strong>
+                            </div>
+
+                            <div class="fp-radar-score-row">
+                                <div>
+                                    <span class="fp-mini-crest">
+                                        @if (!string.IsNullOrWhiteSpace(jogo.EscudoCasa))
+                                        {
+                                            <img src="@jogo.EscudoCasa" alt="@jogo.TimeCasa" />
+                                        }
+                                        else
+                                        {
+                                            @Iniciais(jogo.TimeCasa)
+                                        }
+                                    </span>
+                                    <strong>@jogo.TimeCasa</strong>
+                                </div>
+
+                                <b>@jogo.Placar</b>
+
+                                <div>
+                                    <span class="fp-mini-crest">
+                                        @if (!string.IsNullOrWhiteSpace(jogo.EscudoVisitante))
+                                        {
+                                            <img src="@jogo.EscudoVisitante" alt="@jogo.TimeVisitante" />
+                                        }
+                                        else
+                                        {
+                                            @Iniciais(jogo.TimeVisitante)
+                                        }
+                                    </span>
+                                    <strong>@jogo.TimeVisitante</strong>
+                                </div>
+                            </div>
+
+                            <div class="fp-radar-probs">
+                                <span>Casa @jogo.ProbabilidadeCasa%</span>
+                                <span>Empate @jogo.ProbabilidadeEmpate%</span>
+                                <span>Visitante @jogo.ProbabilidadeVisitante%</span>
+                            </div>
+
+                            <p>@jogo.TextoResumo</p>
+
+                            <div class="fp-radar-card-footer">
+                                <span>@jogo.DataJogo.ToString("dd/MM HH:mm") · @(jogo.Rodada.HasValue ? $"{jogo.Rodada}ª rodada" : jogo.Status)</span>
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    Central da Partida
+                                </a>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </section>
+
+            <section class="fp-radar-two-columns">
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Hoje</span>
+                            <h2>Jogos de hoje</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.JogosHoje.Any())
+                    {
+                        <div class="fp-empty-mini">Nenhum jogo de hoje nos filtros atuais.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.JogosHoje)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@jogo.DataJogo.ToString("HH:mm")</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>@jogo.Tendencia</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Agenda</span>
+                            <h2>Próximos jogos</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.ProximosJogos.Any())
+                    {
+                        <div class="fp-empty-mini">Nenhum próximo jogo nos filtros atuais.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.ProximosJogos)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@jogo.DataJogo.ToString("dd/MM")</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>@jogo.IndicadorGols</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="fp-radar-two-columns">
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Equilíbrio</span>
+                            <h2>Jogos equilibrados</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.JogosEquilibrados.Any())
+                    {
+                        <div class="fp-empty-mini">Nenhum jogo equilibrado encontrado neste recorte.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.JogosEquilibrados)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@jogo.IndicadorEquilibrio%</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>Pouca diferença estatística entre os times</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Vantagem</span>
+                            <h2>Favoritos pelos números</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.FavoritosRodada.Any())
+                    {
+                        <div class="fp-empty-mini">Nenhum favorito claro nos filtros atuais.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.FavoritosRodada)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@Math.Max(jogo.ProbabilidadeCasa, jogo.ProbabilidadeVisitante)%</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>@jogo.Tendencia</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="fp-radar-two-columns">
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Gols</span>
+                            <h2>Tendência de gols</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.TendenciaGols.Any())
+                    {
+                        <div class="fp-empty-mini">Nenhum jogo com tendência forte de gols neste recorte.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.TendenciaGols)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@jogo.MediaGolsProjetada.ToString("0.#") gols</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>@jogo.IndicadorGols</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="fp-match-panel">
+                    <div class="fp-match-panel-header">
+                        <div>
+                            <span>Impacto</span>
+                            <h2>Jogos decisivos</h2>
+                        </div>
+                    </div>
+
+                    @if (!Model.JogosDecisivos.Any())
+                    {
+                        <div class="fp-empty-mini">Não há jogos decisivos claros com os dados disponíveis.</div>
+                    }
+                    else
+                    {
+                        <div class="fp-radar-compact-list">
+                            @foreach (var jogo in Model.JogosDecisivos)
+                            {
+                                <a asp-controller="Jogos" asp-action="Details" asp-route-id="@jogo.JogoId">
+                                    <span>@(jogo.Rodada.HasValue ? $"{jogo.Rodada}ª" : "Fase")</span>
+                                    <strong>@jogo.TimeCasa x @jogo.TimeVisitante</strong>
+                                    <small>@jogo.MotivoDecisivo</small>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <section class="fp-match-panel">
+                <div class="fp-match-panel-header">
+                    <div>
+                        <span>Forma</span>
+                        <h2>Times em alta</h2>
+                    </div>
+                </div>
+
+                @if (!Model.TimesEmAlta.Any())
+                {
+                    <div class="fp-empty-mini">Ainda não há forma recente suficiente para destacar times em alta.</div>
+                }
+                else
+                {
+                    <div class="fp-radar-team-grid">
+                        @foreach (var time in Model.TimesEmAlta)
+                        {
+                            <a asp-controller="Jogos"
+                               asp-action="Details"
+                               asp-route-id="@time.JogoId"
+                               class="fp-radar-team-card">
+                                <span class="fp-mini-crest">
+                                    @if (!string.IsNullOrWhiteSpace(time.EscudoUrl))
+                                    {
+                                        <img src="@time.EscudoUrl" alt="@time.Nome" />
+                                    }
+                                    else
+                                    {
+                                        @Iniciais(time.Nome)
+                                    }
+                                </span>
+
+                                <div>
+                                    <strong>@time.Nome</strong>
+                                    <small>@time.AproveitamentoRecente.ToString("0.#")% · próximo: @time.ProximoAdversario</small>
+                                    <div class="fp-form-strip">
+                                        @foreach (var resultado in time.Forma.Take(5))
+                                        {
+                                            <span class="fp-form-badge @FormaClasse(resultado)">@resultado</span>
+                                        }
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                }
+            </section>
+        }
+
+        <p class="fp-prediction-warning">
+            As análises são estimativas estatísticas para apoio aos palpites. Não garantem resultado e não devem ser tratadas como recomendação financeira ou garantia de ganho.
+        </p>
+    </div>
+</div>

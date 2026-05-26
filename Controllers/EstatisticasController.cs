@@ -10,13 +10,16 @@ namespace FutPlay.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ComparadorTimesService _comparadorTimesService;
+        private readonly RadarRodadaService _radarRodadaService;
 
         public EstatisticasController(
             AppDbContext context,
-            ComparadorTimesService comparadorTimesService)
+            ComparadorTimesService comparadorTimesService,
+            RadarRodadaService radarRodadaService)
         {
             _context = context;
             _comparadorTimesService = comparadorTimesService;
+            _radarRodadaService = radarRodadaService;
         }
 
         public IActionResult Index()
@@ -66,6 +69,21 @@ namespace FutPlay.Controllers
                     }
                 }
             }
+
+            return View(viewModel);
+        }
+
+        public async Task<IActionResult> RadarRodada(
+            int? campeonatoId,
+            int? rodada,
+            DateTime? data,
+            string? periodo)
+        {
+            var viewModel = await _radarRodadaService.MontarAsync(
+                campeonatoId,
+                rodada,
+                data,
+                periodo);
 
             return View(viewModel);
         }

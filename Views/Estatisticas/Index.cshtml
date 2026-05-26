@@ -20,18 +20,22 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <a asp-controller="Estatisticas"
+                   asp-action="RadarRodada"
+                   class="fp-stat-tool-card">
+                    <span>Radar</span>
+                    <strong>Radar da Rodada</strong>
+                    <small>Veja jogos equilibrados, favoritos pelos números, tendência de gols e times em alta.</small>
+                </a>
+            </div>
+
+            <div class="col-md-4">
+                <a asp-controller="Estatisticas"
                    asp-action="CompararTimes"
                    class="fp-stat-tool-card">
                     <span>Comparador</span>
                     <strong>Comparador de Times</strong>
                     <small>Compare desempenho, forma recente, ataque, defesa e classificação.</small>
                 </a>
-            </div>
-
-            <div class="col-md-4">
-                <div class="futplay-empty h-100">
-                    Tendências por jogo
-                </div>
             </div>
 
             <div class="col-md-4">

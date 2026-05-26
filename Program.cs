@@ -92,6 +92,7 @@ builder.Services.AddScoped<ApiSyncLogService>();
 builder.Services.AddScoped<ConviteEmailService>();
 builder.Services.AddScoped<AnalisePartidaService>();
 builder.Services.AddScoped<ComparadorTimesService>();
+builder.Services.AddScoped<RadarRodadaService>();
 builder.Services.AddSingleton<AppTimeService>();
 
 builder.Services.AddHealthChecks()

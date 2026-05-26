@@ -41,9 +41,17 @@
                 : $"Jogos de {campeonatoSelecionado.Nome} por rodada")
         </span>
 
-        @if (User.IsInRole(AppRoles.Administrador))
-        {
-            <div class="fp-score-admin-actions">
+        <div class="fp-score-admin-actions">
+            <a asp-controller="Estatisticas"
+               asp-action="RadarRodada"
+               asp-route-campeonatoId="@Model.CampeonatoId"
+               asp-route-rodada="@Model.RodadaSelecionada"
+               class="fp-score-admin-link">
+                Ver Radar da Rodada
+            </a>
+
+            @if (User.IsInRole(AppRoles.Administrador))
+            {
                 @if (Model.CampeonatoId.HasValue)
                 {
                     <form asp-action="ImportarResultados" method="post" class="d-inline">
@@ -59,8 +67,8 @@
                 <a asp-action="Create" class="fp-score-admin-link">
                     + Novo jogo
                 </a>
-            </div>
-        }
+            }
+        </div>
     </div>
 
     <div class="row g-3">
