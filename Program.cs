@@ -90,6 +90,7 @@ builder.Services.AddScoped<MockDataService>();
 builder.Services.AddScoped<ImportacaoTimesService>();
 builder.Services.AddScoped<ApiSyncLogService>();
 builder.Services.AddScoped<ConviteEmailService>();
+builder.Services.AddScoped<AnalisePartidaService>();
 builder.Services.AddSingleton<AppTimeService>();
 
 builder.Services.AddHealthChecks()

@@ -16,17 +16,20 @@ namespace FutPlay.Controllers
         private readonly ClassificacaoService _classificacaoService;
         private readonly PontuacaoService _pontuacaoService;
         private readonly ImportacaoResultadosService _importacaoResultadosService;
+        private readonly AnalisePartidaService _analisePartidaService;
 
         public JogosController(
             AppDbContext context,
             ClassificacaoService classificacaoService,
             PontuacaoService pontuacaoService,
-            ImportacaoResultadosService importacaoResultadosService)
+            ImportacaoResultadosService importacaoResultadosService,
+            AnalisePartidaService analisePartidaService)
         {
             _context = context;
             _classificacaoService = classificacaoService;
             _pontuacaoService = pontuacaoService;
             _importacaoResultadosService = importacaoResultadosService;
+            _analisePartidaService = analisePartidaService;
         }
 
         public async Task<IActionResult> Index(
@@ -241,32 +244,7 @@ namespace FutPlay.Controllers
                 .Where(p => p.JogoId == jogo.Id && p.Ativo)
                 .ToListAsync();
 
-            var jogosCampeonato = await _context.Jogos
-                .AsNoTracking()
-                .Where(j =>
-                    j.Ativo &&
-                    j.CampeonatoId == jogo.CampeonatoId &&
-                    j.Status == "Finalizado" &&
-                    j.GolsCasa.HasValue &&
-                    j.GolsVisitante.HasValue)
-                .ToListAsync();
-
-            var confrontosDiretos = await _context.Jogos
-                .AsNoTracking()
-                .Include(j => j.Campeonato)
-                .Include(j => j.TimeCasa)
-                .Include(j => j.TimeVisitante)
-                .Where(j =>
-                    j.Ativo &&
-                    j.Id != jogo.Id &&
-                    j.Status == "Finalizado" &&
-                    j.GolsCasa.HasValue &&
-                    j.GolsVisitante.HasValue &&
-                    ((j.TimeCasaId == jogo.TimeCasaId && j.TimeVisitanteId == jogo.TimeVisitanteId) ||
-                     (j.TimeCasaId == jogo.TimeVisitanteId && j.TimeVisitanteId == jogo.TimeCasaId)))
-                .OrderByDescending(j => j.DataJogo)
-                .Take(5)
-                .ToListAsync();
+            var analise = await _analisePartidaService.AnalisarAsync(jogo);
 
             var viewModel = new JogoDetalhesViewModel
             {
@@ -278,15 +256,15 @@ namespace FutPlay.Controllers
                 PalpitesComPontos = palpites.Count(p => p.PontosGanhos > 0),
                 PalpitesPlacarExato = ContarPlacaresExatos(palpites, jogo),
                 TotalPontosDistribuidos = palpites.Sum(p => p.PontosGanhos),
-                ConfrontosDiretos = confrontosDiretos,
-                CampanhaCasa = CalcularCampanhaTime(
-                    jogosCampeonato,
-                    jogo.TimeCasaId,
-                    jogo.TimeCasa?.Nome ?? "Mandante"),
-                CampanhaVisitante = CalcularCampanhaTime(
-                    jogosCampeonato,
-                    jogo.TimeVisitanteId,
-                    jogo.TimeVisitante?.Nome ?? "Visitante")
+                ConfrontosDiretos = analise.ConfrontosDiretos,
+                CampanhaCasa = analise.CampanhaCasa,
+                CampanhaVisitante = analise.CampanhaVisitante,
+                UltimosJogosCasa = analise.UltimosJogosCasa,
+                UltimosJogosVisitante = analise.UltimosJogosVisitante,
+                Comparativo = analise.Comparativo,
+                ClassificacaoCasa = analise.ClassificacaoCasa,
+                ClassificacaoVisitante = analise.ClassificacaoVisitante,
+                Previsao = analise.Previsao
             };
 
             return View(viewModel);
@@ -463,43 +441,6 @@ namespace FutPlay.Controllers
             return palpites.Count(p =>
                 p.GolsCasaPalpite == jogo.GolsCasa!.Value &&
                 p.GolsVisitantePalpite == jogo.GolsVisitante!.Value);
-        }
-
-        private static CampanhaTimeJogoViewModel CalcularCampanhaTime(
-            List<Jogo> jogos,
-            int timeId,
-            string nome)
-        {
-            var campanha = new CampanhaTimeJogoViewModel
-            {
-                Nome = nome
-            };
-
-            foreach (var jogo in jogos.Where(j => j.TimeCasaId == timeId || j.TimeVisitanteId == timeId))
-            {
-                var mandante = jogo.TimeCasaId == timeId;
-                var golsPro = mandante ? jogo.GolsCasa!.Value : jogo.GolsVisitante!.Value;
-                var golsContra = mandante ? jogo.GolsVisitante!.Value : jogo.GolsCasa!.Value;
-
-                campanha.Jogos++;
-                campanha.GolsPro += golsPro;
-                campanha.GolsContra += golsContra;
-
-                if (golsPro > golsContra)
-                {
-                    campanha.Vitorias++;
-                }
-                else if (golsPro < golsContra)
-                {
-                    campanha.Derrotas++;
-                }
-                else
-                {
-                    campanha.Empates++;
-                }
-            }
-
-            return campanha;
         }
 
         private static HashSet<int> ObterCampeonatosParaRecalculo(Jogo jogoAnterior, Jogo jogoAtual)
