@@ -193,9 +193,14 @@ namespace FutPlay.Services
 
                 await _context.SaveChangesAsync();
 
-                if (houveJogoFinalizadoAlterado)
+                if (DeveRecalcularClassificacaoAposSincronizacao(campeonato, resultado))
                 {
-                    await RecalcularClassificacaoAsync(campeonato, resultado, usuarioId, usuarioEmail);
+                    await RecalcularClassificacaoAsync(
+                        campeonato,
+                        resultado,
+                        usuarioId,
+                        usuarioEmail,
+                        recalcularRanking: houveJogoFinalizadoAlterado);
                 }
 
                 resultado.Sucesso = !resultado.Erros.Any();
@@ -305,7 +310,12 @@ namespace FutPlay.Services
 
                 if (resultado.JogosAtualizados > 0)
                 {
-                    await RecalcularClassificacaoAsync(campeonato, resultado, usuarioId, usuarioEmail);
+                    await RecalcularClassificacaoAsync(
+                        campeonato,
+                        resultado,
+                        usuarioId,
+                        usuarioEmail,
+                        recalcularRanking: true);
                 }
 
                 resultado.Sucesso = !resultado.Erros.Any();
@@ -461,12 +471,17 @@ namespace FutPlay.Services
             Campeonato campeonato,
             CampeonatoSincronizacaoResultado resultado,
             string? usuarioId,
-            string? usuarioEmail)
+            string? usuarioEmail,
+            bool recalcularRanking)
         {
             var inicio = DateTime.UtcNow;
 
             await _classificacaoService.RecalcularClassificacaoCampeonatoAsync(campeonato.Id);
-            await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+
+            if (recalcularRanking)
+            {
+                await _pontuacaoService.RecalcularPontuacaoPalpitesCampeonatoAsync(campeonato.Id);
+            }
 
             resultado.ClassificacaoRecalculada = true;
             resultado.DataRecalculo = DateTime.Now;
@@ -481,10 +496,23 @@ namespace FutPlay.Services
                 Status = "Sucesso",
                 TotalProcessados = 1,
                 TotalAtualizados = 1,
-                Mensagem = "Classificação recalculada automaticamente após sincronização.",
+                Mensagem = recalcularRanking
+                    ? "Classificação e ranking recalculados automaticamente após sincronização."
+                    : "Classificação recalculada automaticamente após sincronização.",
                 UsuarioId = usuarioId,
                 UsuarioEmail = usuarioEmail
             });
+        }
+
+        private static bool DeveRecalcularClassificacaoAposSincronizacao(
+            Campeonato campeonato,
+            CampeonatoSincronizacaoResultado resultado)
+        {
+            return resultado.JogosCriados > 0 ||
+                   resultado.JogosAtualizados > 0 ||
+                   resultado.TimesCriados > 0 ||
+                   resultado.TimesAtualizados > 0 ||
+                   campeonato.UsaClassificacaoPorGrupos;
         }
 
         private async Task RegistrarLogAsync(

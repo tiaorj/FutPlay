@@ -1,4 +1,4 @@
-﻿@model List<FutPlay.ViewModels.ApiLigaViewModel>
+@model List<FutPlay.ViewModels.ApiLigaViewModel>
 @using FutPlay.Settings
 @{
     ViewData["Title"] = "Importações";
@@ -11,7 +11,7 @@
         <div>
             <h1 class="futplay-page-title mb-1">Importações</h1>
             <p class="futplay-subtitle mb-0">
-                Integração com API de futebol para importar campeonatos para o @AppBrand.Name.
+                Integrações administrativas para trazer campeonatos, jogos, resultados e validar a saúde das APIs.
             </p>
         </div>
         <div class="mt-3 mt-md-0">
@@ -28,38 +28,69 @@
         </div>
     }
 
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success">
-            @TempData["Sucesso"]
-        </div>
-    }
-
-    @if (TempData["Erro"] != null)
-    {
-        <div class="alert alert-warning">
-            @TempData["Erro"]
-        </div>
-    }
     @if (ViewBag.TotalEncontrado != null)
     {
         <div class="alert alert-secondary">
             Total encontrado na API: @ViewBag.TotalEncontrado
         </div>
     }
-    <div class="card shadow-sm futplay-section-card mb-4">
-        <div class="card-header bg-white">
-            <strong>Ambiente de testes</strong>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <section class="card shadow-sm futplay-section-card h-100">
+                <div class="card-header bg-white">
+                    <strong>API-Football principal</strong>
+                </div>
+
+                <div class="card-body d-flex flex-column gap-3">
+                    <p class="text-muted mb-0">
+                        Valide autenticação, disponibilidade e consumo diário antes de importar campeonatos ou jogos.
+                    </p>
+
+                    <form asp-action="TestarApiFootball" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success w-100">
+                            Testar conexão
+                        </button>
+                    </form>
+                </div>
+            </section>
         </div>
 
-        <div class="card-body">
-            <p class="text-muted">
-                Use dados mockados para testar o @AppBrand.Name sem consumir requisições da API.
-            </p>
+        <div class="col-lg-4">
+            <section class="card shadow-sm futplay-section-card h-100">
+                <div class="card-header bg-white">
+                    <strong>Histórico e auditoria</strong>
+                </div>
 
-            <a asp-controller="MockData" asp-action="Index" class="btn btn-warning">
-                Administrar Dados de Teste
-            </a>
+                <div class="card-body d-flex flex-column gap-3">
+                    <p class="text-muted mb-0">
+                        Consulte sucessos, falhas, sincronizações parciais e quantidade de registros alterados.
+                    </p>
+
+                    <a asp-action="Historico" class="btn btn-outline-secondary w-100">
+                        Abrir histórico
+                    </a>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-4">
+            <section class="card shadow-sm futplay-section-card h-100">
+                <div class="card-header bg-white">
+                    <strong>Ambiente de testes</strong>
+                </div>
+
+                <div class="card-body d-flex flex-column gap-3">
+                    <p class="text-muted mb-0">
+                        Gere e limpe dados mockados para testar portal, classificação, ligas e rankings sem gastar chamadas da API.
+                    </p>
+
+                    <a asp-controller="MockData" asp-action="Index" class="btn btn-warning w-100">
+                        Administrar dados de teste
+                    </a>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -77,7 +108,7 @@
 
         <div class="card-body">
             <p class="text-muted">
-                Use esta integração somente por ação do Admin. Ela atualiza jogos existentes por código da competição no football-data.org,
+                Use esta integração somente por ação do Admin. Ela atualiza jogos existentes por código da competição,
                 sem substituir a API-Football e sem chamar APIs em telas públicas.
             </p>
 
@@ -173,29 +204,12 @@
 
     <div class="card shadow-sm futplay-section-card mb-4">
         <div class="card-header bg-white">
-            <strong>Buscar ligas/campeonatos na API</strong>
-        </div>
-
-        <div class="card shadow-sm futplay-section-card mb-4">
-            <div class="card-header bg-white">
-                <strong>Dados de teste</strong>
-            </div>
-
-            <div class="card-body">
-                <p class="text-muted">
-                    Gere dados mockados para testar o @AppBrand.Name sem consumir requisições da API.
-                </p>
-
-                <form asp-action="GerarDadosTeste" method="post">
-                    <button type="submit" class="btn btn-warning">
-                        Gerar Dados de Teste
-                    </button>
-                </form>
-            </div>
+            <strong>Buscar ligas/campeonatos na API-Football</strong>
         </div>
 
         <div class="card-body">
             <form asp-action="BuscarLigas" method="post">
+                @Html.AntiForgeryToken()
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">País</label>
@@ -207,7 +221,7 @@
 
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Temporada</label>
-                        <input name="temporada" class="form-control" value="@(ViewBag.Temporada ?? 2024)" />
+                        <input name="temporada" class="form-control" value="@(ViewBag.Temporada ?? DateTime.Now.Year)" />
                     </div>
 
                     <div class="col-md-3 mb-3 d-flex align-items-end">

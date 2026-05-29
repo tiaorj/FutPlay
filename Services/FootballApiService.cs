@@ -1,13 +1,16 @@
-﻿using FutPlay.Models.Api;
+using FutPlay.Models.Api;
 using Microsoft.Extensions.Options;
+using System.Net;
 using System.Text.Json;
 
 namespace FutPlay.Services
 {
     public class FootballApiService
     {
+        private const string BaseUrlPadrao = "https://v3.football.api-sports.io";
         private const string LimiteApiMensagem = "Limite de requisições da API atingido. Tente novamente mais tarde.";
         private const string ErroApiMensagem = "Erro ao consultar API de futebol. Tente novamente mais tarde.";
+        private const string ApiKeyAusenteMensagem = "Configure ApiFootball:ApiKey antes de consultar a API-Football.";
 
         private readonly HttpClient _httpClient;
         private readonly ApiFootballOptions _options;
@@ -18,8 +21,16 @@ namespace FutPlay.Services
             _httpClient = httpClient;
             _options = options.Value;
 
-            _httpClient.BaseAddress = new Uri(_options.BaseUrl);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("x-apisports-key", _options.ApiKey);
+            _httpClient.BaseAddress = new Uri(
+                string.IsNullOrWhiteSpace(_options.BaseUrl)
+                    ? BaseUrlPadrao
+                    : _options.BaseUrl.TrimEnd('/'));
+
+            if (!string.IsNullOrWhiteSpace(_options.ApiKey))
+            {
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("x-apisports-key", _options.ApiKey);
+            }
+
             _logger = logger;
         }
 
@@ -79,8 +90,53 @@ namespace FutPlay.Services
             return await ConsultarApiAsync(url, "times", leagueId);
         }
 
+        public async Task<ApiFootballStatusResultado> VerificarStatusAsync()
+        {
+            using var resultado = await ConsultarApiAsync("/status", "status");
+
+            if (!resultado.RootElement.TryGetProperty("response", out var response) ||
+                response.ValueKind != JsonValueKind.Object)
+            {
+                return ApiFootballStatusResultado.Ok("API-Football respondeu, mas o status retornou em um formato inesperado.");
+            }
+
+            response.TryGetProperty("requests", out var requests);
+            response.TryGetProperty("subscription", out var subscription);
+
+            var requisicoesHoje = ObterInt(requests, "current");
+            var limiteDiario = ObterInt(requests, "limit_day");
+            var plano = ObterString(subscription, "plan");
+
+            var detalhes = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(plano))
+            {
+                detalhes.Add($"plano {plano}");
+            }
+
+            if (requisicoesHoje.HasValue && limiteDiario.HasValue)
+            {
+                detalhes.Add($"{requisicoesHoje}/{limiteDiario} requisições usadas hoje");
+            }
+            else if (requisicoesHoje.HasValue)
+            {
+                detalhes.Add($"{requisicoesHoje} requisições usadas hoje");
+            }
+
+            var sufixo = detalhes.Any()
+                ? $" ({string.Join("; ", detalhes)})"
+                : string.Empty;
+
+            return ApiFootballStatusResultado.Ok($"API-Football online e autenticada{sufixo}.");
+        }
+
         private async Task<JsonDocument> ConsultarApiAsync(string url, string recurso, int? apiLeagueId = null)
         {
+            if (string.IsNullOrWhiteSpace(_options.ApiKey))
+            {
+                throw new InvalidOperationException(ApiKeyAusenteMensagem);
+            }
+
             _logger.LogInformation(
                 "Iniciando consulta API-Football. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
                 recurso,
@@ -100,12 +156,12 @@ namespace FutPlay.Services
                     recurso,
                     apiLeagueId);
 
-                throw new Exception(ErroApiMensagem);
+                throw new InvalidOperationException(ErroApiMensagem, ex);
             }
 
             using (response)
             {
-                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
                     _logger.LogWarning(
                         "Limite de requisicoes da API-Football atingido. StatusCode: {StatusCode}. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
@@ -113,7 +169,18 @@ namespace FutPlay.Services
                         recurso,
                         apiLeagueId);
 
-                    throw new Exception(LimiteApiMensagem);
+                    throw new InvalidOperationException(LimiteApiMensagem);
+                }
+
+                if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                {
+                    _logger.LogWarning(
+                        "Chave da API-Football invalida ou sem permissao. StatusCode: {StatusCode}. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                        response.StatusCode,
+                        recurso,
+                        apiLeagueId);
+
+                    throw new InvalidOperationException("Chave da API-Football inválida, ausente ou sem permissão para este recurso.");
                 }
 
                 if (!response.IsSuccessStatusCode)
@@ -124,7 +191,7 @@ namespace FutPlay.Services
                         recurso,
                         apiLeagueId);
 
-                    throw new Exception(ErroApiMensagem);
+                    throw new InvalidOperationException(ErroApiMensagem);
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -134,8 +201,68 @@ namespace FutPlay.Services
                     recurso,
                     apiLeagueId);
 
-                return JsonDocument.Parse(json);
+                try
+                {
+                    return JsonDocument.Parse(json);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Resposta JSON invalida da API-Football. Recurso: {Recurso}. ApiLeagueId: {ApiLeagueId}",
+                        recurso,
+                        apiLeagueId);
+
+                    throw new InvalidOperationException("A API-Football respondeu, mas o JSON retornado não pôde ser lido.", ex);
+                }
             }
+        }
+
+        private static string? ObterString(JsonElement element, string propriedade)
+        {
+            return element.ValueKind == JsonValueKind.Object &&
+                   element.TryGetProperty(propriedade, out var valor) &&
+                   valor.ValueKind != JsonValueKind.Null
+                ? valor.GetString()
+                : null;
+        }
+
+        private static int? ObterInt(JsonElement element, string propriedade)
+        {
+            if (element.ValueKind != JsonValueKind.Object ||
+                !element.TryGetProperty(propriedade, out var valor) ||
+                valor.ValueKind == JsonValueKind.Null)
+            {
+                return null;
+            }
+
+            if (valor.ValueKind == JsonValueKind.Number && valor.TryGetInt32(out var numero))
+            {
+                return numero;
+            }
+
+            if (valor.ValueKind == JsonValueKind.String && int.TryParse(valor.GetString(), out numero))
+            {
+                return numero;
+            }
+
+            return null;
+        }
+    }
+
+    public class ApiFootballStatusResultado
+    {
+        public bool Sucesso { get; set; }
+
+        public string Mensagem { get; set; } = string.Empty;
+
+        public static ApiFootballStatusResultado Ok(string mensagem)
+        {
+            return new ApiFootballStatusResultado
+            {
+                Sucesso = true,
+                Mensagem = mensagem
+            };
         }
     }
 }

@@ -15,6 +15,7 @@ namespace FutPlay.Controllers
     {
         private readonly ImportacaoCampeonatoService _importacaoCampeonatoService;
         private readonly CampeonatoSincronizacaoService _campeonatoSincronizacaoService;
+        private readonly FootballApiService _footballApiService;
         private readonly FootballDataOrgService _footballDataOrgService;
         private readonly MockDataService _mockDataService;
         private readonly AppDbContext _context;
@@ -22,12 +23,14 @@ namespace FutPlay.Controllers
         public ImportacoesController(
             ImportacaoCampeonatoService importacaoCampeonatoService,
             CampeonatoSincronizacaoService campeonatoSincronizacaoService,
+            FootballApiService footballApiService,
             FootballDataOrgService footballDataOrgService,
             MockDataService mockDataService,
             AppDbContext context)
         {
             _importacaoCampeonatoService = importacaoCampeonatoService;
             _campeonatoSincronizacaoService = campeonatoSincronizacaoService;
+            _footballApiService = footballApiService;
             _footballDataOrgService = footballDataOrgService;
             _mockDataService = mockDataService;
             _context = context;
@@ -203,6 +206,23 @@ namespace FutPlay.Controllers
 
             await CarregarCampeonatosAsync();
             return View("Index", new List<ApiLigaViewModel>());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TestarApiFootball()
+        {
+            try
+            {
+                var resultado = await _footballApiService.VerificarStatusAsync();
+                TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+            }
+            catch (Exception ex)
+            {
+                TempData["Erro"] = $"Falha no teste da API-Football: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
