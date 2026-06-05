@@ -121,8 +121,20 @@ namespace FutPlay.Data
             modelBuilder.Entity<Jogo>()
                 .HasIndex(j => j.ApiFixtureId);
 
+            modelBuilder.Entity<Jogo>()
+                .HasIndex(j => j.FootballDataMatchId);
+
             modelBuilder.Entity<Campeonato>()
                 .HasIndex(c => c.ApiLeagueId);
+
+            modelBuilder.Entity<Campeonato>()
+                .HasIndex(c => c.FootballDataCompetitionId);
+
+            modelBuilder.Entity<Campeonato>()
+                .HasIndex(c => c.FootballDataCompetitionCode);
+
+            modelBuilder.Entity<Campeonato>()
+                .HasIndex(c => c.FootballDataSeason);
 
             modelBuilder.Entity<Campeonato>()
                 .Property(c => c.Formato)
@@ -145,6 +157,12 @@ namespace FutPlay.Data
 
             modelBuilder.Entity<ApiSyncLog>()
                 .HasIndex(l => l.CriadoEm);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.FootballDataCompetitionId);
+
+            modelBuilder.Entity<ApiSyncLog>()
+                .HasIndex(l => l.FootballDataMatchId);
 
             modelBuilder.Entity<Classificacao>()
                 .HasIndex(c => c.CampeonatoId);

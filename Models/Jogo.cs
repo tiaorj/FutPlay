@@ -53,5 +53,7 @@ namespace FutPlay.Models
         public bool Ativo { get; set; } = true;
 
         public int? ApiFixtureId { get; set; }
+
+        public int? FootballDataMatchId { get; set; }
     }
 }

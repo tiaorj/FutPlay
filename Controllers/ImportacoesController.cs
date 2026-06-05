@@ -210,6 +210,56 @@ namespace FutPlay.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VincularFootballDataOrgCompeticao(
+            int campeonatoId,
+            int footballDataCompetitionId,
+            string? competitionCode,
+            int? temporada)
+        {
+            var campeonato = await _context.Campeonatos
+                .FirstOrDefaultAsync(c => c.Id == campeonatoId);
+
+            if (campeonato == null)
+            {
+                TempData["Erro"] = "Campeonato local não encontrado para vincular ao football-data.org.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (footballDataCompetitionId <= 0)
+            {
+                TempData["Erro"] = "Competition ID inválido para o football-data.org.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            campeonato.FootballDataCompetitionId = footballDataCompetitionId;
+            campeonato.FootballDataCompetitionCode = string.IsNullOrWhiteSpace(competitionCode)
+                ? null
+                : competitionCode.Trim().ToUpperInvariant();
+            campeonato.FootballDataSeason = temporada.HasValue && temporada.Value > 0
+                ? temporada.Value
+                : campeonato.Ano;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Sucesso"] =
+                $"Campeonato vinculado ao football-data.org com sucesso. ID {footballDataCompetitionId}, code {(campeonato.FootballDataCompetitionCode ?? "-")}, temporada {campeonato.FootballDataSeason}.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TestarFootballDataOrgCompeticao(int campeonatoId)
+        {
+            var resultado = await _footballDataOrgService.ValidarCompeticaoCampeonatoAsync(campeonatoId);
+
+            TempData[resultado.Sucesso ? "Sucesso" : "Erro"] = resultado.Mensagem;
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> TestarApiFootball()
         {
             try
@@ -229,11 +279,13 @@ namespace FutPlay.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AtualizarResultadosFootballDataOrg(
             int campeonatoId,
-            string competitionCode,
-            int temporada)
+            int? footballDataCompetitionId,
+            string? competitionCode,
+            int? temporada)
         {
             var resultado = await _footballDataOrgService.AtualizarResultadosAsync(
                 campeonatoId,
+                footballDataCompetitionId,
                 competitionCode,
                 temporada,
                 ObterUsuarioId(),

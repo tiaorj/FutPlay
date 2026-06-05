@@ -20,6 +20,10 @@ namespace FutPlay.Models
 
         public int? ApiFixtureId { get; set; }
 
+        public int? FootballDataCompetitionId { get; set; }
+
+        public int? FootballDataMatchId { get; set; }
+
         public int? Temporada { get; set; }
 
         public DateTime DataInicio { get; set; }

@@ -4,6 +4,13 @@
     ViewData["Title"] = "Importações";
     var campeonatos = ViewBag.Campeonatos as List<Campeonato> ?? new List<Campeonato>();
     var footballDataOrgCompeticoes = ViewBag.FootballDataOrgCompeticoes as List<FutPlay.ViewModels.FootballDataOrgCompeticaoViewModel> ?? new List<FutPlay.ViewModels.FootballDataOrgCompeticaoViewModel>();
+
+    string DataFootballData(DateTime? data)
+    {
+        return data.HasValue
+            ? data.Value.ToString("yyyy-MM-dd")
+            : "-";
+    }
 }
 
 <div class="container mt-4">
@@ -108,14 +115,19 @@
 
         <div class="card-body">
             <p class="text-muted">
-                Use esta integração somente por ação do Admin. Ela atualiza jogos existentes por código da competição,
+                Use esta integração somente por ação do Admin. Ela atualiza jogos existentes por FootballDataMatchId,
                 sem substituir a API-Football e sem chamar APIs em telas públicas.
+            </p>
+            <p class="text-muted small">
+                Campos salvos no campeonato local: <strong>ID</strong> vira FootballDataCompetitionId,
+                <strong>Código</strong> vira FootballDataCompetitionCode e <strong>Temporada</strong> vira FootballDataSeason.
+                O ApiLeagueId da API-Football não é usado aqui.
             </p>
 
             <form asp-action="AtualizarResultadosFootballDataOrg" method="post" class="row g-3 align-items-end">
                 @Html.AntiForgeryToken()
 
-                <div class="col-lg-5">
+                <div class="col-lg-4">
                     <label class="form-label">Campeonato local</label>
                     <select name="campeonatoId" class="form-select" required>
                         <option value="">Selecione...</option>
@@ -123,17 +135,37 @@
                         {
                             <option value="@campeonato.Id">
                                 @campeonato.Nome @campeonato.Ano
+                                @if (campeonato.FootballDataCompetitionId.HasValue)
+                                {
+                                    <text> - FD #@campeonato.FootballDataCompetitionId</text>
+                                    @if (!string.IsNullOrWhiteSpace(campeonato.FootballDataCompetitionCode))
+                                    {
+                                        <text>/@campeonato.FootballDataCompetitionCode</text>
+                                    }
+                                    @if (campeonato.FootballDataSeason.HasValue)
+                                    {
+                                        <text> @campeonato.FootballDataSeason</text>
+                                    }
+                                }
                             </option>
                         }
                     </select>
                 </div>
 
                 <div class="col-md-3 col-lg-2">
+                    <label class="form-label">Competition ID</label>
+                    <input name="footballDataCompetitionId"
+                           type="number"
+                           class="form-control"
+                           placeholder="Ex: 2021"
+                           min="1" />
+                </div>
+
+                <div class="col-md-3 col-lg-2">
                     <label class="form-label">Código</label>
                     <input name="competitionCode"
                            class="form-control text-uppercase"
-                           placeholder="Ex: PL, CL, WC"
-                           required />
+                           placeholder="Ex: PL, CL, WC" />
                 </div>
 
                 <div class="col-md-3 col-lg-2">
@@ -141,13 +173,12 @@
                     <input name="temporada"
                            type="number"
                            class="form-control"
-                           value="@DateTime.Now.Year"
+                           placeholder="@DateTime.Now.Year"
                            min="2000"
-                           max="2100"
-                           required />
+                           max="2100" />
                 </div>
 
-                <div class="col-md-6 col-lg-3">
+                <div class="col-md-6 col-lg-2">
                     <button type="submit" class="btn btn-success w-100">
                         Atualizar resultados
                     </button>
@@ -155,8 +186,62 @@
             </form>
 
             <small class="text-muted d-block mt-3">
-                Se a competição não existir nessa API, mantenha atualização manual ou futura importação por planilha.
+                Use o ID listado pela própria football-data.org. Não use o ID da API-Football nessa integração.
             </small>
+
+            @if (campeonatos.Any())
+            {
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Campeonato local</th>
+                                <th>Vínculo football-data.org</th>
+                                <th>ID salvo</th>
+                                <th>Code salvo</th>
+                                <th>Season salva</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var campeonato in campeonatos)
+                            {
+                                var vinculado = campeonato.FootballDataCompetitionId.HasValue ||
+                                    !string.IsNullOrWhiteSpace(campeonato.FootballDataCompetitionCode);
+
+                                <tr>
+                                    <td>@campeonato.Nome @campeonato.Ano</td>
+                                    <td>
+                                        @if (vinculado)
+                                        {
+                                            <span class="badge bg-success">Vinculado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Não vinculado</span>
+                                        }
+                                    </td>
+                                    <td>@(campeonato.FootballDataCompetitionId?.ToString() ?? "-")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(campeonato.FootballDataCompetitionCode) ? "-" : campeonato.FootballDataCompetitionCode)</td>
+                                    <td>@(campeonato.FootballDataSeason?.ToString() ?? "-")</td>
+                                    <td class="text-end">
+                                        @if (vinculado)
+                                        {
+                                            <form asp-action="TestarFootballDataOrgCompeticao" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="campeonatoId" value="@campeonato.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                    Testar acesso
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
 
         @if (footballDataOrgCompeticoes.Any())
@@ -166,16 +251,23 @@
                     <thead>
                         <tr>
                             <th>Logo</th>
+                            <th>ID</th>
                             <th>Código</th>
                             <th>Competição</th>
                             <th>País</th>
                             <th>Tipo</th>
+                            <th>Plan</th>
+                            <th>currentSeason/startDate</th>
+                            <th>currentSeason/endDate</th>
+                            <th>currentSeason/currentMatchday</th>
                             <th>Temporada atual</th>
+                            <th>Vincular campeonato local</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var competicao in footballDataOrgCompeticoes)
                         {
+                            var temporadaVinculo = competicao.TemporadaAtual ?? DateTime.Now.Year;
                             <tr>
                                 <td>
                                     @if (!string.IsNullOrWhiteSpace(competicao.EmblemaUrl))
@@ -187,13 +279,46 @@
                                         <span>-</span>
                                     }
                                 </td>
-                                <td>
-                                    <strong>@(string.IsNullOrWhiteSpace(competicao.Codigo) ? competicao.Id : competicao.Codigo)</strong>
-                                </td>
+                                <td><strong>@competicao.Id</strong></td>
+                                <td>@(string.IsNullOrWhiteSpace(competicao.Codigo) ? "-" : competicao.Codigo)</td>
                                 <td>@competicao.Nome</td>
                                 <td>@competicao.Pais</td>
                                 <td>@competicao.Tipo</td>
+                                <td>@(string.IsNullOrWhiteSpace(competicao.Plano) ? "-" : competicao.Plano)</td>
+                                <td>@DataFootballData(competicao.TemporadaAtualInicio)</td>
+                                <td>@DataFootballData(competicao.TemporadaAtualFim)</td>
+                                <td>@(competicao.RodadaAtual?.ToString() ?? "-")</td>
                                 <td>@(competicao.TemporadaAtual.HasValue ? competicao.TemporadaAtual.Value.ToString() : "-")</td>
+                                <td>
+                                    <form asp-action="VincularFootballDataOrgCompeticao" method="post" class="d-flex flex-column flex-xl-row gap-2">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="footballDataCompetitionId" value="@competicao.Id" />
+                                        <input type="hidden" name="competitionCode" value="@competicao.Codigo" />
+
+                                        <select name="campeonatoId" class="form-select form-select-sm" required>
+                                            <option value="">Campeonato local...</option>
+                                            @foreach (var campeonato in campeonatos)
+                                            {
+                                                var jaVinculado = campeonato.FootballDataCompetitionId == competicao.Id;
+                                                <option value="@campeonato.Id" selected="@jaVinculado">
+                                                    @campeonato.Nome @campeonato.Ano
+                                                </option>
+                                            }
+                                        </select>
+
+                                        <input name="temporada"
+                                               type="number"
+                                               class="form-control form-control-sm"
+                                               min="1900"
+                                               max="2100"
+                                               value="@temporadaVinculo"
+                                               title="FootballDataSeason a salvar" />
+
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            Vincular
+                                        </button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                     </tbody>

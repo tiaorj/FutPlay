@@ -55,6 +55,30 @@
                     <span asp-validation-for="DataFim" class="text-danger"></span>
                 </div>
 
+                <div class="border rounded p-3 mb-3">
+                    <h2 class="h6 mb-3">football-data.org</h2>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="FootballDataCompetitionId" class="form-label"></label>
+                            <input asp-for="FootballDataCompetitionId" class="form-control" />
+                            <span asp-validation-for="FootballDataCompetitionId" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="FootballDataCompetitionCode" class="form-label"></label>
+                            <input asp-for="FootballDataCompetitionCode" class="form-control text-uppercase" placeholder="Ex: PL, CL, WC" />
+                            <span asp-validation-for="FootballDataCompetitionCode" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="FootballDataSeason" class="form-label"></label>
+                            <input asp-for="FootballDataSeason" class="form-control" placeholder="@DateTime.Now.Year" />
+                            <span asp-validation-for="FootballDataSeason" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-check mb-3">
                     <input asp-for="Ativo" class="form-check-input" />
                     <label asp-for="Ativo" class="form-check-label"></label>

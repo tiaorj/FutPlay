@@ -38,6 +38,16 @@ namespace FutPlay.Models
 
         public int? ApiLeagueId { get; set; }
 
+        [Display(Name = "FootballDataCompetitionId")]
+        public int? FootballDataCompetitionId { get; set; }
+
+        [StringLength(20)]
+        [Display(Name = "Código football-data.org")]
+        public string? FootballDataCompetitionCode { get; set; }
+
+        [Display(Name = "Temporada football-data.org")]
+        public int? FootballDataSeason { get; set; }
+
         [StringLength(100)]
         public string? Pais { get; set; }
 

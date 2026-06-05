@@ -182,6 +182,14 @@
                     <button type="submit">Atualizar resultados</button>
                 </form>
             }
+
+            @if (usuarioAdministrador && Model.Campeonato.FootballDataCompetitionId.HasValue)
+            {
+                <form asp-controller="Importacoes" asp-action="AtualizarResultadosFootballDataOrg" method="post">
+                    <input type="hidden" name="campeonatoId" value="@Model.Campeonato.Id" />
+                    <button type="submit">Atualizar football-data.org</button>
+                </form>
+            }
         </div>
     </section>
 

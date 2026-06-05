@@ -167,6 +167,7 @@ namespace FutPlay.Controllers
         public async Task<IActionResult> Create(Campeonato campeonato)
         {
             ValidarFormato(campeonato);
+            NormalizarCamposFootballData(campeonato);
 
             const int anoMin = 1900;
             int anoMax = DateTime.Now.Year + 5;
@@ -248,6 +249,7 @@ namespace FutPlay.Controllers
             }
 
             ValidarFormato(campeonato);
+            NormalizarCamposFootballData(campeonato);
 
             const int anoMin = 1900;
             int anoMax = DateTime.Now.Year + 5;
@@ -275,7 +277,25 @@ namespace FutPlay.Controllers
             {
                 try
                 {
-                    _context.Update(campeonato);
+                    var campeonatoExistente = await _context.Campeonatos
+                        .FirstOrDefaultAsync(c => c.Id == id);
+
+                    if (campeonatoExistente == null)
+                    {
+                        return NotFound();
+                    }
+
+                    campeonatoExistente.Nome = campeonato.Nome;
+                    campeonatoExistente.Ano = campeonato.Ano;
+                    campeonatoExistente.Tipo = campeonato.Tipo;
+                    campeonatoExistente.Formato = campeonato.Formato;
+                    campeonatoExistente.DataInicio = campeonato.DataInicio;
+                    campeonatoExistente.DataFim = campeonato.DataFim;
+                    campeonatoExistente.Ativo = campeonato.Ativo;
+                    campeonatoExistente.FootballDataCompetitionId = campeonato.FootballDataCompetitionId;
+                    campeonatoExistente.FootballDataCompetitionCode = campeonato.FootballDataCompetitionCode;
+                    campeonatoExistente.FootballDataSeason = campeonato.FootballDataSeason;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -1012,6 +1032,27 @@ namespace FutPlay.Controllers
             }
 
             campeonato.Formato = CampeonatoFormato.Normalizar(campeonato.Formato);
+        }
+
+        private void NormalizarCamposFootballData(Campeonato campeonato)
+        {
+            campeonato.FootballDataCompetitionCode = string.IsNullOrWhiteSpace(campeonato.FootballDataCompetitionCode)
+                ? null
+                : campeonato.FootballDataCompetitionCode.Trim().ToUpperInvariant();
+
+            if (campeonato.FootballDataCompetitionId is <= 0)
+            {
+                ModelState.AddModelError(
+                    nameof(Campeonato.FootballDataCompetitionId),
+                    "Informe um FootballDataCompetitionId válido.");
+            }
+
+            if (campeonato.FootballDataSeason is <= 0)
+            {
+                ModelState.AddModelError(
+                    nameof(Campeonato.FootballDataSeason),
+                    "Informe uma temporada válida para o football-data.org.");
+            }
         }
 
         private static bool EhFinalizado(Jogo jogo)

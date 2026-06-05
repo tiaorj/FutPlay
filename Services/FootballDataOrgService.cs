@@ -43,10 +43,11 @@ namespace FutPlay.Services
             _apiSyncLogService = apiSyncLogService;
             _logger = logger;
 
-            _httpClient.BaseAddress = new Uri(
-                string.IsNullOrWhiteSpace(_options.BaseUrl)
-                    ? "https://api.football-data.org/v4"
-                    : _options.BaseUrl.TrimEnd('/'));
+            var baseUrl = string.IsNullOrWhiteSpace(_options.BaseUrl)
+                ? "https://api.football-data.org/v4"
+                : _options.BaseUrl.Trim();
+
+            _httpClient.BaseAddress = new Uri($"{baseUrl.TrimEnd('/')}/");
 
             if (!string.IsNullOrWhiteSpace(_options.ApiKey))
             {
@@ -56,33 +57,17 @@ namespace FutPlay.Services
 
         public async Task<List<FootballDataOrgCompeticaoViewModel>> ListarCompeticoesAsync()
         {
-            using var documento = await ConsultarApiAsync("/competitions", "competições");
+            using var consulta = await ConsultarApiAsync("competitions/", "competições");
             var competicoes = new List<FootballDataOrgCompeticaoViewModel>();
 
-            if (!documento.RootElement.TryGetProperty("competitions", out var lista))
+            if (!consulta.Documento.RootElement.TryGetProperty("competitions", out var lista))
             {
                 return competicoes;
             }
 
             foreach (var item in lista.EnumerateArray())
             {
-                competicoes.Add(new FootballDataOrgCompeticaoViewModel
-                {
-                    Id = ObterInt(item, "id") ?? 0,
-                    Nome = ObterString(item, "name") ?? "Competição",
-                    Codigo = ObterString(item, "code") ?? string.Empty,
-                    Tipo = ObterString(item, "type") ?? string.Empty,
-                    Pais = item.TryGetProperty("area", out var area)
-                        ? ObterString(area, "name")
-                        : null,
-                    EmblemaUrl = ObterString(item, "emblem"),
-                    TemporadaAtual = item.TryGetProperty("currentSeason", out var temporada) &&
-                        temporada.ValueKind == JsonValueKind.Object &&
-                        temporada.TryGetProperty("startDate", out var startDate) &&
-                        DateTime.TryParse(startDate.GetString(), out var inicio)
-                            ? inicio.Year
-                            : null
-                });
+                competicoes.Add(ExtrairCompeticao(item));
             }
 
             return competicoes
@@ -91,39 +76,113 @@ namespace FutPlay.Services
                 .ToList();
         }
 
+        public async Task<FootballDataOrgCompetitionValidationResult> ValidarCompeticaoCampeonatoAsync(int campeonatoId)
+        {
+            var campeonato = await _context.Campeonatos
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == campeonatoId);
+
+            if (campeonato == null)
+            {
+                return FootballDataOrgCompetitionValidationResult.Falha(
+                    "Campeonato local não encontrado.",
+                    endpoint: null,
+                    statusCode: null);
+            }
+
+            var idOuCode = ObterIdentificadorCompeticao(campeonato);
+
+            if (string.IsNullOrWhiteSpace(idOuCode))
+            {
+                return FootballDataOrgCompetitionValidationResult.Falha(
+                    "Campeonato não vinculado ao football-data.org.",
+                    endpoint: null,
+                    statusCode: null);
+            }
+
+            return await ValidarCompeticaoAsync(idOuCode);
+        }
+
+        public async Task<FootballDataOrgCompetitionValidationResult> ValidarCompeticaoAsync(string idOuCode)
+        {
+            var identificador = NormalizarIdentificadorCompeticao(idOuCode);
+
+            if (string.IsNullOrWhiteSpace(identificador))
+            {
+                return FootballDataOrgCompetitionValidationResult.Falha(
+                    "Informe o Competition ID ou code do football-data.org.",
+                    endpoint: null,
+                    statusCode: null);
+            }
+
+            var endpointRelativo = $"competitions/{Uri.EscapeDataString(identificador)}";
+            var endpoint = CriarEndpointResumo(endpointRelativo);
+
+            try
+            {
+                using var consulta = await ConsultarApiAsync(endpointRelativo, $"competição {identificador}");
+                var competicao = ExtrairCompeticao(consulta.Documento.RootElement);
+                var resultado = FootballDataOrgCompetitionValidationResult.Ok(
+                    endpoint,
+                    (int)consulta.StatusCode,
+                    competicao);
+
+                resultado.TemporadasDisponiveis = ExtrairTemporadasDisponiveis(consulta.Documento.RootElement);
+
+                return resultado;
+            }
+            catch (FootballDataOrgHttpException ex)
+            {
+                return FootballDataOrgCompetitionValidationResult.Falha(
+                    ex.UserMessage,
+                    ex.Endpoint,
+                    (int)ex.StatusCode);
+            }
+        }
+
         public async Task<List<FootballDataOrgMatchData>> BuscarJogosCompeticaoAsync(
-            string competitionCode,
+            int competitionId,
             int temporada)
         {
-            var codigo = NormalizarCodigoCompeticao(competitionCode);
-            using var documento = await ConsultarApiAsync(
-                $"/competitions/{Uri.EscapeDataString(codigo)}/matches?season={temporada}",
-                $"jogos {codigo}/{temporada}");
+            var resposta = await BuscarJogosCompeticaoComDetalhesAsync(
+                competitionId.ToString(CultureInfo.InvariantCulture),
+                temporada);
 
-            var jogos = new List<FootballDataOrgMatchData>();
+            return resposta.Jogos;
+        }
 
-            if (!documento.RootElement.TryGetProperty("matches", out var matches))
-            {
-                return jogos;
-            }
+        public async Task<List<FootballDataOrgMatchData>> BuscarJogosCompeticaoAsync(
+            string competitionIdentifier,
+            int temporada)
+        {
+            var resposta = await BuscarJogosCompeticaoComDetalhesAsync(competitionIdentifier, temporada);
 
-            foreach (var item in matches.EnumerateArray())
-            {
-                jogos.Add(ExtrairJogo(item));
-            }
+            return resposta.Jogos;
+        }
 
-            return jogos;
+        public Task<FootballDataOrgSyncResultado> AtualizarResultadosAsync(
+            int campeonatoId,
+            string? usuarioId = null,
+            string? usuarioEmail = null)
+        {
+            return AtualizarResultadosAsync(
+                campeonatoId,
+                footballDataCompetitionId: null,
+                competitionCode: null,
+                temporada: null,
+                usuarioId,
+                usuarioEmail);
         }
 
         public async Task<FootballDataOrgSyncResultado> AtualizarResultadosAsync(
             int campeonatoId,
-            string competitionCode,
-            int temporada,
+            int? footballDataCompetitionId,
+            string? competitionCode,
+            int? temporada,
             string? usuarioId = null,
             string? usuarioEmail = null)
         {
             var inicio = DateTime.UtcNow;
-            var codigo = NormalizarCodigoCompeticao(competitionCode);
             var resultado = FootballDataOrgSyncResultado.Iniciar(campeonatoId);
 
             var campeonato = await _context.Campeonatos
@@ -134,23 +193,94 @@ namespace FutPlay.Services
                 return FootballDataOrgSyncResultado.Falha("Campeonato não encontrado.", campeonatoId);
             }
 
-            if (string.IsNullOrWhiteSpace(codigo))
+            resultado.CampeonatoNome = $"{campeonato.Nome} {campeonato.Ano}".Trim();
+
+            AplicarConfiguracaoFootballData(campeonato, footballDataCompetitionId, competitionCode, temporada);
+
+            var idOuCode = ObterIdentificadorCompeticao(campeonato);
+
+            if (string.IsNullOrWhiteSpace(idOuCode))
             {
-                return FootballDataOrgSyncResultado.Falha("Informe o código da competição no football-data.org.", campeonatoId);
+                resultado.Sucesso = false;
+                resultado.Mensagem = "Campeonato não vinculado ao football-data.org.";
+                resultado.Erros.Add(resultado.Mensagem);
+
+                await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail);
+                return resultado;
             }
+
+            resultado.FootballDataCompetitionId = campeonato.FootballDataCompetitionId;
+            resultado.FootballDataCompetitionCode = campeonato.FootballDataCompetitionCode;
 
             try
             {
-                var jogosApi = await BuscarJogosCompeticaoAsync(codigo, temporada);
-                resultado.TotalProcessados = jogosApi.Count;
+                var validacao = await ValidarCompeticaoAsync(idOuCode);
+                resultado.EndpointValidacao = validacao.Endpoint;
+                resultado.StatusHttpValidacao = validacao.StatusHttp;
+                resultado.CompeticaoFootballDataNome = validacao.Nome;
+                resultado.CompeticaoFootballDataCode = validacao.Codigo;
+                resultado.CompeticaoFootballDataId = validacao.Id;
 
-                if (!jogosApi.Any())
+                if (!validacao.Sucesso)
                 {
                     resultado.Sucesso = false;
-                    resultado.Mensagem = $"Nenhum jogo encontrado no {Fonte} para {codigo}/{temporada}. Mantenha atualização manual ou importação por planilha.";
-                    resultado.Erros.Add(resultado.Mensagem);
+                    resultado.Erros.Add(validacao.Mensagem);
+                    resultado.Mensagem = MontarMensagemSincronizacao(resultado);
 
-                    await RegistrarLogAsync(campeonato, inicio, codigo, temporada, resultado, usuarioId, usuarioEmail);
+                    await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail);
+                    return resultado;
+                }
+
+                AtualizarVinculoComCompeticaoValidada(campeonato, validacao);
+
+                var temporadaSincronizacao = campeonato.FootballDataSeason
+                    ?? validacao.TemporadaAtual
+                    ?? campeonato.Ano;
+
+                if (!campeonato.FootballDataSeason.HasValue)
+                {
+                    campeonato.FootballDataSeason = temporadaSincronizacao;
+                }
+
+                resultado.FootballDataCompetitionId = campeonato.FootballDataCompetitionId;
+                resultado.FootballDataCompetitionCode = campeonato.FootballDataCompetitionCode;
+                resultado.Temporada = temporadaSincronizacao;
+
+                if (temporadaSincronizacao is < 1900 or > 2100)
+                {
+                    resultado.Sucesso = false;
+                    resultado.Erros.Add("FootballDataSeason inválida para consulta no football-data.org.");
+                    resultado.Mensagem = MontarMensagemSincronizacao(resultado);
+
+                    await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail);
+                    return resultado;
+                }
+
+                if (validacao.TemporadasDisponiveis.Any() &&
+                    !validacao.TemporadasDisponiveis.Contains(temporadaSincronizacao))
+                {
+                    resultado.Avisos.Add(
+                        $"FootballDataSeason {temporadaSincronizacao} não aparece nas temporadas retornadas pela competição validada.");
+                }
+
+                if (_context.ChangeTracker.HasChanges())
+                {
+                    await _context.SaveChangesAsync();
+                }
+
+                var jogosApi = await BuscarJogosCompeticaoComDetalhesAsync(idOuCode, temporadaSincronizacao);
+                resultado.EndpointJogos = jogosApi.Endpoint;
+                resultado.StatusHttpJogos = jogosApi.StatusHttp;
+                resultado.JogosRetornadosApi = jogosApi.Jogos.Count;
+                resultado.TotalProcessados = jogosApi.Jogos.Count;
+
+                if (!jogosApi.Jogos.Any())
+                {
+                    resultado.Sucesso = false;
+                    resultado.Erros.Add("Nenhum jogo retornado para essa competição/temporada/filtros.");
+                    resultado.Mensagem = MontarMensagemSincronizacao(resultado);
+
+                    await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail);
                     return resultado;
                 }
 
@@ -160,28 +290,29 @@ namespace FutPlay.Services
                     .Where(j => j.CampeonatoId == campeonato.Id && j.Ativo)
                     .ToListAsync();
 
-                foreach (var jogoApi in jogosApi)
+                resultado.JogosLocaisBanco = jogosLocais.Count;
+                resultado.JogosLocaisComFootballDataMatchId = jogosLocais.Count(j => j.FootballDataMatchId.HasValue);
+
+                var jogosPorFootballDataMatchId = CriarMapaJogosPorFootballDataMatchId(jogosLocais, resultado);
+
+                foreach (var jogoApi in jogosApi.Jogos)
                 {
-                    var jogoLocal = LocalizarJogo(jogosLocais, jogoApi);
-
-                    if (jogoLocal == null)
+                    try
                     {
-                        resultado.JogosIgnorados++;
-                        continue;
+                        ProcessarJogoApi(
+                            jogosLocais,
+                            jogosPorFootballDataMatchId,
+                            jogoApi,
+                            resultado);
                     }
-
-                    if (!AplicarDadosJogo(jogoLocal, jogoApi))
+                    catch (Exception ex)
                     {
-                        resultado.JogosIgnorados++;
-                        continue;
-                    }
-
-                    _context.Jogos.Update(jogoLocal);
-                    resultado.JogosAtualizados++;
-
-                    if (jogoApi.EstaFinalizado)
-                    {
-                        resultado.JogosFinalizados++;
+                        resultado.Erros.Add($"Match {jogoApi.MatchId}: {ex.Message}");
+                        _logger.LogError(
+                            ex,
+                            "Erro ao atualizar resultado via football-data.org. CampeonatoId: {CampeonatoId}. FootballDataMatchId: {FootballDataMatchId}",
+                            campeonato.Id,
+                            jogoApi.MatchId);
                     }
                 }
 
@@ -195,15 +326,22 @@ namespace FutPlay.Services
                     resultado.RankingRecalculado = true;
                 }
 
-                resultado.Sucesso = true;
-                resultado.Mensagem =
-                    $"Sincronização {Fonte} concluída para {codigo}/{temporada}. " +
-                    $"Jogos atualizados: {resultado.JogosAtualizados}; ignorados: {resultado.JogosIgnorados}; finalizados: {resultado.JogosFinalizados}. " +
-                    (resultado.ClassificacaoRecalculada
-                        ? "Classificação e ranking dos bolões recalculados."
-                        : "Nenhum jogo existente foi alterado; fluxo manual segue disponível.");
+                resultado.Sucesso = !resultado.Erros.Any();
+                resultado.Mensagem = MontarMensagemSincronizacao(resultado);
 
-                await RegistrarLogAsync(campeonato, inicio, codigo, temporada, resultado, usuarioId, usuarioEmail);
+                await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail);
+
+                return resultado;
+            }
+            catch (FootballDataOrgHttpException ex)
+            {
+                resultado.Sucesso = false;
+                resultado.EndpointJogos = ex.Endpoint;
+                resultado.StatusHttpJogos = (int)ex.StatusCode;
+                resultado.Erros.Add(ex.UserMessage);
+                resultado.Mensagem = MontarMensagemSincronizacao(resultado);
+
+                await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail, ex.ToString());
 
                 return resultado;
             }
@@ -211,53 +349,161 @@ namespace FutPlay.Services
             {
                 _logger.LogError(
                     ex,
-                    "Erro ao sincronizar resultados via football-data.org. CampeonatoId: {CampeonatoId}. Codigo: {Codigo}. Temporada: {Temporada}",
+                    "Erro ao sincronizar resultados via football-data.org. CampeonatoId: {CampeonatoId}. FootballDataCompetitionId: {FootballDataCompetitionId}. Code: {Code}. Temporada: {Temporada}",
                     campeonato.Id,
-                    codigo,
-                    temporada);
+                    campeonato.FootballDataCompetitionId,
+                    campeonato.FootballDataCompetitionCode,
+                    resultado.Temporada);
 
                 resultado.Sucesso = false;
                 resultado.Mensagem = $"Erro ao sincronizar via {Fonte}: {ex.Message}";
                 resultado.Erros.Add(ex.Message);
 
-                await RegistrarLogAsync(campeonato, inicio, codigo, temporada, resultado, usuarioId, usuarioEmail, ex.ToString());
+                await RegistrarLogAsync(campeonato, inicio, resultado, usuarioId, usuarioEmail, ex.ToString());
 
                 return resultado;
             }
         }
 
-        private async Task<JsonDocument> ConsultarApiAsync(string url, string recurso)
+        private async Task<FootballDataOrgMatchesResponse> BuscarJogosCompeticaoComDetalhesAsync(
+            string competitionIdentifier,
+            int temporada)
         {
+            var identificador = NormalizarIdentificadorCompeticao(competitionIdentifier);
+
+            if (string.IsNullOrWhiteSpace(identificador))
+            {
+                throw new InvalidOperationException("Informe o Competition ID ou code do football-data.org.");
+            }
+
+            var endpointRelativo = $"competitions/{Uri.EscapeDataString(identificador)}/matches?season={temporada}";
+
+            using var consulta = await ConsultarApiAsync(
+                endpointRelativo,
+                $"jogos {identificador}/{temporada}");
+
+            var jogos = new List<FootballDataOrgMatchData>();
+
+            if (!consulta.Documento.RootElement.TryGetProperty("matches", out var matches))
+            {
+                return new FootballDataOrgMatchesResponse
+                {
+                    Jogos = jogos,
+                    Endpoint = consulta.Endpoint,
+                    StatusHttp = (int)consulta.StatusCode
+                };
+            }
+
+            foreach (var item in matches.EnumerateArray())
+            {
+                jogos.Add(ExtrairJogo(item));
+            }
+
+            return new FootballDataOrgMatchesResponse
+            {
+                Jogos = jogos,
+                Endpoint = consulta.Endpoint,
+                StatusHttp = (int)consulta.StatusCode
+            };
+        }
+
+        private void ProcessarJogoApi(
+            List<Jogo> jogosLocais,
+            Dictionary<int, Jogo> jogosPorFootballDataMatchId,
+            FootballDataOrgMatchData jogoApi,
+            FootballDataOrgSyncResultado resultado)
+        {
+            if (jogoApi.MatchId <= 0)
+            {
+                resultado.AdicionarIgnorado("API retornou jogo sem id");
+                return;
+            }
+
+            var vinculadoNestaExecucao = false;
+
+            if (!jogosPorFootballDataMatchId.TryGetValue(jogoApi.MatchId, out var jogoLocal))
+            {
+                jogoLocal = LocalizarJogoParaVinculo(jogosLocais, jogoApi, out var motivoIgnorado);
+
+                if (jogoLocal == null)
+                {
+                    resultado.AdicionarIgnorado(motivoIgnorado);
+                    return;
+                }
+
+                jogoLocal.FootballDataMatchId = jogoApi.MatchId;
+                jogosPorFootballDataMatchId[jogoApi.MatchId] = jogoLocal;
+                resultado.JogosVinculadosFootballData++;
+                vinculadoNestaExecucao = true;
+            }
+
+            resultado.JogosEncontradosBanco++;
+
+            if (!AplicarDadosJogo(jogoLocal, jogoApi))
+            {
+                if (!vinculadoNestaExecucao)
+                {
+                    resultado.AdicionarIgnorado("Jogo encontrado sem alterações");
+                }
+
+                return;
+            }
+
+            resultado.JogosAtualizados++;
+
+            if (jogoApi.EstaFinalizado)
+            {
+                resultado.JogosFinalizados++;
+            }
+        }
+
+        private static Dictionary<int, Jogo> CriarMapaJogosPorFootballDataMatchId(
+            List<Jogo> jogosLocais,
+            FootballDataOrgSyncResultado resultado)
+        {
+            var grupos = jogosLocais
+                .Where(j => j.FootballDataMatchId.HasValue)
+                .GroupBy(j => j.FootballDataMatchId!.Value)
+                .ToList();
+
+            foreach (var grupo in grupos.Where(g => g.Count() > 1))
+            {
+                resultado.Erros.Add(
+                    $"FootballDataMatchId duplicado no banco: {grupo.Key} ({grupo.Count()} jogos locais).");
+            }
+
+            return grupos.ToDictionary(g => g.Key, g => g.First());
+        }
+
+        private async Task<FootballDataOrgApiResponse> ConsultarApiAsync(string url, string recurso)
+        {
+            var endpoint = CriarEndpointResumo(url);
+
             if (string.IsNullOrWhiteSpace(_options.ApiKey))
             {
-                throw new InvalidOperationException("Configure FootballDataOrg:ApiKey antes de consultar o football-data.org.");
+                throw new FootballDataOrgHttpException(
+                    HttpStatusCode.Unauthorized,
+                    endpoint,
+                    "Chave football-data.org inválida ou não configurada.");
             }
 
             using var response = await _httpClient.GetAsync(url);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                throw new InvalidOperationException($"Competição ou recurso não encontrado no {Fonte}.");
-            }
-
-            if (response.StatusCode == HttpStatusCode.TooManyRequests)
-            {
-                throw new InvalidOperationException($"Limite de requisições do {Fonte} atingido. Tente novamente mais tarde.");
-            }
-
-            if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
-            {
-                throw new InvalidOperationException($"Chave do {Fonte} inválida, ausente ou sem permissão para este recurso.");
-            }
+            var statusCode = response.StatusCode;
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new InvalidOperationException($"Erro ao consultar {Fonte}. Recurso: {recurso}. Status: {(int)response.StatusCode}.");
+                throw new FootballDataOrgHttpException(
+                    statusCode,
+                    endpoint,
+                    MapearMensagemStatusHttp(statusCode));
             }
 
             var json = await response.Content.ReadAsStringAsync();
 
-            return JsonDocument.Parse(json);
+            return new FootballDataOrgApiResponse(
+                JsonDocument.Parse(json),
+                statusCode,
+                endpoint);
         }
 
         private FootballDataOrgMatchData ExtrairJogo(JsonElement item)
@@ -270,13 +516,14 @@ namespace FutPlay.Services
                 ObterString(item, "utcDate") ?? string.Empty,
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal);
+            var statusApi = ObterString(item, "status") ?? string.Empty;
 
             return new FootballDataOrgMatchData
             {
                 MatchId = ObterInt(item, "id") ?? 0,
                 DataJogo = _appTimeService.ConverterUtcParaHorarioAplicacao(utcDate),
-                StatusApi = ObterString(item, "status") ?? string.Empty,
-                Status = ConverterStatus(ObterString(item, "status")),
+                StatusApi = statusApi,
+                Status = ConverterStatus(statusApi),
                 Matchday = ObterInt(item, "matchday"),
                 Stage = ObterString(item, "stage"),
                 Grupo = ObterString(item, "group"),
@@ -284,6 +531,40 @@ namespace FutPlay.Services
                 TimeVisitante = ExtrairTime(awayTeam),
                 GolsCasa = ObterInt(fullTime, "home"),
                 GolsVisitante = ObterInt(fullTime, "away")
+            };
+        }
+
+        private static FootballDataOrgCompeticaoViewModel ExtrairCompeticao(JsonElement item)
+        {
+            var currentSeason = item.TryGetProperty("currentSeason", out var season) &&
+                season.ValueKind == JsonValueKind.Object
+                    ? season
+                    : default;
+
+            var startDate = currentSeason.ValueKind == JsonValueKind.Object
+                ? ObterData(currentSeason, "startDate")
+                : null;
+            var endDate = currentSeason.ValueKind == JsonValueKind.Object
+                ? ObterData(currentSeason, "endDate")
+                : null;
+
+            return new FootballDataOrgCompeticaoViewModel
+            {
+                Id = ObterInt(item, "id") ?? 0,
+                Nome = ObterString(item, "name") ?? "Competição",
+                Codigo = ObterString(item, "code") ?? string.Empty,
+                Tipo = ObterString(item, "type") ?? string.Empty,
+                Plano = ObterString(item, "plan") ?? string.Empty,
+                Pais = item.TryGetProperty("area", out var area)
+                    ? ObterString(area, "name")
+                    : null,
+                EmblemaUrl = ObterString(item, "emblem"),
+                TemporadaAtual = startDate?.Year,
+                TemporadaAtualInicio = startDate,
+                TemporadaAtualFim = endDate,
+                RodadaAtual = currentSeason.ValueKind == JsonValueKind.Object
+                    ? ObterInt(currentSeason, "currentMatchday")
+                    : null
             };
         }
 
@@ -298,12 +579,14 @@ namespace FutPlay.Services
             };
         }
 
-        private Jogo? LocalizarJogo(
+        private Jogo? LocalizarJogoParaVinculo(
             List<Jogo> jogosLocais,
-            FootballDataOrgMatchData jogoApi)
+            FootballDataOrgMatchData jogoApi,
+            out string motivoIgnorado)
         {
             var candidatos = jogosLocais
                 .Where(j =>
+                    !j.FootballDataMatchId.HasValue &&
                     TimesCorrespondem(j.TimeCasa, jogoApi.TimeCasa) &&
                     TimesCorrespondem(j.TimeVisitante, jogoApi.TimeVisitante))
                 .Select(j => new
@@ -319,7 +602,25 @@ namespace FutPlay.Services
                 .ThenBy(c => c.DistanciaDias)
                 .ToList();
 
-            return candidatos.FirstOrDefault()?.Jogo;
+            if (!candidatos.Any())
+            {
+                motivoIgnorado = "Sem FootballDataMatchId e sem jogo local compatível por times/data";
+                return null;
+            }
+
+            var melhor = candidatos.First();
+            var ambiguo = candidatos
+                .Skip(1)
+                .Any(c => c.RodadaConfere == melhor.RodadaConfere && c.DistanciaDias == melhor.DistanciaDias);
+
+            if (ambiguo)
+            {
+                motivoIgnorado = "Vínculo ambíguo para FootballDataMatchId";
+                return null;
+            }
+
+            motivoIgnorado = string.Empty;
+            return melhor.Jogo;
         }
 
         private static bool TimesCorrespondem(Time? timeLocal, FootballDataOrgTeamData timeApi)
@@ -359,6 +660,12 @@ namespace FutPlay.Services
         {
             var alterado = false;
             var dataJogoLocal = _appTimeService.NormalizarHorarioAplicacao(jogo.DataJogo);
+
+            if (jogo.FootballDataMatchId != jogoApi.MatchId)
+            {
+                jogo.FootballDataMatchId = jogoApi.MatchId;
+                alterado = true;
+            }
 
             if (dataJogoLocal != jogoApi.DataJogo)
             {
@@ -408,8 +715,6 @@ namespace FutPlay.Services
         private async Task RegistrarLogAsync(
             Campeonato campeonato,
             DateTime inicio,
-            string codigo,
-            int temporada,
             FootballDataOrgSyncResultado resultado,
             string? usuarioId,
             string? usuarioEmail,
@@ -419,17 +724,106 @@ namespace FutPlay.Services
             {
                 TipoSincronizacao = "FootballDataOrgResultados",
                 CampeonatoId = campeonato.Id,
-                Temporada = temporada,
+                FootballDataCompetitionId = campeonato.FootballDataCompetitionId,
+                Temporada = resultado.Temporada,
                 DataInicio = inicio,
                 Status = resultado.Sucesso ? "Sucesso" : "Erro",
-                TotalProcessados = resultado.TotalProcessados,
+                TotalProcessados = resultado.JogosRetornadosApi,
+                TotalCriados = resultado.JogosCriados,
                 TotalAtualizados = resultado.JogosAtualizados,
                 TotalIgnorados = resultado.JogosIgnorados,
-                Mensagem = $"[{codigo}] {resultado.Mensagem}",
-                ErroDetalhado = erroDetalhado ?? (resultado.Erros.Any() ? string.Join(Environment.NewLine, resultado.Erros) : null),
+                Mensagem = LimitarTexto(resultado.Mensagem, 500),
+                ErroDetalhado = erroDetalhado ?? resultado.MontarResumoDetalhado(),
                 UsuarioId = usuarioId,
                 UsuarioEmail = usuarioEmail
             });
+        }
+
+        private static void AplicarConfiguracaoFootballData(
+            Campeonato campeonato,
+            int? footballDataCompetitionId,
+            string? competitionCode,
+            int? temporada)
+        {
+            if (footballDataCompetitionId.HasValue && footballDataCompetitionId.Value > 0)
+            {
+                campeonato.FootballDataCompetitionId = footballDataCompetitionId.Value;
+            }
+
+            var codigo = NormalizarCodigoCompeticao(competitionCode);
+
+            if (!string.IsNullOrWhiteSpace(codigo))
+            {
+                campeonato.FootballDataCompetitionCode = codigo;
+            }
+
+            if (temporada.HasValue && temporada.Value > 0)
+            {
+                campeonato.FootballDataSeason = temporada.Value;
+            }
+        }
+
+        private static void AtualizarVinculoComCompeticaoValidada(
+            Campeonato campeonato,
+            FootballDataOrgCompetitionValidationResult validacao)
+        {
+            if (validacao.Id.HasValue && campeonato.FootballDataCompetitionId != validacao.Id)
+            {
+                campeonato.FootballDataCompetitionId = validacao.Id;
+            }
+
+            if (!string.IsNullOrWhiteSpace(validacao.Codigo) &&
+                !string.Equals(campeonato.FootballDataCompetitionCode, validacao.Codigo, StringComparison.OrdinalIgnoreCase))
+            {
+                campeonato.FootballDataCompetitionCode = validacao.Codigo;
+            }
+        }
+
+        private static string ObterIdentificadorCompeticao(Campeonato campeonato)
+        {
+            return !string.IsNullOrWhiteSpace(campeonato.FootballDataCompetitionCode)
+                ? campeonato.FootballDataCompetitionCode.Trim().ToUpperInvariant()
+                : campeonato.FootballDataCompetitionId?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static string MontarMensagemSincronizacao(FootballDataOrgSyncResultado resultado)
+        {
+            var mensagem =
+                $"Resumo da sincronização {Fonte}. " +
+                $"Campeonato local: {resultado.CampeonatoNome}; " +
+                $"FootballDataCompetitionId usado: {resultado.FootballDataCompetitionId}; " +
+                $"FootballDataCompetitionCode usado: {resultado.FootballDataCompetitionCode ?? "-"}; " +
+                $"FootballDataSeason usada: {resultado.Temporada}; " +
+                $"Endpoint chamado: {resultado.EndpointJogos ?? resultado.EndpointValidacao ?? "-"}; " +
+                $"Status HTTP: {resultado.StatusHttpJogos?.ToString() ?? resultado.StatusHttpValidacao?.ToString() ?? "-"}; " +
+                $"Jogos retornados: {resultado.JogosRetornadosApi}; " +
+                $"criados: {resultado.JogosCriados}; atualizados: {resultado.JogosAtualizados}; " +
+                $"ignorados: {resultado.JogosIgnorados}; erros: {resultado.Erros.Count}. ";
+
+            mensagem += resultado.ClassificacaoRecalculada
+                ? "Classificação e ranking dos bolões recalculados."
+                : "Classificação não recalculada porque nenhum resultado foi alterado.";
+
+            if (resultado.IgnoradosPorMotivo.Any())
+            {
+                var motivos = string.Join(
+                    "; ",
+                    resultado.IgnoradosPorMotivo.Select(m => $"{m.Key}: {m.Value}"));
+
+                mensagem += $" Motivos dos ignorados: {motivos}.";
+            }
+
+            if (resultado.Avisos.Any())
+            {
+                mensagem += $" Avisos: {string.Join("; ", resultado.Avisos)}.";
+            }
+
+            if (resultado.Erros.Any())
+            {
+                mensagem += $" Erros: {string.Join("; ", resultado.Erros)}.";
+            }
+
+            return mensagem;
         }
 
         private static string ConverterStatus(string? statusApi)
@@ -443,12 +837,44 @@ namespace FutPlay.Services
                 "PAUSED" => "Em andamento",
                 "FINISHED" => "Finalizado",
                 "POSTPONED" => "Adiado",
-                "SUSPENDED" => "Suspenso",
                 "CANCELLED" => "Cancelado",
                 "CANCELED" => "Cancelado",
+                "SUSPENDED" => "Suspenso",
                 "AWARDED" => "Finalizado",
                 _ => "Agendado"
             };
+        }
+
+        private static string MapearMensagemStatusHttp(HttpStatusCode statusCode)
+        {
+            return statusCode switch
+            {
+                HttpStatusCode.OK => "Consulta realizada com sucesso.",
+                HttpStatusCode.Unauthorized => "Chave football-data.org inválida ou não configurada.",
+                HttpStatusCode.Forbidden => "Competição existe, mas não está disponível para sua chave/plano.",
+                HttpStatusCode.NotFound => "Competição não encontrada no football-data.org.",
+                HttpStatusCode.TooManyRequests => "Limite de chamadas atingido.",
+                _ => $"Erro ao consultar {Fonte}. Status HTTP {(int)statusCode}."
+            };
+        }
+
+        private string CriarEndpointResumo(string url)
+        {
+            return new Uri(_httpClient.BaseAddress!, url).ToString();
+        }
+
+        private static string NormalizarIdentificadorCompeticao(string? competitionIdentifier)
+        {
+            if (string.IsNullOrWhiteSpace(competitionIdentifier))
+            {
+                return string.Empty;
+            }
+
+            var identificador = competitionIdentifier.Trim();
+
+            return identificador.All(char.IsDigit)
+                ? identificador
+                : identificador.ToUpperInvariant();
         }
 
         private static string NormalizarCodigoCompeticao(string? competitionCode)
@@ -490,19 +916,175 @@ namespace FutPlay.Services
             return chave.Normalize(NormalizationForm.FormC);
         }
 
+        private static string LimitarTexto(string? texto, int maximo)
+        {
+            if (string.IsNullOrWhiteSpace(texto) || texto.Length <= maximo)
+            {
+                return texto ?? string.Empty;
+            }
+
+            return texto.Substring(0, maximo);
+        }
+
         private static string? ObterString(JsonElement element, string propriedade)
         {
-            return element.TryGetProperty(propriedade, out var valor) && valor.ValueKind != JsonValueKind.Null
-                ? valor.GetString()
-                : null;
+            return element.ValueKind == JsonValueKind.Object &&
+                element.TryGetProperty(propriedade, out var valor) &&
+                valor.ValueKind != JsonValueKind.Null
+                    ? valor.GetString()
+                    : null;
         }
 
         private static int? ObterInt(JsonElement element, string propriedade)
         {
-            return element.TryGetProperty(propriedade, out var valor) && valor.ValueKind != JsonValueKind.Null
-                ? valor.GetInt32()
-                : null;
+            return element.ValueKind == JsonValueKind.Object &&
+                element.TryGetProperty(propriedade, out var valor) &&
+                valor.ValueKind != JsonValueKind.Null
+                    ? valor.GetInt32()
+                    : null;
         }
+
+        private static DateTime? ObterData(JsonElement element, string propriedade)
+        {
+            var texto = ObterString(element, propriedade);
+
+            return DateTime.TryParse(
+                texto,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                out var data)
+                    ? data
+                    : null;
+        }
+
+        private static List<int> ExtrairTemporadasDisponiveis(JsonElement competition)
+        {
+            if (!competition.TryGetProperty("seasons", out var seasons) ||
+                seasons.ValueKind != JsonValueKind.Array)
+            {
+                return new List<int>();
+            }
+
+            return seasons
+                .EnumerateArray()
+                .Select(season => ObterData(season, "startDate")?.Year)
+                .Where(ano => ano.HasValue)
+                .Select(ano => ano!.Value)
+                .Distinct()
+                .OrderByDescending(ano => ano)
+                .ToList();
+        }
+    }
+
+    public class FootballDataOrgHttpException : Exception
+    {
+        public FootballDataOrgHttpException(
+            HttpStatusCode statusCode,
+            string endpoint,
+            string userMessage)
+            : base($"{userMessage} Endpoint: {endpoint}. Status HTTP: {(int)statusCode}.")
+        {
+            StatusCode = statusCode;
+            Endpoint = endpoint;
+            UserMessage = userMessage;
+        }
+
+        public HttpStatusCode StatusCode { get; }
+
+        public string Endpoint { get; }
+
+        public string UserMessage { get; }
+    }
+
+    public sealed class FootballDataOrgApiResponse : IDisposable
+    {
+        public FootballDataOrgApiResponse(
+            JsonDocument documento,
+            HttpStatusCode statusCode,
+            string endpoint)
+        {
+            Documento = documento;
+            StatusCode = statusCode;
+            Endpoint = endpoint;
+        }
+
+        public JsonDocument Documento { get; }
+
+        public HttpStatusCode StatusCode { get; }
+
+        public string Endpoint { get; }
+
+        public void Dispose()
+        {
+            Documento.Dispose();
+        }
+    }
+
+    public class FootballDataOrgCompetitionValidationResult
+    {
+        public bool Sucesso { get; set; }
+
+        public string Mensagem { get; set; } = string.Empty;
+
+        public string? Endpoint { get; set; }
+
+        public int? StatusHttp { get; set; }
+
+        public int? Id { get; set; }
+
+        public string? Codigo { get; set; }
+
+        public string? Nome { get; set; }
+
+        public string? Plano { get; set; }
+
+        public int? TemporadaAtual { get; set; }
+
+        public List<int> TemporadasDisponiveis { get; set; } = new();
+
+        public static FootballDataOrgCompetitionValidationResult Ok(
+            string endpoint,
+            int statusHttp,
+            FootballDataOrgCompeticaoViewModel competicao)
+        {
+            return new FootballDataOrgCompetitionValidationResult
+            {
+                Sucesso = true,
+                Endpoint = endpoint,
+                StatusHttp = statusHttp,
+                Id = competicao.Id,
+                Codigo = string.IsNullOrWhiteSpace(competicao.Codigo) ? null : competicao.Codigo,
+                Nome = competicao.Nome,
+                Plano = competicao.Plano,
+                TemporadaAtual = competicao.TemporadaAtual,
+                Mensagem = $"Competição validada no football-data.org: {competicao.Nome} (ID {competicao.Id}, code {(string.IsNullOrWhiteSpace(competicao.Codigo) ? "-" : competicao.Codigo)}). Status HTTP {statusHttp}."
+            };
+        }
+
+        public static FootballDataOrgCompetitionValidationResult Falha(
+            string mensagem,
+            string? endpoint,
+            int? statusCode)
+        {
+            return new FootballDataOrgCompetitionValidationResult
+            {
+                Sucesso = false,
+                Endpoint = endpoint,
+                StatusHttp = statusCode,
+                Mensagem = statusCode.HasValue
+                    ? $"{mensagem} Status HTTP {statusCode.Value}."
+                    : mensagem
+            };
+        }
+    }
+
+    public class FootballDataOrgMatchesResponse
+    {
+        public List<FootballDataOrgMatchData> Jogos { get; set; } = new();
+
+        public string Endpoint { get; set; } = string.Empty;
+
+        public int StatusHttp { get; set; }
     }
 
     public class FootballDataOrgMatchData
@@ -551,7 +1133,41 @@ namespace FutPlay.Services
 
         public int CampeonatoId { get; set; }
 
+        public string? CampeonatoNome { get; set; }
+
+        public int? FootballDataCompetitionId { get; set; }
+
+        public string? FootballDataCompetitionCode { get; set; }
+
+        public int? CompeticaoFootballDataId { get; set; }
+
+        public string? CompeticaoFootballDataCode { get; set; }
+
+        public string? CompeticaoFootballDataNome { get; set; }
+
+        public int? Temporada { get; set; }
+
+        public string? EndpointValidacao { get; set; }
+
+        public int? StatusHttpValidacao { get; set; }
+
+        public string? EndpointJogos { get; set; }
+
+        public int? StatusHttpJogos { get; set; }
+
         public int TotalProcessados { get; set; }
+
+        public int JogosRetornadosApi { get; set; }
+
+        public int JogosLocaisBanco { get; set; }
+
+        public int JogosLocaisComFootballDataMatchId { get; set; }
+
+        public int JogosEncontradosBanco { get; set; }
+
+        public int JogosVinculadosFootballData { get; set; }
+
+        public int JogosCriados { get; set; }
 
         public int JogosAtualizados { get; set; }
 
@@ -563,7 +1179,77 @@ namespace FutPlay.Services
 
         public bool RankingRecalculado { get; set; }
 
+        public Dictionary<string, int> IgnoradosPorMotivo { get; set; } = new();
+
+        public List<string> Avisos { get; set; } = new();
+
         public List<string> Erros { get; set; } = new();
+
+        public void AdicionarIgnorado(string motivo)
+        {
+            motivo = string.IsNullOrWhiteSpace(motivo)
+                ? "Motivo não informado"
+                : motivo.Trim();
+
+            JogosIgnorados++;
+
+            if (!IgnoradosPorMotivo.TryAdd(motivo, 1))
+            {
+                IgnoradosPorMotivo[motivo]++;
+            }
+        }
+
+        public string MontarResumoDetalhado()
+        {
+            var linhas = new List<string>
+            {
+                $"Campeonato local: {CampeonatoNome ?? CampeonatoId.ToString(CultureInfo.InvariantCulture)}",
+                $"FootballDataCompetitionId usado: {FootballDataCompetitionId?.ToString(CultureInfo.InvariantCulture) ?? "-"}",
+                $"FootballDataCompetitionCode usado: {FootballDataCompetitionCode ?? "-"}",
+                $"Competição validada: {CompeticaoFootballDataNome ?? "-"} (ID {CompeticaoFootballDataId?.ToString(CultureInfo.InvariantCulture) ?? "-"}, code {CompeticaoFootballDataCode ?? "-"})",
+                $"FootballDataSeason usada: {Temporada?.ToString(CultureInfo.InvariantCulture) ?? "-"}",
+                $"Endpoint validação: {EndpointValidacao ?? "-"}",
+                $"Status HTTP validação: {StatusHttpValidacao?.ToString(CultureInfo.InvariantCulture) ?? "-"}",
+                $"Endpoint jogos: {EndpointJogos ?? "-"}",
+                $"Status HTTP jogos: {StatusHttpJogos?.ToString(CultureInfo.InvariantCulture) ?? "-"}",
+                "Filtros jogos: season=" + (Temporada?.ToString(CultureInfo.InvariantCulture) ?? "-"),
+                $"Jogos retornados pela API: {JogosRetornadosApi}",
+                $"Jogos locais no banco: {JogosLocaisBanco}",
+                $"Jogos locais com FootballDataMatchId: {JogosLocaisComFootballDataMatchId}",
+                $"Jogos encontrados no banco: {JogosEncontradosBanco}",
+                $"Jogos vinculados ao FootballDataMatchId: {JogosVinculadosFootballData}",
+                $"Jogos criados: {JogosCriados}",
+                $"Jogos atualizados: {JogosAtualizados}",
+                $"Jogos ignorados: {JogosIgnorados}",
+                $"Jogos finalizados atualizados: {JogosFinalizados}",
+                $"Classificação recalculada: {(ClassificacaoRecalculada ? "sim" : "não")}",
+                $"Ranking recalculado: {(RankingRecalculado ? "sim" : "não")}"
+            };
+
+            if (IgnoradosPorMotivo.Any())
+            {
+                linhas.Add("Motivos dos ignorados:");
+
+                foreach (var motivo in IgnoradosPorMotivo)
+                {
+                    linhas.Add($"- {motivo.Key}: {motivo.Value}");
+                }
+            }
+
+            if (Avisos.Any())
+            {
+                linhas.Add("Avisos:");
+                linhas.AddRange(Avisos.Select(aviso => $"- {aviso}"));
+            }
+
+            if (Erros.Any())
+            {
+                linhas.Add("Erros:");
+                linhas.AddRange(Erros.Select(erro => $"- {erro}"));
+            }
+
+            return string.Join(Environment.NewLine, linhas);
+        }
 
         public static FootballDataOrgSyncResultado Iniciar(int campeonatoId)
         {

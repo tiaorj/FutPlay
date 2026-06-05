@@ -37,6 +37,7 @@
     <form asp-action="Edit" method="post" class="fp-admin-edit-form">
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="ApiFixtureId" />
+        <input type="hidden" asp-for="FootballDataMatchId" />
         <input type="hidden" name="returnUrl" value="@returnUrl" />
 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -123,7 +124,9 @@
                                 <option value="Agendado">Agendado</option>
                                 <option value="Em andamento">Em andamento</option>
                                 <option value="Finalizado">Finalizado</option>
+                                <option value="Adiado">Adiado</option>
                                 <option value="Cancelado">Cancelado</option>
+                                <option value="Suspenso">Suspenso</option>
                             </select>
                             <span asp-validation-for="Status" class="text-danger"></span>
                         </div>
@@ -144,7 +147,11 @@
                         <h2>Resultado</h2>
                         @if (Model.ApiFixtureId.HasValue)
                         {
-                            <span>API #@Model.ApiFixtureId</span>
+                            <span>API-Football #@Model.ApiFixtureId</span>
+                        }
+                        @if (Model.FootballDataMatchId.HasValue)
+                        {
+                            <span>football-data.org #@Model.FootballDataMatchId</span>
                         }
                     </div>
 
