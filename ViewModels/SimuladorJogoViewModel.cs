@@ -32,6 +32,12 @@ namespace FutPlay.ViewModels
 
         public int OrdemFase { get; set; }
 
+        public bool ResultadoOficial { get; set; }
+
+        public bool EhFaseDeGrupos { get; set; }
+
+        public bool EhEliminatorio => !EhFaseDeGrupos;
+
         public int? PlacarCasa { get; set; }
 
         public int? PlacarVisitante { get; set; }

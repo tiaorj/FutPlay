@@ -154,7 +154,15 @@ namespace FutPlay.Controllers
                 .Select(j =>
                 {
                     var grupo = campeonato.UsaClassificacaoPorGrupos ? ObterGrupoJogo(j) : null;
-                    placares.TryGetValue(j.Id, out var placar);
+                    var temPlacarInformado = placares.TryGetValue(j.Id, out var placar);
+                    var resultadoOficial = EhResultadoOficial(j);
+                    var ehFaseDeGrupos = campeonato.UsaClassificacaoPorGrupos && EhJogoFaseGrupos(j, grupo);
+                    var placarCasa = temPlacarInformado
+                        ? placar.Casa
+                        : resultadoOficial ? j.GolsCasa : null;
+                    var placarVisitante = temPlacarInformado
+                        ? placar.Visitante
+                        : resultadoOficial ? j.GolsVisitante : null;
 
                     return new SimuladorJogoViewModel
                     {
@@ -173,19 +181,26 @@ namespace FutPlay.Controllers
                         GrupoChave = ChaveGrupo(grupo),
                         Fase = NomeFase(j.Fase),
                         OrdemFase = OrdemFase(j.Fase),
-                        PlacarCasa = placar.Casa,
-                        PlacarVisitante = placar.Visitante
+                        ResultadoOficial = resultadoOficial,
+                        EhFaseDeGrupos = ehFaseDeGrupos,
+                        PlacarCasa = placarCasa,
+                        PlacarVisitante = placarVisitante
                     };
                 })
-                .OrderBy(j => campeonato.UsaClassificacaoPorGrupos ? GrupoOrdenacao(j.GrupoChave) : string.Empty)
+                .OrderBy(j => campeonato.UsaClassificacaoPorGrupos ? j.EhFaseDeGrupos ? 0 : 1 : 0)
+                .ThenBy(j => campeonato.UsaClassificacaoPorGrupos && j.EhFaseDeGrupos ? GrupoOrdenacao(j.GrupoChave) : string.Empty)
                 .ThenBy(j => campeonato.UsaClassificacaoPorGrupos ? j.OrdemFase : 0)
                 .ThenBy(j => campeonato.UsaClassificacaoPorGrupos ? j.Fase : string.Empty)
                 .ThenBy(j => campeonato.UsaClassificacaoPorGrupos ? 0 : j.Rodada ?? int.MaxValue)
                 .ThenBy(j => j.DataJogo)
                 .ToList();
 
+            var placaresEfetivos = jogosViewModel
+                .Where(j => j.TemPlacar)
+                .ToDictionary(j => j.JogoId, j => (Casa: j.PlacarCasa, Visitante: j.PlacarVisitante));
+
             var classificacao = simulado
-                ? CalcularClassificacao(campeonato, jogos, campeonatoTimes, gruposPorTime, placares, ObterGrupoJogo)
+                ? CalcularClassificacao(campeonato, jogos, campeonatoTimes, gruposPorTime, placaresEfetivos, ObterGrupoJogo)
                 : new List<SimuladorClassificacaoViewModel>();
 
             return new SimuladorViewModel
@@ -217,6 +232,11 @@ namespace FutPlay.Controllers
             foreach (var jogo in jogos)
             {
                 var grupo = obterGrupoJogo(jogo);
+
+                if (campeonato.UsaClassificacaoPorGrupos && !EhJogoFaseGrupos(jogo, grupo))
+                {
+                    continue;
+                }
 
                 GarantirLinha(linhas, jogo.TimeCasaId, jogo.TimeCasa, grupo, campeonato.UsaClassificacaoPorGrupos);
                 GarantirLinha(linhas, jogo.TimeVisitanteId, jogo.TimeVisitante, grupo, campeonato.UsaClassificacaoPorGrupos);
@@ -341,6 +361,53 @@ namespace FutPlay.Controllers
             }
         }
 
+        private static bool EhResultadoOficial(Jogo jogo)
+        {
+            return string.Equals(jogo.Status, "Finalizado", StringComparison.OrdinalIgnoreCase) &&
+                   jogo.GolsCasa.HasValue &&
+                   jogo.GolsVisitante.HasValue;
+        }
+
+        private static bool EhJogoFaseGrupos(Jogo jogo, string? grupo)
+        {
+            if (EhFaseEliminatoria(jogo.Fase))
+            {
+                return false;
+            }
+
+            return EhFaseDeGrupos(jogo.Fase) || !string.IsNullOrWhiteSpace(grupo);
+        }
+
+        private static bool EhFaseDeGrupos(string? fase)
+        {
+            return !string.IsNullOrWhiteSpace(fase) &&
+                   (fase.Contains("grupo", StringComparison.OrdinalIgnoreCase) ||
+                    fase.Contains("group", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool EhFaseEliminatoria(string? fase)
+        {
+            if (string.IsNullOrWhiteSpace(fase))
+            {
+                return false;
+            }
+
+            var texto = fase.Trim();
+
+            return texto.Contains("32", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("16avos", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("16 avos", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("dezesseisavos", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("round of 32", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("round of 16", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("oitava", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("oitavo", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("quarter", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("quarta", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("semi", StringComparison.OrdinalIgnoreCase) ||
+                   texto.Contains("final", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static int? NormalizarPlacar(int? placar)
         {
             return placar is >= 0 and <= 99
@@ -392,28 +459,69 @@ namespace FutPlay.Controllers
 
             var texto = fase.Trim();
 
-            return texto.Contains("Group", StringComparison.OrdinalIgnoreCase)
-                ? "Fase de grupos"
-                : texto;
+            if (EhFaseDeGrupos(texto))
+            {
+                return "Fase de grupos";
+            }
+
+            if (texto.Contains("32", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16avos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16 avos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("dezesseisavos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("round of 32", StringComparison.OrdinalIgnoreCase))
+            {
+                return "16Avos-de-final";
+            }
+
+            if (texto.Contains("round of 16", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("oitava", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("oitavo", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Oitavas";
+            }
+
+            if (texto.Contains("quarter", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("quarta", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Quartas";
+            }
+
+            if (texto.Contains("semi", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Semifinais";
+            }
+
+            if (texto.Contains("final", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Final";
+            }
+
+            return texto;
         }
 
         private static int OrdemFase(string? fase)
         {
             var texto = fase ?? string.Empty;
 
-            if (texto.Contains("grupo", StringComparison.OrdinalIgnoreCase) ||
-                texto.Contains("group", StringComparison.OrdinalIgnoreCase))
+            if (EhFaseDeGrupos(texto))
             {
                 return 1;
             }
 
-            if (texto.Contains("32", StringComparison.OrdinalIgnoreCase))
+            if (texto.Contains("32", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16avos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16 avos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("dezesseisavos", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("round of 32", StringComparison.OrdinalIgnoreCase))
             {
                 return 2;
             }
 
-            if (texto.Contains("16", StringComparison.OrdinalIgnoreCase) ||
-                texto.Contains("oitava", StringComparison.OrdinalIgnoreCase))
+            if (texto.Contains("round of 16", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("oitava", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("oitavo", StringComparison.OrdinalIgnoreCase) ||
+                texto.Contains("16", StringComparison.OrdinalIgnoreCase))
             {
                 return 3;
             }

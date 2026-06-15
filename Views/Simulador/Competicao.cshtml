@@ -20,6 +20,8 @@
     {
         return string.IsNullOrWhiteSpace(grupo) ? "Sem grupo" : grupo;
     }
+
+    var temEliminatoria = Model.UsaGrupos && Model.Jogos.Any(j => j.EhEliminatorio);
 }
 
 <div class="container fp-sim-page">
@@ -84,6 +86,8 @@
                         string? grupoAtual = null;
                         string? faseAtual = null;
                         int? rodadaAtual = null;
+                        var exibiuFaseGrupos = false;
+                        var exibiuEliminatoria = false;
                     }
 
                     @for (var i = 0; i < Model.Jogos.Count; i++)
@@ -92,19 +96,41 @@
 
                         if (Model.UsaGrupos)
                         {
-                            if (!string.Equals(grupoAtual, jogo.GrupoChave, StringComparison.OrdinalIgnoreCase))
+                            if (jogo.EhFaseDeGrupos)
                             {
-                                grupoAtual = jogo.GrupoChave;
-                                faseAtual = null;
+                                if (!exibiuFaseGrupos)
+                                {
+                                    exibiuFaseGrupos = true;
+                                    grupoAtual = null;
+                                    faseAtual = null;
 
-                                <div class="fp-sim-section-label">@HeaderGrupo(jogo.Grupo)</div>
+                                    <div class="fp-sim-phase-heading">Fase de grupos</div>
+                                }
+
+                                if (!string.Equals(grupoAtual, jogo.GrupoChave, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    grupoAtual = jogo.GrupoChave;
+                                    faseAtual = null;
+
+                                    <div class="fp-sim-section-label">@HeaderGrupo(jogo.Grupo)</div>
+                                }
                             }
-
-                            if (!string.Equals(faseAtual, jogo.Fase, StringComparison.OrdinalIgnoreCase))
+                            else
                             {
-                                faseAtual = jogo.Fase;
+                                if (!exibiuEliminatoria)
+                                {
+                                    exibiuEliminatoria = true;
+                                    faseAtual = null;
 
-                                <div class="fp-sim-subsection-label">@jogo.Fase</div>
+                                    <div class="fp-sim-phase-heading fp-sim-phase-heading-knockout">Fase eliminatória</div>
+                                }
+
+                                if (!string.Equals(faseAtual, jogo.Fase, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    faseAtual = jogo.Fase;
+
+                                    <div class="fp-sim-subsection-label">@jogo.Fase</div>
+                                }
                             }
                         }
                         else if (rodadaAtual != jogo.Rodada)
@@ -114,7 +140,15 @@
                             <div class="fp-sim-section-label">@RodadaTitulo(jogo.Rodada)</div>
                         }
 
-                        <article class="fp-sim-fixture-row">
+                        var classeLinha = jogo.ResultadoOficial
+                            ? "fp-sim-fixture-row official"
+                            : "fp-sim-fixture-row";
+
+                        classeLinha += Model.UsaGrupos
+                            ? jogo.EhEliminatorio ? " knockout" : " group-stage"
+                            : " league-stage";
+
+                        <article class="@classeLinha">
                             <input type="hidden" name="Jogos[@i].JogoId" value="@jogo.JogoId" />
 
                             <div class="fp-sim-team home">
@@ -128,7 +162,10 @@
                                         @jogo.TimeCasaSigla
                                     }
                                 </span>
-                                <b>@jogo.TimeCasaNome</b>
+                                <b>
+                                    <span class="fp-sim-team-full">@jogo.TimeCasaNome</span>
+                                    <span class="fp-sim-team-short">@jogo.TimeCasaSigla</span>
+                                </b>
                             </div>
 
                             <div class="fp-sim-score-box">
@@ -166,7 +203,10 @@
                                         @jogo.TimeVisitanteSigla
                                     }
                                 </span>
-                                <b>@jogo.TimeVisitanteNome</b>
+                                <b>
+                                    <span class="fp-sim-team-full">@jogo.TimeVisitanteNome</span>
+                                    <span class="fp-sim-team-short">@jogo.TimeVisitanteSigla</span>
+                                </b>
                             </div>
 
                             <div class="fp-sim-match-meta">
@@ -175,12 +215,28 @@
                                 {
                                     <span>@RodadaTitulo(jogo.Rodada)</span>
                                 }
-                                @if (Model.UsaGrupos)
+                                @if (Model.UsaGrupos && jogo.EhFaseDeGrupos)
                                 {
                                     <span>@jogo.Grupo</span>
                                 }
+                                @if (Model.UsaGrupos && jogo.EhEliminatorio)
+                                {
+                                    <span>@jogo.Fase</span>
+                                }
+                                @if (jogo.ResultadoOficial)
+                                {
+                                    <span class="fp-sim-official-badge">Resultado oficial</span>
+                                }
                             </div>
                         </article>
+                    }
+
+                    @if (Model.UsaGrupos && !temEliminatoria)
+                    {
+                        <div class="fp-sim-phase-heading fp-sim-phase-heading-knockout">Fase eliminatória</div>
+                        <div class="fp-sim-empty inline">
+                            A fase eliminatória aparecerá aqui quando os jogos forem cadastrados.
+                        </div>
                     }
                 </div>
             }

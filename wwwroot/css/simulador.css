@@ -211,6 +211,30 @@
     padding: 8px 10px;
 }
 
+.fp-sim-phase-heading {
+    align-items: center;
+    color: var(--fp-brand-ink, #101827);
+    display: flex;
+    font-size: .9rem;
+    font-weight: 950;
+    gap: 8px;
+    margin: 14px 0 8px;
+}
+
+.fp-sim-phase-heading::before {
+    background: var(--fp-brand-green, #16a34a);
+    border-radius: 999px;
+    content: "";
+    height: 8px;
+    width: 8px;
+}
+
+.fp-sim-phase-heading-knockout {
+    border-top: 1px solid #edf1f6;
+    margin-top: 18px;
+    padding-top: 14px;
+}
+
 .fp-sim-subsection-label {
     color: var(--fp-brand-muted, #627184);
     font-size: .72rem;
@@ -226,6 +250,10 @@
     gap: 10px;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     padding: 10px 2px;
+}
+
+.fp-sim-fixture-row.official {
+    background: linear-gradient(90deg, rgba(22, 163, 74, .06) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .fp-sim-fixture-row:first-of-type {
@@ -252,6 +280,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.fp-sim-team-short {
+    display: none;
 }
 
 .fp-sim-crest {
@@ -313,6 +345,13 @@
     padding: 4px 7px;
 }
 
+.fp-sim-official-badge {
+    background: #eaf8ef !important;
+    color: var(--fp-brand-green-dark, #047857);
+    font-size: .68rem;
+    font-weight: 950;
+}
+
 .fp-sim-empty {
     background: linear-gradient(135deg, #f8fbff 0%, #f3fbf6 100%);
     border: 1px dashed #b8c7dc;
@@ -322,6 +361,11 @@
     margin: 14px;
     padding: 18px;
     text-align: center;
+}
+
+.fp-sim-empty.inline {
+    margin: 8px 0 12px;
+    padding: 14px;
 }
 
 .fp-sim-standings-title {
@@ -400,24 +444,59 @@
     }
 
     .fp-sim-fixture-row {
-        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 6px;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        padding: 9px 0;
+    }
+
+    .fp-sim-team {
+        gap: 5px;
     }
 
     .fp-sim-team.away {
-        grid-column: 1 / -1;
-        justify-content: flex-start;
-        text-align: left;
+        grid-column: auto;
+        justify-content: flex-end;
+        text-align: right;
+    }
+
+    .fp-sim-team b {
+        font-size: .78rem;
+    }
+
+    .fp-sim-team-full {
+        display: none;
+    }
+
+    .fp-sim-team-short {
+        display: inline;
+    }
+
+    .fp-sim-crest {
+        font-size: .52rem;
+        height: 24px;
+        width: 24px;
     }
 
     .fp-sim-score-box {
-        grid-column: 2;
-        grid-row: 1 / span 2;
-        grid-template-columns: 52px;
-        justify-items: center;
+        grid-column: auto;
+        grid-row: auto;
+        gap: 5px;
+        grid-template-columns: 42px auto 42px;
     }
 
     .fp-sim-score-box input {
-        height: 46px;
-        width: 52px;
+        font-size: 1rem;
+        height: 44px;
+        width: 42px;
+    }
+
+    .fp-sim-match-meta {
+        font-size: .66rem;
+        gap: 4px;
+    }
+
+    .fp-sim-official-badge {
+        font-size: .62rem;
+        padding: 3px 6px;
     }
 }
