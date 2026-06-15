@@ -160,7 +160,7 @@
 .fp-tv-segmented,
 .fp-tv-table-switch {
     align-items: center;
-    background: var(--tv-soft);
+    background: #eef2f7;
     border-radius: 999px;
     display: flex;
     gap: 4px;
@@ -172,8 +172,10 @@
 .fp-tv-segmented a,
 .fp-tv-segmented span,
 .fp-tv-table-switch span {
+    background: #f6f8fb;
+    border: 1px solid transparent;
     border-radius: 999px;
-    color: var(--tv-text);
+    color: #334155;
     display: inline-flex;
     font-size: .83rem;
     font-weight: 900;
@@ -187,7 +189,7 @@
 }
 
 .fp-tv-segmented a:hover {
-    background: #e6ecff;
+    background: #e2e8f0;
     color: #1d4ed8;
     text-decoration: none;
 }
@@ -195,8 +197,9 @@
 .fp-tv-segmented a.active,
 .fp-tv-segmented span.active,
 .fp-tv-table-switch span.active {
-    background: linear-gradient(135deg, var(--tv-blue), var(--tv-green));
-    box-shadow: 0 3px 9px rgba(51, 72, 255, .22);
+    background: #2637b8;
+    border-color: #2637b8;
+    box-shadow: 0 3px 9px rgba(38, 55, 184, .24);
     color: #fff;
 }
 

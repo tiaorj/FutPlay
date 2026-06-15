@@ -40,10 +40,15 @@
                 string.Equals(ChaveGrupo(grupoTime), ChaveGrupo(grupoVisaoGeralSelecionado.Nome), StringComparison.OrdinalIgnoreCase)))
             .OrderBy(c => c.Posicao)
             .ToList();
-    var jogosPorDia = Model.JogosDaRodada
-        .OrderBy(j => j.DataJogo)
-        .GroupBy(j => Model.Modo == "grupo" ? GrupoDoJogo(j) : j.DataJogo.ToString("dd/MM/yyyy"))
-        .ToList();
+    var agruparJogosPorGrupo = Model.Modo == "grupo" && string.IsNullOrWhiteSpace(Model.GrupoSelecionado);
+    IEnumerable<FutPlay.Models.Jogo> jogosParaAgrupar = agruparJogosPorGrupo
+        ? Model.JogosDaRodada
+        : Model.JogosDaRodada.OrderBy(j => j.DataJogo).ToList();
+    var jogosPorDiaBase = jogosParaAgrupar
+        .GroupBy(j => agruparJogosPorGrupo ? GrupoDoJogo(j) : j.DataJogo.ToString("dd/MM/yyyy"));
+    var jogosPorDia = agruparJogosPorGrupo
+        ? jogosPorDiaBase.OrderBy(g => ChaveGrupo(g.Key)).ToList()
+        : jogosPorDiaBase.ToList();
     var jogosDestaque = Model.JogosDaRodada
         .OrderBy(j => j.DataJogo)
         .Take(4)
@@ -100,11 +105,6 @@
 
     string GrupoDoJogo(FutPlay.Models.Jogo jogo)
     {
-        if (!string.IsNullOrWhiteSpace(jogo.Grupo))
-        {
-            return NomeGrupo(jogo.Grupo);
-        }
-
         grupoPorTimeId.TryGetValue(jogo.TimeCasaId, out var grupoCasa);
         grupoPorTimeId.TryGetValue(jogo.TimeVisitanteId, out var grupoVisitante);
 
@@ -115,10 +115,25 @@
             return NomeGrupo(grupoCasa);
         }
 
-        return !string.IsNullOrWhiteSpace(grupoVisitante)
-            ? NomeGrupo(grupoVisitante)
+        if (!string.IsNullOrWhiteSpace(grupoVisitante) && string.IsNullOrWhiteSpace(grupoCasa))
+        {
+            return NomeGrupo(grupoVisitante);
+        }
+
+        return !string.IsNullOrWhiteSpace(jogo.Grupo)
+            ? NomeGrupo(jogo.Grupo)
             : "Sem grupo";
     }
+
+    var gruposFiltro = Model.Grupos
+        .Select(g => ChaveGrupo(g.Nome))
+        .Concat(Model.Jogos
+            .Select(j => ChaveGrupo(GrupoDoJogo(j)))
+            .Where(g => !string.IsNullOrWhiteSpace(g) &&
+                !string.Equals(g, "Sem grupo", StringComparison.OrdinalIgnoreCase)))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(g => g)
+        .ToList();
 
     // Helper para exibir horário com pt-BR e "Horário a definir" quando 00:00
     string FormatarHorario(DateTime dt)
@@ -162,13 +177,13 @@
                 @Model.Campeonato.Tipo
                 @if (!string.IsNullOrWhiteSpace(Model.Campeonato.Pais))
                 {
-                    <span> &middot; @Model.Campeonato.Pais</span>
+                    <span> &middot; @PaisExibicao.Normalizar(Model.Campeonato.Pais)</span>
                 }
             </p>
         </div>
 
         <div class="fp-tv-title-actions">
-            <a asp-action="Index">Competições</a>
+            <a asp-action="Index" asp-route-ano="@Model.Campeonato.Ano">Competições</a>
 
             @if (usuarioAdministrador && Model.Campeonato.ApiLeagueId.HasValue)
             {
@@ -364,10 +379,10 @@
                             <input type="hidden" name="modo" value="grupo" />
                             <select name="grupoSelecionado" class="form-select form-select-sm" onchange="this.form.submit()">
                                 <option value="" selected="@(string.IsNullOrWhiteSpace(Model.GrupoSelecionado))">Todos os grupos</option>
-                                @foreach (var grupo in Model.Grupos)
+                                @foreach (var grupo in gruposFiltro)
                                 {
-                                    <option value="@grupo.Nome" selected="@(string.Equals(Model.GrupoSelecionado, grupo.Nome, StringComparison.OrdinalIgnoreCase))">
-                                        @NomeGrupo(grupo.Nome)
+                                    <option value="@grupo" selected="@(string.Equals(ChaveGrupo(Model.GrupoSelecionado), grupo, StringComparison.OrdinalIgnoreCase))">
+                                        @NomeGrupo(grupo)
                                     </option>
                                 }
                             </select>
@@ -438,7 +453,7 @@
                         {
                             <div class="fp-tv-date-row">@grupoDia.Key</div>
 
-                            @foreach (var jogo in grupoDia.OrderBy(j => j.DataJogo))
+                            @foreach (var jogo in grupoDia)
                             {
                                 var serieLabel = Model.SerieJogoLabels.TryGetValue(jogo.Id, out var label)
                                     ? label

@@ -22,9 +22,13 @@ namespace FutPlay.Controllers
             _classificacaoService = classificacaoService;
         }
 
-        public async Task<IActionResult> Index(string filtro = "todos", string? pais = null, string? tipo = null)
+        public async Task<IActionResult> Index(string filtro = "todos", string? pais = null, string? tipo = null, int? ano = null)
         {
             filtro = NormalizarFiltro(filtro);
+            var anoSelecionado = ano ?? DateTime.Today.Year;
+            pais = string.IsNullOrWhiteSpace(pais)
+                ? null
+                : PaisExibicao.Normalizar(pais);
 
             var usuarioAutenticado = User.Identity?.IsAuthenticated == true;
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -45,7 +49,11 @@ namespace FutPlay.Controllers
                 .ThenBy(c => c.Nome)
                 .ToListAsync();
 
-            IEnumerable<Campeonato> campeonatos = todosCampeonatos;
+            var campeonatosDoAno = todosCampeonatos
+                .Where(c => c.Ano == anoSelecionado)
+                .ToList();
+
+            IEnumerable<Campeonato> campeonatos = campeonatosDoAno;
 
             campeonatos = filtro switch
             {
@@ -58,7 +66,7 @@ namespace FutPlay.Controllers
 
             if (!string.IsNullOrWhiteSpace(pais))
             {
-                campeonatos = campeonatos.Where(c => string.Equals(c.Pais, pais, StringComparison.OrdinalIgnoreCase));
+                campeonatos = campeonatos.Where(c => PaisExibicao.Equivale(c.Pais, pais));
             }
 
             if (!string.IsNullOrWhiteSpace(tipo))
@@ -74,31 +82,38 @@ namespace FutPlay.Controllers
                     .ThenBy(c => c.Nome)
                     .ToList(),
                 Paises = todosCampeonatos
+                    .Where(c => c.Ano == anoSelecionado)
                     .Select(c => c.Pais)
-                    .Where(p => !string.IsNullOrWhiteSpace(p))
-                    .Select(p => p!)
+                    .Select(PaisExibicao.Normalizar)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(p => p)
                     .ToList(),
-                Tipos = todosCampeonatos
+                Tipos = campeonatosDoAno
                     .Select(c => c.Tipo)
                     .Where(t => !string.IsNullOrWhiteSpace(t))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .OrderBy(t => t)
                     .ToList(),
+                Anos = todosCampeonatos
+                    .Select(c => c.Ano)
+                    .Append(anoSelecionado)
+                    .Distinct()
+                    .OrderByDescending(a => a)
+                    .ToList(),
                 CampeonatosFavoritosIds = campeonatosFavoritosIds,
                 Filtro = filtro,
                 Pais = pais,
                 Tipo = tipo,
+                Ano = anoSelecionado,
                 UsuarioAutenticado = usuarioAutenticado,
-                TotalCampeonatos = todosCampeonatos.Count,
-                TotalAtivos = todosCampeonatos.Count(c => c.Ativo),
-                TotalInativos = todosCampeonatos.Count(c => !c.Ativo),
-                TotalPaises = todosCampeonatos
-                    .Select(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
+                TotalCampeonatos = campeonatosDoAno.Count,
+                TotalAtivos = campeonatosDoAno.Count(c => c.Ativo),
+                TotalInativos = campeonatosDoAno.Count(c => !c.Ativo),
+                TotalPaises = campeonatosDoAno
+                    .Select(c => PaisExibicao.Normalizar(c.Pais))
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .Count(),
-                TotalFavoritos = todosCampeonatos.Count(c => campeonatosFavoritosIds.Contains(c.Id))
+                TotalFavoritos = campeonatosDoAno.Count(c => campeonatosFavoritosIds.Contains(c.Id))
             };
 
             return View(viewModel);
@@ -498,7 +513,6 @@ namespace FutPlay.Controllers
                 .Where(j =>
                     j.CampeonatoId == id &&
                     j.Ativo)
-                .OrderBy(j => j.DataJogo)
                 .ToListAsync();
 
             var gruposPorTime = campeonatoTimes
@@ -508,11 +522,6 @@ namespace FutPlay.Controllers
 
             string? ObterGrupoJogo(Jogo jogo)
             {
-                if (!string.IsNullOrWhiteSpace(jogo.Grupo))
-                {
-                    return jogo.Grupo.Trim();
-                }
-
                 gruposPorTime.TryGetValue(jogo.TimeCasaId, out var grupoCasa);
                 gruposPorTime.TryGetValue(jogo.TimeVisitanteId, out var grupoVisitante);
 
@@ -523,10 +532,41 @@ namespace FutPlay.Controllers
                     return grupoCasa;
                 }
 
-                return !string.IsNullOrWhiteSpace(grupoVisitante)
-                    ? grupoVisitante
+                if (!string.IsNullOrWhiteSpace(grupoVisitante) && string.IsNullOrWhiteSpace(grupoCasa))
+                {
+                    return grupoVisitante;
+                }
+
+                return !string.IsNullOrWhiteSpace(jogo.Grupo)
+                    ? jogo.Grupo.Trim()
                     : null;
             }
+
+            string ChaveGrupoOrdenacao(Jogo jogo)
+            {
+                var grupo = ChaveGrupoPortal(ObterGrupoJogo(jogo));
+
+                return string.IsNullOrWhiteSpace(grupo)
+                    ? "ZZZ"
+                    : grupo;
+            }
+
+            List<Jogo> OrdenarJogos(IEnumerable<Jogo> jogos)
+            {
+                return campeonato.UsaClassificacaoPorGrupos
+                    ? jogos
+                        .OrderBy(ChaveGrupoOrdenacao, StringComparer.OrdinalIgnoreCase)
+                        .ThenBy(j => OrdemFasePortal(NomeFasePortal(j.Fase)))
+                        .ThenBy(j => NomeFasePortal(j.Fase), StringComparer.OrdinalIgnoreCase)
+                        .ThenBy(j => j.DataJogo)
+                        .ToList()
+                    : jogos
+                        .OrderBy(j => j.Rodada ?? int.MaxValue)
+                        .ThenBy(j => j.DataJogo)
+                        .ToList();
+            }
+
+            jogosCampeonato = OrdenarJogos(jogosCampeonato);
 
             // Rodadas: mantive compatibilidade, usando o parâmetro 'rodadaSelecionada' (query string 'rodadaSelecionada')
             var rodadas = ObterRodadas(
@@ -618,7 +658,7 @@ namespace FutPlay.Controllers
             {
                 if (!string.IsNullOrWhiteSpace(dataSelecionada) && DateTime.TryParse(dataSelecionada, out var dataSel))
                 {
-                    jogosDaRodada = jogosCampeonato.Where(j => j.DataJogo.Date == dataSel.Date).OrderBy(j => j.DataJogo).ToList();
+                    jogosDaRodada = OrdenarJogos(jogosCampeonato.Where(j => j.DataJogo.Date == dataSel.Date));
                 }
                 else
                 {
@@ -629,30 +669,22 @@ namespace FutPlay.Controllers
             {
                 jogosDaRodada = string.IsNullOrWhiteSpace(grupoSelecionado)
                     ? jogosCampeonato
-                        .OrderBy(j => ObterGrupoJogo(j) ?? "ZZZ")
-                        .ThenBy(j => j.DataJogo)
-                        .ToList()
-                    : jogosCampeonato
-                        .Where(j => string.Equals(ObterGrupoJogo(j), grupoSelecionado, StringComparison.OrdinalIgnoreCase))
-                        .OrderBy(j => j.DataJogo)
-                        .ToList();
+                    : OrdenarJogos(jogosCampeonato
+                        .Where(j =>
+                            string.Equals(ObterGrupoJogo(j), grupoSelecionado, StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(ChaveGrupoPortal(ObterGrupoJogo(j)), ChaveGrupoPortal(grupoSelecionado), StringComparison.OrdinalIgnoreCase)));
             }
             else if (string.Equals(modo, "fase", StringComparison.OrdinalIgnoreCase))
             {
                 jogosDaRodada = string.IsNullOrWhiteSpace(faseSelecionada)
                     ? jogosCampeonato
-                        .OrderBy(j => OrdemFasePortal(NomeFasePortal(j.Fase)))
-                        .ThenBy(j => j.DataJogo)
-                        .ToList()
-                    : jogosCampeonato
-                        .Where(j => string.Equals(NomeFasePortal(j.Fase), faseSelecionada, StringComparison.OrdinalIgnoreCase))
-                        .OrderBy(j => j.DataJogo)
-                        .ToList();
+                    : OrdenarJogos(jogosCampeonato
+                        .Where(j => string.Equals(NomeFasePortal(j.Fase), faseSelecionada, StringComparison.OrdinalIgnoreCase)));
             }
             else // modo=rodada (comportamento anterior)
             {
                 jogosDaRodada = rodadaSelecionadaOut.HasValue && rodadas.Any(r => r.Rodada == rodadaSelecionadaOut.Value)
-                    ? jogosCampeonato.Where(j => j.Rodada == rodadaSelecionadaOut.Value).OrderBy(j => j.DataJogo).ToList()
+                    ? OrdenarJogos(jogosCampeonato.Where(j => j.Rodada == rodadaSelecionadaOut.Value))
                     : jogosCampeonato;
             }
 
@@ -1103,6 +1135,20 @@ namespace FutPlay.Controllers
                 "rodada" => "rodada",
                 _ => preferirFase ? "fase" : "rodada"
             };
+        }
+
+        private static string ChaveGrupoPortal(string? grupo)
+        {
+            if (string.IsNullOrWhiteSpace(grupo))
+            {
+                return string.Empty;
+            }
+
+            var texto = grupo.Trim();
+
+            return texto.StartsWith("Grupo ", StringComparison.OrdinalIgnoreCase)
+                ? texto.Substring("Grupo ".Length).Trim()
+                : texto;
         }
 
         private static string NomeFasePortal(string? fase)

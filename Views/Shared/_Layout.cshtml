@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="~/css/meupitaco-melhorias.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/navigation.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/competition-portal.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/simulador.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/bolao-palpites.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/FutPlay.styles.css" asp-append-version="true" />
 </head>
@@ -96,6 +97,13 @@
                            class="fp-sport-tab @(currentController == "Campeonatos" ? "active" : "")">
                             <span>🏆</span>
                             <strong>Competições</strong>
+                        </a>
+
+                        <a asp-controller="Simulador"
+                           asp-action="Index"
+                           class="fp-sport-tab @(currentController == "Simulador" ? "active" : "")">
+                            <span>▦</span>
+                            <strong>Simulador</strong>
                         </a>
 
                         <a asp-controller="Times"

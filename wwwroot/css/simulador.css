@@ -1,0 +1,423 @@
+.fp-sim-page {
+    padding-top: 12px;
+}
+
+.fp-sim-titlebar {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--fp-brand-line, #dde6f0);
+    border-radius: 8px;
+    box-shadow: var(--fp-brand-shadow, 0 10px 26px rgba(15, 23, 42, .065));
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding: 16px;
+}
+
+.fp-sim-titlebar span {
+    color: var(--fp-brand-muted, #627184);
+    display: block;
+    font-size: .74rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.fp-sim-titlebar h1 {
+    color: var(--fp-brand-ink, #101827);
+    font-size: 1.35rem;
+    font-weight: 950;
+    margin: 2px 0 0;
+}
+
+.fp-sim-titlebar > a,
+.fp-sim-secondary-action {
+    background: #f5f8fc;
+    border: 1px solid var(--fp-brand-line, #dde6f0);
+    border-radius: 8px;
+    color: var(--fp-brand-blue, #2637b8);
+    font-size: .82rem;
+    font-weight: 900;
+    padding: 8px 12px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.fp-sim-titlebar > a:hover,
+.fp-sim-secondary-action:hover {
+    background: var(--fp-brand-blue, #2637b8);
+    color: #fff;
+}
+
+.fp-sim-competition-grid {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fp-sim-competition-card {
+    background: #fff;
+    border: 1px solid var(--fp-brand-line, #dde6f0);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .055);
+    display: grid;
+    gap: 12px;
+    min-height: 224px;
+    padding: 16px;
+}
+
+.fp-sim-competition-logo,
+.fp-sim-crest {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--fp-brand-line, #dde6f0);
+    border-radius: 999px;
+    color: var(--fp-brand-green-dark, #047857);
+    display: inline-flex;
+    font-weight: 950;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.fp-sim-competition-logo {
+    height: 52px;
+    width: 52px;
+}
+
+.fp-sim-competition-logo img,
+.fp-sim-crest img {
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+    width: 100%;
+}
+
+.fp-sim-competition-body {
+    display: grid;
+    gap: 8px;
+}
+
+.fp-sim-competition-body strong {
+    color: var(--fp-brand-ink, #101827);
+    font-size: 1rem;
+    font-weight: 950;
+    line-height: 1.18;
+}
+
+.fp-sim-competition-body small {
+    color: var(--fp-brand-muted, #627184);
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.fp-sim-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.fp-sim-tags span {
+    background: #f0f3f8;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    color: #475569;
+    font-size: .72rem;
+    font-weight: 850;
+    line-height: 1;
+    padding: 5px 7px;
+}
+
+.fp-sim-card-action,
+.fp-sim-primary-action {
+    align-items: center;
+    background: var(--fp-brand-blue, #2637b8);
+    border: 0;
+    border-radius: 8px;
+    color: #fff;
+    display: inline-flex;
+    font-size: .84rem;
+    font-weight: 950;
+    justify-content: center;
+    min-height: 38px;
+    padding: 9px 12px;
+    text-decoration: none;
+    width: 100%;
+}
+
+.fp-sim-card-action:hover,
+.fp-sim-primary-action:hover {
+    background: var(--fp-brand-blue-strong, #1d4ed8);
+    color: #fff;
+}
+
+.fp-sim-layout {
+    align-items: start;
+    display: grid;
+    gap: 14px;
+    grid-template-columns: minmax(0, 1.18fr) minmax(360px, .82fr);
+}
+
+.fp-sim-panel {
+    background: #fff;
+    border: 1px solid var(--fp-brand-line, #dde6f0);
+    border-radius: 8px;
+    box-shadow: var(--fp-brand-shadow, 0 10px 26px rgba(15, 23, 42, .065));
+    overflow: hidden;
+}
+
+.fp-sim-panel > header {
+    align-items: center;
+    background: linear-gradient(180deg, #ffffff 0%, #f5f8fc 100%);
+    border-bottom: 1px solid var(--fp-brand-line, #dde6f0);
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px 14px;
+}
+
+.fp-sim-panel > header span {
+    color: var(--fp-brand-muted, #627184);
+    display: block;
+    font-size: .72rem;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.fp-sim-panel > header strong {
+    color: var(--fp-brand-ink, #101827);
+    display: block;
+    font-size: .98rem;
+    font-weight: 950;
+}
+
+.fp-sim-primary-action {
+    cursor: pointer;
+    width: auto;
+}
+
+.fp-sim-fixtures-list {
+    display: grid;
+    gap: 0;
+    padding: 10px 12px 14px;
+}
+
+.fp-sim-section-label {
+    background: #eef6ff;
+    border-left: 4px solid var(--fp-brand-blue, #2637b8);
+    color: var(--fp-brand-blue, #2637b8);
+    font-size: .8rem;
+    font-weight: 950;
+    margin: 10px 0 6px;
+    padding: 8px 10px;
+}
+
+.fp-sim-subsection-label {
+    color: var(--fp-brand-muted, #627184);
+    font-size: .72rem;
+    font-weight: 950;
+    padding: 6px 4px;
+    text-transform: uppercase;
+}
+
+.fp-sim-fixture-row {
+    align-items: center;
+    border-top: 1px solid #edf1f6;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    padding: 10px 2px;
+}
+
+.fp-sim-fixture-row:first-of-type {
+    border-top: 0;
+}
+
+.fp-sim-team {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+}
+
+.fp-sim-team.away {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.fp-sim-team b {
+    color: var(--fp-brand-ink, #101827);
+    font-size: .86rem;
+    font-weight: 900;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fp-sim-crest {
+    flex: 0 0 auto;
+    font-size: .62rem;
+    height: 30px;
+    width: 30px;
+}
+
+.fp-sim-crest.small {
+    font-size: .56rem;
+    height: 24px;
+    width: 24px;
+}
+
+.fp-sim-score-box {
+    align-items: center;
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 48px auto 48px;
+}
+
+.fp-sim-score-box input {
+    appearance: textfield;
+    border: 1px solid #cfd8e3;
+    border-radius: 8px;
+    color: var(--fp-brand-ink, #101827);
+    font-size: 1.05rem;
+    font-weight: 950;
+    height: 42px;
+    text-align: center;
+    width: 48px;
+}
+
+.fp-sim-score-box input:focus {
+    border-color: var(--fp-brand-blue, #2637b8);
+    box-shadow: 0 0 0 3px rgba(38, 55, 184, .12);
+    outline: 0;
+}
+
+.fp-sim-score-box span {
+    color: var(--fp-brand-muted, #627184);
+    font-weight: 950;
+}
+
+.fp-sim-match-meta {
+    color: var(--fp-brand-muted, #627184);
+    display: flex;
+    flex-wrap: wrap;
+    font-size: .72rem;
+    font-weight: 800;
+    gap: 6px;
+    grid-column: 1 / -1;
+}
+
+.fp-sim-match-meta span {
+    background: #f6f8fb;
+    border-radius: 999px;
+    padding: 4px 7px;
+}
+
+.fp-sim-empty {
+    background: linear-gradient(135deg, #f8fbff 0%, #f3fbf6 100%);
+    border: 1px dashed #b8c7dc;
+    border-radius: 8px;
+    color: var(--fp-brand-muted, #627184);
+    font-size: .9rem;
+    margin: 14px;
+    padding: 18px;
+    text-align: center;
+}
+
+.fp-sim-standings-title {
+    color: var(--fp-brand-blue, #2637b8);
+    font-size: .86rem;
+    font-weight: 950;
+    padding: 12px 14px 4px;
+}
+
+.fp-sim-table-wrap {
+    overflow-x: auto;
+    padding: 8px 12px 14px;
+}
+
+.fp-sim-standings-table {
+    border-collapse: collapse;
+    min-width: 560px;
+    width: 100%;
+}
+
+.fp-sim-standings-table th,
+.fp-sim-standings-table td {
+    border-bottom: 1px solid #edf1f6;
+    color: #334155;
+    font-size: .78rem;
+    padding: 8px 7px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.fp-sim-standings-table th {
+    color: var(--fp-brand-muted, #627184);
+    font-size: .7rem;
+    font-weight: 950;
+    text-transform: uppercase;
+}
+
+.fp-sim-standings-table td:nth-child(2),
+.fp-sim-standings-table th:nth-child(2) {
+    min-width: 180px;
+    text-align: left;
+}
+
+.fp-sim-table-team {
+    align-items: center;
+    display: inline-flex;
+    gap: 7px;
+    min-width: 0;
+}
+
+.fp-sim-table-team b {
+    color: var(--fp-brand-ink, #101827);
+    font-weight: 900;
+}
+
+@media (max-width: 1199px) {
+    .fp-sim-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 991px) {
+    .fp-sim-competition-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767px) {
+    .fp-sim-titlebar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .fp-sim-competition-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fp-sim-fixture-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .fp-sim-team.away {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .fp-sim-score-box {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+        grid-template-columns: 52px;
+        justify-items: center;
+    }
+
+    .fp-sim-score-box input {
+        height: 46px;
+        width: 52px;
+    }
+}

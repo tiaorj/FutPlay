@@ -1,0 +1,287 @@
+@model FutPlay.ViewModels.SimuladorViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = $"Simulador - {Model.Campeonato.Nome}";
+
+    var cultura = CultureInfo.GetCultureInfo("pt-BR");
+
+    string RodadaTitulo(int? rodada)
+    {
+        return rodada.HasValue ? $"Rodada {rodada.Value}" : "Rodada a definir";
+    }
+
+    string DataCurta(DateTime data)
+    {
+        return data.ToString("dd/MM/yyyy", cultura);
+    }
+
+    string HeaderGrupo(string? grupo)
+    {
+        return string.IsNullOrWhiteSpace(grupo) ? "Sem grupo" : grupo;
+    }
+}
+
+<div class="container fp-sim-page">
+    <section class="fp-tv-titlebar fp-sim-titlebar">
+        <div class="fp-tv-title-logo">
+            @if (!string.IsNullOrWhiteSpace(Model.Campeonato.LogoUrl))
+            {
+                <img src="@Model.Campeonato.LogoUrl" alt="@Model.Campeonato.Nome" />
+            }
+            else
+            {
+                <span>MP</span>
+            }
+        </div>
+
+        <div>
+            <span>@Model.FormatoDescricao</span>
+            <h1>@Model.Campeonato.Nome @Model.Campeonato.Ano</h1>
+            <p>
+                @Model.Campeonato.Tipo
+                @if (!string.IsNullOrWhiteSpace(Model.Campeonato.Pais))
+                {
+                    <span> &middot; @PaisExibicao.Normalizar(Model.Campeonato.Pais)</span>
+                }
+            </p>
+        </div>
+
+        <div class="fp-tv-title-actions">
+            <a asp-action="Index">Simulador</a>
+            <a asp-controller="Campeonatos" asp-action="Portal" asp-route-id="@Model.Campeonato.Id">Portal</a>
+        </div>
+    </section>
+
+    <form asp-action="Competicao"
+          asp-route-campeonatoId="@Model.Campeonato.Id"
+          method="post"
+          class="fp-sim-layout">
+        @Html.AntiForgeryToken()
+
+        <section class="fp-sim-panel fp-sim-fixtures-panel">
+            <header>
+                <div>
+                    <span>Partidas</span>
+                    <strong>@Model.Jogos.Count jogo(s)</strong>
+                </div>
+
+                <button type="submit" class="fp-sim-primary-action">
+                    Simular
+                </button>
+            </header>
+
+            @if (!Model.Jogos.Any())
+            {
+                <div class="fp-sim-empty">
+                    Nenhuma partida cadastrada para esta competição.
+                </div>
+            }
+            else
+            {
+                <div class="fp-sim-fixtures-list">
+                    @{
+                        string? grupoAtual = null;
+                        string? faseAtual = null;
+                        int? rodadaAtual = null;
+                    }
+
+                    @for (var i = 0; i < Model.Jogos.Count; i++)
+                    {
+                        var jogo = Model.Jogos[i];
+
+                        if (Model.UsaGrupos)
+                        {
+                            if (!string.Equals(grupoAtual, jogo.GrupoChave, StringComparison.OrdinalIgnoreCase))
+                            {
+                                grupoAtual = jogo.GrupoChave;
+                                faseAtual = null;
+
+                                <div class="fp-sim-section-label">@HeaderGrupo(jogo.Grupo)</div>
+                            }
+
+                            if (!string.Equals(faseAtual, jogo.Fase, StringComparison.OrdinalIgnoreCase))
+                            {
+                                faseAtual = jogo.Fase;
+
+                                <div class="fp-sim-subsection-label">@jogo.Fase</div>
+                            }
+                        }
+                        else if (rodadaAtual != jogo.Rodada)
+                        {
+                            rodadaAtual = jogo.Rodada;
+
+                            <div class="fp-sim-section-label">@RodadaTitulo(jogo.Rodada)</div>
+                        }
+
+                        <article class="fp-sim-fixture-row">
+                            <input type="hidden" name="Jogos[@i].JogoId" value="@jogo.JogoId" />
+
+                            <div class="fp-sim-team home">
+                                <span class="fp-sim-crest">
+                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeCasaEscudoUrl))
+                                    {
+                                        <img src="@jogo.TimeCasaEscudoUrl" alt="@jogo.TimeCasaNome" />
+                                    }
+                                    else
+                                    {
+                                        @jogo.TimeCasaSigla
+                                    }
+                                </span>
+                                <b>@jogo.TimeCasaNome</b>
+                            </div>
+
+                            <div class="fp-sim-score-box">
+                                <input type="number"
+                                       min="0"
+                                       max="99"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       autocomplete="off"
+                                       aria-label="Placar @jogo.TimeCasaNome"
+                                       name="Jogos[@i].PlacarCasa"
+                                       value="@(jogo.PlacarCasa?.ToString())" />
+
+                                <span>x</span>
+
+                                <input type="number"
+                                       min="0"
+                                       max="99"
+                                       inputmode="numeric"
+                                       pattern="[0-9]*"
+                                       autocomplete="off"
+                                       aria-label="Placar @jogo.TimeVisitanteNome"
+                                       name="Jogos[@i].PlacarVisitante"
+                                       value="@(jogo.PlacarVisitante?.ToString())" />
+                            </div>
+
+                            <div class="fp-sim-team away">
+                                <span class="fp-sim-crest">
+                                    @if (!string.IsNullOrWhiteSpace(jogo.TimeVisitanteEscudoUrl))
+                                    {
+                                        <img src="@jogo.TimeVisitanteEscudoUrl" alt="@jogo.TimeVisitanteNome" />
+                                    }
+                                    else
+                                    {
+                                        @jogo.TimeVisitanteSigla
+                                    }
+                                </span>
+                                <b>@jogo.TimeVisitanteNome</b>
+                            </div>
+
+                            <div class="fp-sim-match-meta">
+                                <span>@DataCurta(jogo.DataJogo)</span>
+                                @if (jogo.Rodada.HasValue)
+                                {
+                                    <span>@RodadaTitulo(jogo.Rodada)</span>
+                                }
+                                @if (Model.UsaGrupos)
+                                {
+                                    <span>@jogo.Grupo</span>
+                                }
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="fp-sim-panel fp-sim-standings-panel">
+            <header>
+                <div>
+                    <span>Classificação</span>
+                    <strong>Simulada</strong>
+                </div>
+
+                @if (Model.Simulado)
+                {
+                    <a asp-action="Competicao"
+                       asp-route-campeonatoId="@Model.Campeonato.Id"
+                       class="fp-sim-secondary-action">
+                        Limpar
+                    </a>
+                }
+            </header>
+
+            @if (!Model.Simulado)
+            {
+                <div class="fp-sim-empty">
+                    A classificação simulada aparecerá aqui.
+                </div>
+            }
+            else if (!Model.Classificacao.Any())
+            {
+                <div class="fp-sim-empty">
+                    Nenhum placar informado para simulação.
+                </div>
+            }
+            else
+            {
+                var gruposClassificacao = Model.UsaGrupos
+                    ? Model.Classificacao
+                        .GroupBy(c => c.Grupo)
+                        .OrderBy(g => g.First().GrupoChave)
+                        .ToList()
+                    : Model.Classificacao
+                        .GroupBy(_ => "Tabela única")
+                        .ToList();
+
+                foreach (var grupo in gruposClassificacao)
+                {
+                    if (Model.UsaGrupos)
+                    {
+                        <div class="fp-sim-standings-title">@grupo.Key</div>
+                    }
+
+                    <div class="fp-sim-table-wrap">
+                        <table class="fp-sim-standings-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Time</th>
+                                    <th>J</th>
+                                    <th>V</th>
+                                    <th>E</th>
+                                    <th>D</th>
+                                    <th>SG</th>
+                                    <th>GP:GC</th>
+                                    <th>PTS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var linha in grupo)
+                                {
+                                    <tr>
+                                        <td>@linha.Posicao</td>
+                                        <td>
+                                            <span class="fp-sim-table-team">
+                                                <span class="fp-sim-crest small">
+                                                    @if (!string.IsNullOrWhiteSpace(linha.EscudoUrl))
+                                                    {
+                                                        <img src="@linha.EscudoUrl" alt="@linha.TimeNome" />
+                                                    }
+                                                    else
+                                                    {
+                                                        @linha.Sigla
+                                                    }
+                                                </span>
+                                                <b>@linha.TimeNome</b>
+                                            </span>
+                                        </td>
+                                        <td>@linha.Jogos</td>
+                                        <td>@linha.Vitorias</td>
+                                        <td>@linha.Empates</td>
+                                        <td>@linha.Derrotas</td>
+                                        <td>@linha.SaldoGols</td>
+                                        <td>@linha.GolsPro:@linha.GolsContra</td>
+                                        <td><strong>@linha.Pontos</strong></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+        </section>
+    </form>
+</div>

@@ -1,0 +1,61 @@
+@model FutPlay.ViewModels.SimuladorIndexViewModel
+
+@{
+    ViewData["Title"] = "Simulador";
+}
+
+<div class="container fp-sim-page">
+    <section class="fp-sim-titlebar">
+        <div>
+            <span>Simulador de partidas</span>
+            <h1>Competições @Model.Ano</h1>
+        </div>
+
+        <a asp-controller="Campeonatos" asp-action="Index" asp-route-ano="@Model.Ano">Competições</a>
+    </section>
+
+    @if (!Model.Competicoes.Any())
+    {
+        <div class="fp-sim-empty">
+            Nenhuma competição encontrada para @Model.Ano.
+        </div>
+    }
+    else
+    {
+        <section class="fp-sim-competition-grid">
+            @foreach (var competicao in Model.Competicoes)
+            {
+                <article class="fp-sim-competition-card">
+                    <div class="fp-sim-competition-logo">
+                        @if (!string.IsNullOrWhiteSpace(competicao.LogoUrl))
+                        {
+                            <img src="@competicao.LogoUrl" alt="@competicao.Nome" />
+                        }
+                        else
+                        {
+                            <span>MP</span>
+                        }
+                    </div>
+
+                    <div class="fp-sim-competition-body">
+                        <strong>@competicao.Nome</strong>
+
+                        <div class="fp-sim-tags">
+                            <span>@competicao.Ano</span>
+                            <span>@competicao.Tipo</span>
+                            <span>@competicao.Pais</span>
+                        </div>
+
+                        <small>@competicao.FormatoDescricao</small>
+                    </div>
+
+                    <a asp-action="Competicao"
+                       asp-route-campeonatoId="@competicao.Id"
+                       class="fp-sim-card-action">
+                        Simular partidas
+                    </a>
+                </article>
+            }
+        </section>
+    }
+</div>

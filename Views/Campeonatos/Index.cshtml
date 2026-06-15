@@ -11,7 +11,7 @@
         .ToList();
 
     var grupos = competicoes
-        .GroupBy(c => string.IsNullOrWhiteSpace(c.Pais) ? "Mundo" : c.Pais)
+        .GroupBy(c => PaisExibicao.Normalizar(c.Pais))
         .OrderBy(g => g.Key)
         .ToList();
 }
@@ -19,7 +19,7 @@
 <div class="container fp-score-home">
 
     <div class="fp-score-page-title d-flex flex-column flex-md-row justify-content-between gap-2">
-        <span>Escolha uma competição para ver jogos, classificação e resumo</span>
+        <span>Escolha uma competição de @Model.Ano para ver jogos, classificação e resumo</span>
 
         @if (User.IsInRole(AppRoles.Administrador))
         {
@@ -69,6 +69,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="todos"
                        class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
                         Todos
@@ -77,6 +78,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="ativos"
                        class="fp-score-filter @(Model.Filtro == "ativos" ? "active" : "")">
                         Ativos
@@ -85,6 +87,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="favoritos"
                        class="fp-score-filter @(Model.Filtro == "favoritos" ? "active" : "")">
                         Favoritos
@@ -99,6 +102,22 @@
 
                 <form asp-action="Index" method="get" class="fp-compact-filter-form">
                     <input type="hidden" name="filtro" value="@Model.Filtro" />
+
+                    <select class="form-select form-select-sm" name="ano" onchange="this.form.submit()">
+                        @if (!Model.Anos.Any())
+                        {
+                            <option value="@Model.Ano" selected>@Model.Ano</option>
+                        }
+                        else
+                        {
+                            @foreach (var ano in Model.Anos)
+                            {
+                                <option value="@ano" selected="@(Model.Ano == ano)">
+                                    @ano
+                                </option>
+                            }
+                        }
+                    </select>
 
                     <select class="form-select form-select-sm" name="pais" onchange="this.form.submit()">
                         <option value="">Todos os países</option>
@@ -152,6 +171,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="todos"
                        class="@(Model.Filtro == "todos" ? "active" : "")">
                         Todos
@@ -160,6 +180,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="ativos"
                        class="@(Model.Filtro == "ativos" ? "active" : "")">
                         Ativos
@@ -168,6 +189,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="favoritos"
                        class="@(Model.Filtro == "favoritos" ? "active" : "")">
                         Favoritos
@@ -184,6 +206,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="todos"
                        class="fp-score-filter @(Model.Filtro == "todos" ? "active" : "")">
                         Todos (@Model.TotalCampeonatos)
@@ -192,6 +215,7 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="ativos"
                        class="fp-score-filter @(Model.Filtro == "ativos" ? "active" : "")">
                         Ativos (@Model.TotalAtivos)
@@ -200,15 +224,21 @@
                     <a asp-action="Index"
                        asp-route-pais="@Model.Pais"
                        asp-route-tipo="@Model.Tipo"
+                       asp-route-ano="@Model.Ano"
                        asp-route-filtro="favoritos"
                        class="fp-score-filter @(Model.Filtro == "favoritos" ? "active" : "")">
                         Favoritos (@Model.TotalFavoritos)
                     </a>
 
+                    <span class="fp-score-filter active">
+                        @Model.Ano
+                    </span>
+
                     @if (!string.IsNullOrWhiteSpace(Model.Pais))
                     {
                         <a asp-action="Index"
                            asp-route-tipo="@Model.Tipo"
+                           asp-route-ano="@Model.Ano"
                            asp-route-filtro="@Model.Filtro"
                            class="fp-score-filter active">
                             @Model.Pais
@@ -219,6 +249,7 @@
                     {
                         <a asp-action="Index"
                            asp-route-pais="@Model.Pais"
+                           asp-route-ano="@Model.Ano"
                            asp-route-filtro="@Model.Filtro"
                            class="fp-score-filter active">
                             @Model.Tipo
@@ -250,9 +281,10 @@
                         </div>
 
                         <div class="fp-competition-app-grid">
-                            @foreach (var campeonato in competicoes.Take(18))
+                            @foreach (var campeonato in competicoes)
                             {
                                 var favorito = Model.CampeonatosFavoritosIds.Contains(campeonato.Id);
+                                var paisCampeonato = PaisExibicao.Normalizar(campeonato.Pais);
 
                                 <article class="fp-competition-app-card">
                                     <a asp-action="Portal"
@@ -271,15 +303,14 @@
 
                                         <strong>@campeonato.Nome</strong>
 
-                                        <small>
-                                            @campeonato.Ano
-                                            @if (!string.IsNullOrWhiteSpace(campeonato.Pais))
-                                            {
-                                                <span> &middot; @campeonato.Pais</span>
-                                            }
-                                        </small>
+                                        <span class="fp-competition-app-meta">
+                                            <small>@campeonato.Ano</small>
+                                            <small>@campeonato.Tipo</small>
+                                            <small>@paisCampeonato</small>
+                                        </span>
 
-                                        <small>@campeonato.Tipo &middot; @CampeonatoFormato.ObterDescricao(campeonato.Formato)</small>
+                                        <small class="fp-competition-app-format">@CampeonatoFormato.ObterDescricao(campeonato.Formato)</small>
+                                        <span class="fp-competition-app-button">Ver competição</span>
                                     </a>
 
                                     <form asp-action="AlternarFavorito"
@@ -329,6 +360,7 @@
                                             @foreach (var campeonato in grupo.OrderByDescending(c => c.Ativo).ThenByDescending(c => c.Ano).ThenBy(c => c.Nome))
                                             {
                                                 var favorito = Model.CampeonatosFavoritosIds.Contains(campeonato.Id);
+                                                var paisCampeonato = PaisExibicao.Normalizar(campeonato.Pais);
 
                                                 <article class="fp-competition-row-app">
                                                     <div class="fp-competition-row-logo">
@@ -345,7 +377,7 @@
                                                     <div class="fp-competition-row-info">
                                                         <strong>@campeonato.Nome @campeonato.Ano</strong>
                                                         <span>
-                                                            @campeonato.Tipo &middot; @CampeonatoFormato.ObterDescricao(campeonato.Formato)
+                                                            @campeonato.Tipo &middot; @paisCampeonato &middot; @CampeonatoFormato.ObterDescricao(campeonato.Formato)
                                                             @if (!campeonato.Ativo)
                                                             {
                                                                 <span> &middot; Inativo</span>
@@ -366,7 +398,7 @@
                                                             </button>
                                                         </form>
 
-                                                        <a asp-action="Portal" asp-route-id="@campeonato.Id">Abrir</a>
+                                                        <a asp-action="Portal" asp-route-id="@campeonato.Id">Ver competição</a>
                                                         <a asp-controller="Jogos"
                                                            asp-action="Index"
                                                            asp-route-aba="competicoes"
